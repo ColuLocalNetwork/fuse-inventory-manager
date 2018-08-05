@@ -17,9 +17,9 @@ module.exports = (db) => {
     from: {type: String},
     gas: {type: db.mongoose.Schema.Types.Decimal128, set: setDecimal128, get: getDecimal128},
     gasPrice: {type: db.mongoose.Schema.Types.Decimal128, set: setDecimal128, get: getDecimal128},
-    hash: {type: String},
+    hash: {type: String, unique: true},
     input: {type: String},
-    nonce: {type: db.mongoose.Schema.Types.Decimal128, set: setDecimal128, get: getDecimal128},
+    nonce: {type: Number},
     to: {type: String},
     transactionIndex: {type: Number},
     value: {type: db.mongoose.Schema.Types.Decimal128, set: setDecimal128, get: getDecimal128},
@@ -60,15 +60,34 @@ module.exports = (db) => {
       const blockchainTransaction = new BlockchainTransaction(data)
       blockchainTransaction.save((err, newObj) => {
         if (err) {
-          err = {status: 500, message: err}
           return reject(err)
         }
         if (!newObj) {
-          err = {status: 500, message: 'BlockchainTransaction not saved'}
+          let err = 'BlockchainTransaction not saved'
           return reject(err)
         }
         resolve(newObj)
       })
+    })
+  }
+
+  blockchainTransaction.getLastNonceForAddress = (address) => {
+    return new Promise((resolve, reject) => {
+      const cond = {from: address, $or: [{state: 'FINALIZED'}, {state: 'CONFIRMED'}]}
+      const projection = {nonce: 1}
+      const limit = 1
+      const sort = {blockNumber: -1}
+
+      BlockchainTransaction.find(cond, projection)
+        .lean()
+        .limit(limit)
+        .sort(sort)
+        .exec((err, data) => {
+          if (err) {
+            return reject(err)
+          }
+          resolve(data && data.length > 0 ? data[0].nonce : 0) // TODO what if no data here ?!?!
+        })
     })
   }
 
