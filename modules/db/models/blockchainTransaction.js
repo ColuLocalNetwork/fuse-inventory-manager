@@ -23,7 +23,7 @@ module.exports = (db) => {
     to: {type: String},
     transactionIndex: {type: Number},
     value: {type: db.mongoose.Schema.Types.Decimal128, set: setDecimal128, get: getDecimal128},
-    state: {type: String, enum: ['NEW', 'PENDING', 'TRANSMITTED', 'CONFIRMED', 'FINALIZDE'], default: 'NEW'} // TODO are those the states we need ?!?!
+    state: {type: String, enum: ['NEW', 'PENDING', 'CONFIRMED', 'FINALIZED'], default: 'NEW'} // TODO are those the states we need ?!?!
   }).plugin(timestamps())
 
   BlockchainTransactionSchema.set('toJSON', {
