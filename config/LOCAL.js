@@ -9,6 +9,29 @@ module.exports = {
   OSSEUS_ROUTER_CONTROLLERS_PATH: '/app/controllers',
   OSSEUS_ROUTER_POLICY_PATH: '/app/middlewares',
   OSSEUS_ROUTER_URL_PREFIX: '/api',
+  OSSEUS_ROUTER_JWT_SECRET: 'somekindofsecret',
   OSSEUS_MONGO_DEPENDENCIES: ['logger'],
-  OSSEUS_MONGO_URI: 'mongodb://localhost/inventory-manager'
+  OSSEUS_MONGO_URI: 'mongodb://localhost/inventory-manager',
+  OSSEUS_MQ_DEPENDENCIES: ['logger'],
+  OSSEUS_MQ_PROTOCOL: 'AMQP',
+  OSSEUS_MQ_DB_USAGE: 'NONE',
+  OSSEUS_MQ_AMQP_CONNECTIONS: {
+    brokers: [{
+      alias: 'broker_one',
+      connection: 'amqp://admin:admin@localhost',
+      consumer: [
+        {
+          name: 'topic://SYSTEM.MESSAGES.LOCAL',
+          alias: 'smsg',
+          options: ['settle']
+        }
+      ],
+      producer: [
+        {
+          name: 'topic://SYSTEM.MESSAGES.LOCAL',
+          alias: 'smsg'
+        }
+      ]
+    }]
+  }
 }
