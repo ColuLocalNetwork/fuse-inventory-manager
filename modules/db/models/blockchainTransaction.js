@@ -23,6 +23,7 @@ module.exports = (db) => {
     to: {type: String},
     transactionIndex: {type: Number},
     value: {type: db.mongoose.Schema.Types.Decimal128, set: setDecimal128, get: getDecimal128},
+    transmittedAt: {type: Date},
     state: {type: String, enum: ['NEW', 'PENDING', 'CONFIRMED', 'FINALIZED'], default: 'NEW'} // TODO are those the states we need ?!?!
   }).plugin(timestamps())
 
@@ -45,6 +46,7 @@ module.exports = (db) => {
         to: ret.to,
         transactionIndex: ret.transactionIndex,
         value: ret.value,
+        transmittedAt: ret.transmittedAt,
         state: ret.state
       }
       return safeRet
