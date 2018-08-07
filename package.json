@@ -13,7 +13,7 @@
   "dependencies": {
     "bignumber.js": "^7.2.1",
     "mongoose-time": "^0.1.0",
-    "osseus": "^1.4.12"
+    "osseus": "^1.4.13"
   },
   "devDependencies": {
     "standard": "^11.0.1"
