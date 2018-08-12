@@ -2,6 +2,8 @@ const timestamps = require('mongoose-time')
 const BigNumber = require('bignumber.js')
 
 module.exports = (db) => {
+  const Schema = db.mongoose.Schema
+
   const setDecimal128 = (bignum) => {
     return db.mongoose.Types.Decimal128.fromString(bignum.toString())
   }
@@ -11,7 +13,7 @@ module.exports = (db) => {
     return new BigNumber(val)
   }
 
-  const BlockchainTransactionSchema = new db.mongoose.Schema({
+  const BlockchainTransactionSchema = new Schema({
     blockHash: {type: String},
     blockNumber: {type: Number},
     from: {type: String},
