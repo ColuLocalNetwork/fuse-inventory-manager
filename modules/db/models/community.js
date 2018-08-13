@@ -112,7 +112,7 @@ module.exports = (db) => {
           return reject(err)
         }
         if (!doc) {
-          err = `Community with not found for id ${id}`
+          err = `Community not found for id ${id}`
           return reject(err)
         }
         resolve(doc)
@@ -161,6 +161,21 @@ module.exports = (db) => {
           return reject(err)
         }
         resolve(doc)
+      })
+    })
+  }
+
+  community.getAll = () => {
+    return new Promise((resolve, reject) => {
+      Community.find({}, (err, docs) => {
+        if (err) {
+          return reject(err)
+        }
+        if (!docs || docs.length === 0) {
+          err = `No communities found`
+          return reject(err)
+        }
+        resolve(docs)
       })
     })
   }

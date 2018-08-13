@@ -54,7 +54,7 @@ module.exports = (db) => {
           return reject(err)
         }
         if (!doc) {
-          err = `Currency with not found for id ${id}`
+          err = `Currency not found for id ${id}`
           return reject(err)
         }
         resolve(doc)
@@ -88,6 +88,21 @@ module.exports = (db) => {
           return reject(err)
         }
         resolve(doc)
+      })
+    })
+  }
+
+  currency.getAll = () => {
+    return new Promise((resolve, reject) => {
+      Currency.find({}, (err, docs) => {
+        if (err) {
+          return reject(err)
+        }
+        if (!docs || docs.length === 0) {
+          err = `No currencies found`
+          return reject(err)
+        }
+        resolve(docs)
       })
     })
   }
