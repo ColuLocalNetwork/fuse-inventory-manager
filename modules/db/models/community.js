@@ -13,20 +13,46 @@ module.exports = (db) => {
     return new BigNumber(val)
   }
 
+  const TYPES = ['manager', 'users', 'merchants']
+
+  const WalletSchema = new Schema({
+    type: {type: String, enum: TYPES},
+    address: {type: String}
+  }).plugin(timestamps())
+
+  WalletSchema.index({type: 1}, {unique: true})
+  WalletSchema.index({address: 1}, {unique: true})
+
   const BalanceSchema = new Schema({
+    wallet: {type: Schema.Types.ObjectId},
     currency: {type: Schema.Types.ObjectId, ref: 'Currency'},
     blockchainBalance: {type: db.mongoose.Schema.Types.Decimal128, set: setDecimal128, get: getDecimal128},
     offchainBalance: {type: db.mongoose.Schema.Types.Decimal128, set: setDecimal128, get: getDecimal128}
   }).plugin(timestamps())
 
+  BalanceSchema.index({type: 1}, {unique: true})
+
   const CommunitySchema = new Schema({
-    managerWalletAddress: {type: String},
-    usersWalletAddress: {type: String},
+    wallets: [{type: WalletSchema}],
     mnemonic: {type: String},
     defaultCurrency: {type: Schema.Types.ObjectId, ref: 'Currency'},
-    managerBalance: {type: BalanceSchema},
-    usersBalance: {type: BalanceSchema}
+    balances: [{type: BalanceSchema}]
   }).plugin(timestamps())
+
+  WalletSchema.set('toJSON', {
+    getters: true,
+    virtuals: true,
+    transform: (doc, ret, options) => {
+      const safeRet = {
+        id: ret._id.toString(),
+        createdAt: ret.created_at,
+        updatedAt: ret.updated_at,
+        type: ret.type,
+        address: ret.address
+      }
+      return safeRet
+    }
+  })
 
   BalanceSchema.set('toJSON', {
     getters: true,
@@ -36,6 +62,7 @@ module.exports = (db) => {
         id: ret._id.toString(),
         createdAt: ret.created_at,
         updatedAt: ret.updated_at,
+        type: ret.type,
         currency: ret.currency,
         blockchainBalance: ret.blockchainBalance,
         offchainBalance: ret.offchainBalance
@@ -52,12 +79,10 @@ module.exports = (db) => {
         id: ret._id.toString(),
         createdAt: ret.created_at,
         updatedAt: ret.updated_at,
-        managerWalletAddress: ret.managerWalletAddress,
-        usersWalletAddress: ret.usersWalletAddress,
+        wallets: ret.wallets,
         // mnemonic: ret.mnemonic,
         defaultCurrency: ret.defaultCurrency,
-        managerBalance: ret.managerBalance,
-        usersBalance: ret.usersBalance
+        balances: ret.balances
       }
       return safeRet
     }
@@ -98,14 +123,14 @@ module.exports = (db) => {
     })
   }
 
-  community.getByManagerWalletAddress = (address) => {
+  community.getByWalletType = (type) => {
     return new Promise((resolve, reject) => {
-      Community.findOne({managerWalletAddress: address}, (err, doc) => {
+      Community.findOne({'wallets.type': type}, (err, doc) => {
         if (err) {
           return reject(err)
         }
         if (!doc) {
-          err = `Community not found for managerWalletAddress: ${address}`
+          err = `Community not found for wallet type: ${type}`
           return reject(err)
         }
         resolve(doc)
@@ -113,14 +138,14 @@ module.exports = (db) => {
     })
   }
 
-  community.getByUsersWalletAddress = (address) => {
+  community.getByWalletAddress = (address) => {
     return new Promise((resolve, reject) => {
-      Community.findOne({usersWalletAddress: address}, (err, doc) => {
+      Community.findOne({'wallets.address': address}, (err, doc) => {
         if (err) {
           return reject(err)
         }
         if (!doc) {
-          err = `Community not found for usersWalletAddress: ${address}`
+          err = `Community not found for wallet address: ${address}`
           return reject(err)
         }
         resolve(doc)
@@ -132,7 +157,7 @@ module.exports = (db) => {
     return new Promise((resolve, reject) => {
       /* TODO
         Input params:
-          manager/users
+          manager/users/merchants/etc...
           blockchain/offchain
           currency (id)
           increase/decrease
@@ -146,7 +171,7 @@ module.exports = (db) => {
     return new Promise((resolve, reject) => {
       /* TODO
         Input params:
-          manager/users
+          manager/users/merchants/etc...
           blockchain/offchain
           currency (id)
           amount
