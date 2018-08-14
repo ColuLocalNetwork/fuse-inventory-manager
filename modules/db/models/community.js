@@ -22,11 +22,13 @@ module.exports = (db) => {
   const WalletSchema = new Schema({
     type: {type: String, enum: ['manager', 'users', 'merchants']},
     address: {type: String},
+    index: {type: Number},
     balances: [{type: BalanceSchema}]
   }).plugin(timestamps())
 
   WalletSchema.index({type: 1}, {unique: true})
   WalletSchema.index({address: 1}, {unique: true})
+  WalletSchema.index({index: 1}, {unique: true})
 
   const CommunitySchema = new Schema({
     wallets: [{type: WalletSchema}],
@@ -60,6 +62,7 @@ module.exports = (db) => {
         updatedAt: ret.updated_at,
         type: ret.type,
         address: ret.address,
+        index: ret.index,
         balances: ret.balances
       }
       return safeRet
@@ -140,6 +143,21 @@ module.exports = (db) => {
         }
         if (!doc) {
           err = `Community not found for wallet address: ${address}`
+          return reject(err)
+        }
+        resolve(doc)
+      })
+    })
+  }
+
+  community.getByWalletIndex = (index) => {
+    return new Promise((resolve, reject) => {
+      Community.findOne({'wallets.index': index}, (err, doc) => {
+        if (err) {
+          return reject(err)
+        }
+        if (!doc) {
+          err = `Community not found for wallet index: ${index}`
           return reject(err)
         }
         resolve(doc)
