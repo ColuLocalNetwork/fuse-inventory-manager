@@ -13,31 +13,42 @@ module.exports = (db) => {
     return new BigNumber(val)
   }
 
-  const TYPES = ['manager', 'users', 'merchants']
-
-  const WalletSchema = new Schema({
-    type: {type: String, enum: TYPES},
-    address: {type: String}
-  }).plugin(timestamps())
-
-  WalletSchema.index({type: 1}, {unique: true})
-  WalletSchema.index({address: 1}, {unique: true})
-
   const BalanceSchema = new Schema({
-    wallet: {type: Schema.Types.ObjectId},
     currency: {type: Schema.Types.ObjectId, ref: 'Currency'},
     blockchainBalance: {type: db.mongoose.Schema.Types.Decimal128, set: setDecimal128, get: getDecimal128},
     offchainBalance: {type: db.mongoose.Schema.Types.Decimal128, set: setDecimal128, get: getDecimal128}
   }).plugin(timestamps())
 
-  BalanceSchema.index({type: 1}, {unique: true})
+  const WalletSchema = new Schema({
+    type: {type: String, enum: ['manager', 'users', 'merchants']},
+    address: {type: String},
+    balances: [{type: BalanceSchema}]
+  }).plugin(timestamps())
+
+  WalletSchema.index({type: 1}, {unique: true})
+  WalletSchema.index({address: 1}, {unique: true})
 
   const CommunitySchema = new Schema({
     wallets: [{type: WalletSchema}],
     mnemonic: {type: String},
-    defaultCurrency: {type: Schema.Types.ObjectId, ref: 'Currency'},
-    balances: [{type: BalanceSchema}]
+    defaultCurrency: {type: Schema.Types.ObjectId, ref: 'Currency'}
   }).plugin(timestamps())
+
+  BalanceSchema.set('toJSON', {
+    getters: true,
+    virtuals: true,
+    transform: (doc, ret, options) => {
+      const safeRet = {
+        id: ret._id.toString(),
+        createdAt: ret.created_at,
+        updatedAt: ret.updated_at,
+        currency: ret.currency,
+        blockchainBalance: ret.blockchainBalance,
+        offchainBalance: ret.offchainBalance
+      }
+      return safeRet
+    }
+  })
 
   WalletSchema.set('toJSON', {
     getters: true,
@@ -48,24 +59,8 @@ module.exports = (db) => {
         createdAt: ret.created_at,
         updatedAt: ret.updated_at,
         type: ret.type,
-        address: ret.address
-      }
-      return safeRet
-    }
-  })
-
-  BalanceSchema.set('toJSON', {
-    getters: true,
-    virtuals: true,
-    transform: (doc, ret, options) => {
-      const safeRet = {
-        id: ret._id.toString(),
-        createdAt: ret.created_at,
-        updatedAt: ret.updated_at,
-        type: ret.type,
-        currency: ret.currency,
-        blockchainBalance: ret.blockchainBalance,
-        offchainBalance: ret.offchainBalance
+        address: ret.address,
+        balances: ret.balances
       }
       return safeRet
     }
@@ -81,8 +76,7 @@ module.exports = (db) => {
         updatedAt: ret.updated_at,
         wallets: ret.wallets,
         // mnemonic: ret.mnemonic,
-        defaultCurrency: ret.defaultCurrency,
-        balances: ret.balances
+        defaultCurrency: ret.defaultCurrency
       }
       return safeRet
     }
