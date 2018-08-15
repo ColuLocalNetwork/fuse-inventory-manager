@@ -11,5 +11,7 @@ module.exports = {
   OSSEUS_ROUTER_URL_PREFIX: '/api',
   OSSEUS_ROUTER_JWT_SECRET: 'somekindofsecret',
   OSSEUS_MONGO_DEPENDENCIES: ['logger'],
-  OSSEUS_MONGO_URI: 'mongodb://localhost/inventory-manager'
+  OSSEUS_MONGO_URI: 'mongodb://localhost/inventory-manager',
+  WEB3_PROVIDER: 'https://ropsten.infura.io',
+  SECRET: 'thisissomekindofsecret'
 }

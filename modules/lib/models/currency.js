@@ -1,26 +1,38 @@
 const contract = require('truffle-contract')
 
-module.exports = class Currency {
-  constructor (model, doc) {
-    this.model = model
-    this.doc = doc
-    this.ccContract = contract({abi: doc.ccABI})
-    this.mmContract = contract({abi: doc.mmABI})
+module.exports = (osseus) => {
+  function currency () {}
+
+  currency.create = (ccAddress, mmAddress, ccABI, mmABI) => {
+    return new Promise(async (resolve, reject) => {
+      const data = {
+        ccAddress: ccAddress,
+        mmAddress: mmAddress,
+        ccABI: ccABI,
+        mmABI: mmABI
+      }
+      const newCurrency = await osseus.db_models.currency.create(data).catch(err => { reject(err) })
+      resolve(newCurrency)
+    })
   }
 
-  model () {
-    return this.model
+  currency.getContracts = (currencyId, provider) => {
+    return new Promise(async (resolve, reject) => {
+      const currency = await osseus.db_models.currency.getById(currencyId).catch(err => { reject(err) })
+      const contracts = {}
+
+      const CC = contract({abi: currency.ccABI})
+      CC.setProvider(provider)
+      contracts.cc = await CC.at(currency.ccAddress)
+
+      const MM = contract({abi: currency.mmABI})
+      MM.setProvider(provider)
+      MM.setProvider(provider)
+      contracts.mm = await MM.at(currency.mmAddress)
+
+      resolve(contracts)
+    })
   }
 
-  doc () {
-    return this.doc
-  }
-
-  ccContract () {
-    return this.ccContract
-  }
-
-  mmContract () {
-    return this.mmContract
-  }
+  return currency
 }

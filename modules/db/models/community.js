@@ -26,11 +26,12 @@ module.exports = (db) => {
     balances: [{type: BalanceSchema}]
   }).plugin(timestamps())
 
-  WalletSchema.index({type: 1}, {unique: true})
-  WalletSchema.index({address: 1}, {unique: true})
-  WalletSchema.index({index: 1}, {unique: true})
+  // WalletSchema.index({type: 1}, {unique: true})
+  // WalletSchema.index({address: 1}, {unique: true})
+  // WalletSchema.index({index: 1}, {unique: true})
 
   const CommunitySchema = new Schema({
+    name: {type: String},
     wallets: [{type: WalletSchema}],
     mnemonic: {type: String},
     defaultCurrency: {type: Schema.Types.ObjectId, ref: 'Currency'}
@@ -77,6 +78,7 @@ module.exports = (db) => {
         id: ret._id.toString(),
         createdAt: ret.created_at,
         updatedAt: ret.updated_at,
+        name: ret.name,
         wallets: ret.wallets,
         // mnemonic: ret.mnemonic,
         defaultCurrency: ret.defaultCurrency
@@ -105,6 +107,17 @@ module.exports = (db) => {
     })
   }
 
+  community.update = (id, data) => {
+    return new Promise((resolve, reject) => {
+      Community.findOneAndUpdate({_id: id}, {$set: data}, {returnNewDocument: true}, (err, updatedObj) => {
+        if (err) {
+          return reject(err)
+        }
+        resolve(updatedObj)
+      })
+    })
+  }
+
   community.getById = (id) => {
     return new Promise((resolve, reject) => {
       Community.findById(id, (err, doc) => {
@@ -113,6 +126,21 @@ module.exports = (db) => {
         }
         if (!doc) {
           err = `Community not found for id ${id}`
+          return reject(err)
+        }
+        resolve(doc)
+      })
+    })
+  }
+
+  community.getByName = (name) => {
+    return new Promise((resolve, reject) => {
+      Community.findOne({name: name}, (err, doc) => {
+        if (err) {
+          return reject(err)
+        }
+        if (!doc) {
+          err = `Community not found for name ${name}`
           return reject(err)
         }
         resolve(doc)
