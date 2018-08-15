@@ -6,12 +6,13 @@
   "scripts": {
     "start": "node index.js",
     "build": "npm install",
-    "test": "standard"
+    "test": "node ./node_modules/truffle/build/cli.bundled.js test"
   },
   "author": "LiorRabin",
   "license": "MIT",
   "dependencies": {
     "bignumber.js": "^7.2.1",
+    "cln-solidity": "^1.0.0",
     "mongoose-time": "^0.1.0",
     "osseus": "~2.0.0",
     "osseus-logger": "~0.4.0",
@@ -20,6 +21,9 @@
     "osseus-server": "~0.1.3"
   },
   "devDependencies": {
-    "standard": "^11.0.1"
+    "ganache-cli": "^6.1.7",
+    "standard": "^11.0.1",
+    "truffle": "^4.1.14",
+    "truffle-contract": "^3.0.6"
   }
 }
