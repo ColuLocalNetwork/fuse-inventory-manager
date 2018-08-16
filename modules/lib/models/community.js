@@ -1,3 +1,4 @@
+const crypto = require('crypto')
 const bip39 = require('bip39')
 const HDWalletProvider = require('truffle-hdwallet-provider')
 
@@ -7,7 +8,7 @@ module.exports = (osseus) => {
   const getProvider = (community) => {
     const provider = new HDWalletProvider([{
       mnemonic: community.mnemonic,
-      password: Buffer.from(`${community.id}_${osseus.config.secret}`).toString('base64')
+      password: crypto.createHash('sha256').update(`${community.id}_${osseus.config.secret}`).digest('base64')
     }], osseus.config.web3_provider, 0, 3)
     return provider
   }

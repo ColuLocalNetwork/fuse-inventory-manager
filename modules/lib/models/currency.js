@@ -21,16 +21,20 @@ module.exports = (osseus) => {
       const currency = await osseus.db_models.currency.getById(currencyId).catch(err => { reject(err) })
       const contracts = {}
 
-      const CC = contract({abi: currency.ccABI})
-      CC.setProvider(provider)
-      contracts.cc = await CC.at(currency.ccAddress)
+      try {
+        const CC = contract({abi: currency.ccABI})
+        CC.setProvider(provider)
+        contracts.cc = await CC.at(currency.ccAddress)
 
-      const MM = contract({abi: currency.mmABI})
-      MM.setProvider(provider)
-      MM.setProvider(provider)
-      contracts.mm = await MM.at(currency.mmAddress)
+        const MM = contract({abi: currency.mmABI})
+        MM.setProvider(provider)
+        MM.setProvider(provider)
+        contracts.mm = await MM.at(currency.mmAddress)
 
-      resolve(contracts)
+        resolve(contracts)
+      } catch (err) {
+        reject(err)
+      }
     })
   }
 

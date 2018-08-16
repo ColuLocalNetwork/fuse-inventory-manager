@@ -13,8 +13,8 @@
   "dependencies": {
     "async": "^2.6.1",
     "bignumber.js": "^7.2.1",
-    "cln-solidity": "^1.0.0",
     "bip39": "^2.5.0",
+    "cln-solidity": "^1.0.0",
     "mongoose-time": "^0.1.0",
     "osseus": "^2.0.1",
     "osseus-logger": "~0.4.0",
