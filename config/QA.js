@@ -1,5 +1,5 @@
 module.exports = {
-  DEBUG: 'false',
+  DEBUG: false,
   OSSEUS_LOGGER_LOG_LEVEL: 'debug',
   OSSEUS_SERVER_DEPENDENCIES: ['logger', 'mongo'],
   OSSEUS_SERVER_PORT: '8080',

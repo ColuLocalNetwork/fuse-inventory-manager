@@ -109,7 +109,7 @@ module.exports = (db) => {
 
   community.update = (id, data) => {
     return new Promise((resolve, reject) => {
-      Community.findOneAndUpdate({_id: id}, {$set: data}, {returnNewDocument: true}, (err, updatedObj) => {
+      Community.findOneAndUpdate({_id: id}, {$set: data}, {new: true}, (err, updatedObj) => {
         if (err) {
           return reject(err)
         }
@@ -148,21 +148,6 @@ module.exports = (db) => {
     })
   }
 
-  community.getByWalletType = (type) => {
-    return new Promise((resolve, reject) => {
-      Community.findOne({'wallets.type': type}, (err, doc) => {
-        if (err) {
-          return reject(err)
-        }
-        if (!doc) {
-          err = `Community not found for wallet type: ${type}`
-          return reject(err)
-        }
-        resolve(doc)
-      })
-    })
-  }
-
   community.getByWalletAddress = (address) => {
     return new Promise((resolve, reject) => {
       Community.findOne({'wallets.address': address}, (err, doc) => {
@@ -171,21 +156,6 @@ module.exports = (db) => {
         }
         if (!doc) {
           err = `Community not found for wallet address: ${address}`
-          return reject(err)
-        }
-        resolve(doc)
-      })
-    })
-  }
-
-  community.getByWalletIndex = (index) => {
-    return new Promise((resolve, reject) => {
-      Community.findOne({'wallets.index': index}, (err, doc) => {
-        if (err) {
-          return reject(err)
-        }
-        if (!doc) {
-          err = `Community not found for wallet index: ${index}`
           return reject(err)
         }
         resolve(doc)

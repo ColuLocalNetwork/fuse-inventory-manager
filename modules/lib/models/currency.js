@@ -28,7 +28,6 @@ module.exports = (osseus) => {
 
         const MM = contract({abi: currency.mmABI})
         MM.setProvider(provider)
-        MM.setProvider(provider)
         contracts.mm = await MM.at(currency.mmAddress)
 
         resolve(contracts)

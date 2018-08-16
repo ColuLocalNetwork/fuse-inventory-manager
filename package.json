@@ -6,7 +6,7 @@
   "scripts": {
     "start": "node index.js",
     "build": "npm install",
-    "test": "node ./node_modules/truffle/build/cli.bundled.js test"
+    "test": "node ./node_modules/truffle/build/cli.bundled.js test --ENV=TEST"
   },
   "author": "LiorRabin",
   "license": "MIT",
@@ -17,7 +17,7 @@
     "cln-solidity": "^1.0.0",
     "mongoose-time": "^0.1.0",
     "osseus": "^2.0.1",
-    "osseus-logger": "~0.4.0",
+    "osseus-logger": "^0.4.1",
     "osseus-mongo": "~0.2.1",
     "osseus-router": "~0.3.0",
     "osseus-server": "~0.1.3",

@@ -10,6 +10,9 @@ module.exports = (db) => {
     mmABI: {type: String}
   }).plugin(timestamps())
 
+  CurrencySchema.index({ccAddress: 1}, {unique: true})
+  CurrencySchema.index({mmAddress: 1}, {unique: true})
+
   CurrencySchema.set('toJSON', {
     getters: true,
     virtuals: true,
