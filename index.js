@@ -9,12 +9,13 @@ const main = async () => {
     console.time('INVENTORY MANAGER')
 
     await require('./modules/db').init(osseus)
+    await require('./modules/lib').init(osseus)
     await require('./modules/errors').init(osseus)
 
     console.timeEnd('INVENTORY MANAGER')
     osseus.logger.info('INVENTORY MANAGER IS RUNNING :)')
   } catch (err) {
-    console.error('BOOTSTRAP ERROR!', err.stack)
+    console.error('BOOTSTRAP ERROR!', err.stack || err)
     process.exit(1)
   }
 }
