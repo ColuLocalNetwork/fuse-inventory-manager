@@ -26,9 +26,7 @@ module.exports = (db) => {
     balances: [{type: BalanceSchema}]
   }).plugin(timestamps())
 
-  // WalletSchema.index({type: 1}, {unique: true})
-  // WalletSchema.index({address: 1}, {unique: true})
-  // WalletSchema.index({index: 1}, {unique: true})
+  WalletSchema.index({address: 1}, {unique: true})
 
   const CommunitySchema = new Schema({
     name: {type: String},
@@ -178,6 +176,32 @@ module.exports = (db) => {
     })
   }
 
+  community.checkSufficientBalance = (address, currency, balanceType, amount) => {
+    return new Promise((resolve, reject) => {
+      community.getByWalletAddress(address)
+        .then(doc => {
+          const wallet = doc.wallets.filter(wallet => wallet.address === address)[0]
+          const balance = wallet.balances.filter(balance => balance.currency.toString() === currency)[0]
+          if (!balance) {
+            let err = `Balance doesn't exist for address: ${address} and currency: ${currency}`
+            return reject(err)
+          }
+          if (!balance[balanceType]) {
+            let err = `Balance of type: ${balanceType} doesn't exist for address: ${address} and currency: ${currency}`
+            return reject(err)
+          }
+          if (balance[balanceType] <= amount) {
+            let err = `Balance of type: ${balanceType} for address: ${address} and currency: ${currency} is insufficient`
+            return reject(err)
+          }
+          resolve(`OK`)
+        })
+        .catch(err => {
+          reject(err)
+        })
+    })
+  }
+
   community.updateBalance = () => {
     return new Promise((resolve, reject) => {
       /* TODO
@@ -186,19 +210,6 @@ module.exports = (db) => {
           blockchain/offchain
           currency (id)
           increase/decrease
-          amount
-      */
-      reject(new Error('not implemented yet'))
-    })
-  }
-
-  community.checkSufficientBalance = () => {
-    return new Promise((resolve, reject) => {
-      /* TODO
-        Input params:
-          manager/users/merchants/etc...
-          blockchain/offchain
-          currency (id)
           amount
       */
       reject(new Error('not implemented yet'))

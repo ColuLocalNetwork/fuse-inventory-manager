@@ -4,7 +4,8 @@ const init = (osseus) => {
     this.osseus.db_models = {
       bctx: require('./models/blockchainTransaction')(this.osseus.mongo),
       community: require('./models/community')(this.osseus.mongo),
-      currency: require('./models/currency')(this.osseus.mongo)
+      currency: require('./models/currency')(this.osseus.mongo),
+      tx: require('./models/transaction')(this.osseus.mongo)
     }
     osseus.logger.info(`DB ready`)
     return resolve()
