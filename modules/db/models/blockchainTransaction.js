@@ -1,7 +1,8 @@
 const timestamps = require('mongoose-time')
 const BigNumber = require('bignumber.js')
 
-module.exports = (db) => {
+module.exports = (osseus) => {
+  const db = osseus.mongo
   const Schema = db.mongoose.Schema
 
   const setDecimal128 = (bignum) => {
@@ -55,7 +56,7 @@ module.exports = (db) => {
     }
   })
 
-  const BlockchainTransaction = db.model('blockchain_transaction', BlockchainTransactionSchema)
+  const BlockchainTransaction = db.model('Blockchain_Transaction', BlockchainTransactionSchema)
 
   function blockchainTransaction () {}
 

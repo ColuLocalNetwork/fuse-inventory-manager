@@ -1,6 +1,7 @@
 const timestamps = require('mongoose-time')
 
-module.exports = (db) => {
+module.exports = (osseus) => {
+  const db = osseus.mongo
   const Schema = db.mongoose.Schema
 
   const CurrencySchema = new Schema({
@@ -30,7 +31,7 @@ module.exports = (db) => {
     }
   })
 
-  const Currency = db.model('currency', CurrencySchema)
+  const Currency = db.model('Currency', CurrencySchema)
 
   function currency () {}
 

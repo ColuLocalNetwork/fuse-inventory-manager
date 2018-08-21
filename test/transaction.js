@@ -20,7 +20,7 @@ contract('TRANSACTION', async (accounts) => {
   const ccABI = JSON.stringify(require('./helpers/abi/cc'))
   const mmABI = JSON.stringify(require('./helpers/abi/mm'))
 
-  const validateTransaction = (tx1, tx2, from, to, amount) => {
+  const validateTransaction = (tx1, tx2, from, to, amount, state) => {
     expect(tx1).to.be.a('Object')
     expect(tx1.id).to.be.a('string')
     if (tx2) expect(tx1.id).to.equal(tx2.id)
@@ -30,41 +30,31 @@ contract('TRANSACTION', async (accounts) => {
     expect(tx1.to.currency.toString()).to.equal(tx2 ? tx2.to.currency.toString() : to.currency)
     expect(tx1.amount.toNumber()).to.be.greaterThan(0)
     expect(tx1.amount.toNumber()).to.equal(tx2 ? tx2.amount.toNumber() : amount)
-    expect(tx1.state).to.equal(tx2 ? tx2.state : 'NEW')
+    expect(tx1.state).to.equal(tx2 ? tx2.state : (state || 'DONE'))
   }
 
   const createCommunity = async (currency) => {
-    await osseus.db_models.community.create({
+    let newCommunity = await osseus.db_models.community.create({
       name: 'Test Community',
-      wallets: [
-        {
-          type: 'manager',
-          address: accounts[0],
-          index: 0,
-          balances: [
-            {
-              currency: currency.id,
-              blockchainBalance: 0,
-              offchainBalance: 100 * TOKEN_DECIMALS
-            }
-          ]
-        },
-        {
-          type: 'users',
-          address: accounts[1],
-          index: 1,
-          balances: [
-            {
-              currency: currency.id,
-              blockchainBalance: 0,
-              offchainBalance: 100 * TOKEN_DECIMALS
-            }
-          ]
-        }
-      ],
       mnemonic: 'grainedness unlimned afara overfeast parsonology steeplechasing vireo metantimonous stra amygdaloncus supraspinous preceremonial',
       defaultCurrency: currency.id
     })
+
+    // create the wallets
+    const defaultBalance = {
+      currency: currency,
+      blockchainAmount: 0,
+      offchainAmount: 10 * TOKEN_DECIMALS,
+      pendingTxs: []
+    }
+    const wallets = [
+      await osseus.db_models.wallet.create({address: accounts[0], type: 'manager', index: 0, balances: [defaultBalance]}),
+      await osseus.db_models.wallet.create({address: accounts[1], type: 'users', index: 1, balances: [defaultBalance]}),
+      await osseus.db_models.wallet.create({address: accounts[2], type: 'merchants', index: 2, balances: [defaultBalance]})
+    ]
+
+    // update community wallets in db
+    await osseus.db_models.community.update(newCommunity._id, {wallets: wallets.map(wallet => wallet.id)})
   }
 
   before(async function () {
@@ -92,7 +82,7 @@ contract('TRANSACTION', async (accounts) => {
     })
   })
 
-  it('should create a transaction', async () => {
+  it('should make a successful transaction (state should be DONE)', async () => {
     let currency = await osseus.lib.Currency.create(ccAddress, mmAddress, ccABI, mmABI)
 
     await createCommunity(currency)
@@ -106,6 +96,22 @@ contract('TRANSACTION', async (accounts) => {
     from.currency = currency.id
     to.currency = currency.id
     validateTransaction(tx, undefined, from, to, amount)
+  })
+
+  it('should not make a transaction if not enough balance (state should be CANCELED)', async () => {
+    let currency = await osseus.lib.Currency.create(ccAddress, mmAddress, ccABI, mmABI)
+
+    await createCommunity(currency)
+
+    let amount = 100 * TOKEN_DECIMALS
+    let from = {accountAddress: accounts[0], currency: ccAddress}
+    let to = {accountAddress: accounts[1], currency: ccAddress}
+
+    let tx = await osseus.lib.Transaction.create(from, to, amount)
+
+    from.currency = currency.id
+    to.currency = currency.id
+    validateTransaction(tx, undefined, from, to, amount, 'CANCELED')
   })
 
   it('should get transaction (by id)', async () => {

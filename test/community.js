@@ -38,8 +38,8 @@ contract('COMMUNITY', async (accounts) => {
       expect(wallet.balances).to.be.an('array')
       expect(wallet.balances).to.have.lengthOf(1)
       expect(wallet.balances[0].currency.toString()).to.equal(community2 ? community2.defaultCurrency.toString() : currency.id)
-      expect(wallet.balances[0].blockchainBalance.toNumber()).to.equal(0)
-      expect(wallet.balances[0].offchainBalance.toNumber()).to.equal(0)
+      expect(wallet.balances[0].blockchainAmount.toNumber()).to.equal(0)
+      expect(wallet.balances[0].offchainAmount.toNumber()).to.equal(0)
     })
   }
 

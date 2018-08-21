@@ -17,15 +17,12 @@ module.exports = (osseus) => {
       from = await validateParticipant(from).catch(err => { reject(err) })
       to = await validateParticipant(to).catch(err => { reject(err) })
 
-      await osseus.db_models.community.checkSufficientBalance(from.accountAddress, from.currency, 'offchainBalance', amount).catch(err => { reject(err) })
-
       const data = {
         from: from,
         to: to,
         amount: amount
       }
       const newTx = await osseus.db_models.tx.create(data).catch(err => { reject(err) })
-      // TODO need to update offchainBalance of `from.accountAddress` and `to.accountAddress`
       resolve(newTx)
     })
   }

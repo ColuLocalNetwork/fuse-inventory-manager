@@ -17,30 +17,9 @@ module.exports = (osseus) => {
     return new Promise(async (resolve, reject) => {
       // create a new community - generate a mnemonic, create default balances for all wallets using default currency
       const mnemonic = bip39.generateMnemonic()
-      const defaultBalance = {
-        currency: defaultCurrency,
-        blockchainBalance: 0,
-        offchainBalance: 0
-      }
+
       const data = {
         name: name,
-        wallets: [
-          {
-            type: 'manager',
-            index: 0,
-            balances: [defaultBalance]
-          },
-          {
-            type: 'users',
-            index: 1,
-            balances: [defaultBalance]
-          },
-          {
-            type: 'merchants',
-            index: 2,
-            balances: [defaultBalance]
-          }
-        ],
         mnemonic: mnemonic,
         defaultCurrency: defaultCurrency
       }
@@ -49,12 +28,22 @@ module.exports = (osseus) => {
       // create the provider
       const provider = getProvider(newCommunity)
 
-      // update wallets for community in db
-      const update = {}
-      newCommunity.wallets.forEach(wallet => {
-        update[`wallets.${wallet.index}.address`] = provider.getAddress(wallet.index)
-      })
-      const updatedCommunity = await osseus.db_models.community.update(newCommunity._id, update).catch(err => { reject(err) })
+      // create the wallets
+      const defaultBalance = {
+        currency: defaultCurrency,
+        blockchainAmount: 0,
+        offchainAmount: 0,
+        pendingTxs: []
+      }
+      const wallets = [
+        await osseus.db_models.wallet.create({address: provider.getAddress(0), type: 'manager', index: 0, balances: [defaultBalance]}).catch(err => { reject(err) }),
+        await osseus.db_models.wallet.create({address: provider.getAddress(1), type: 'users', index: 1, balances: [defaultBalance]}).catch(err => { reject(err) }),
+        await osseus.db_models.wallet.create({address: provider.getAddress(2), type: 'merchants', index: 2, balances: [defaultBalance]}).catch(err => { reject(err) })
+      ]
+
+      // update community wallets in db
+      const updatedCommunity = await osseus.db_models.community.update(newCommunity._id, {wallets: wallets.map(wallet => wallet.id)}).catch(err => { reject(err) })
+      updatedCommunity.wallets = wallets
 
       // resolve
       resolve(updatedCommunity)

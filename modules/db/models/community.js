@@ -1,72 +1,15 @@
 const timestamps = require('mongoose-time')
-const BigNumber = require('bignumber.js')
 
-module.exports = (db) => {
+module.exports = (osseus) => {
+  const db = osseus.mongo
   const Schema = db.mongoose.Schema
-
-  const setDecimal128 = (bignum) => {
-    return db.mongoose.Types.Decimal128.fromString(bignum.toString())
-  }
-
-  const getDecimal128 = (decimal) => {
-    const val = decimal ? decimal.toString() : 0
-    return new BigNumber(val)
-  }
-
-  const BalanceSchema = new Schema({
-    currency: {type: Schema.Types.ObjectId, ref: 'Currency'},
-    blockchainBalance: {type: db.mongoose.Schema.Types.Decimal128, set: setDecimal128, get: getDecimal128},
-    offchainBalance: {type: db.mongoose.Schema.Types.Decimal128, set: setDecimal128, get: getDecimal128}
-  }).plugin(timestamps())
-
-  const WalletSchema = new Schema({
-    type: {type: String, enum: ['manager', 'users', 'merchants']},
-    address: {type: String},
-    index: {type: Number},
-    balances: [{type: BalanceSchema}]
-  }).plugin(timestamps())
-
-  WalletSchema.index({address: 1}, {unique: true})
 
   const CommunitySchema = new Schema({
     name: {type: String},
-    wallets: [{type: WalletSchema}],
+    wallets: [{type: Schema.Types.ObjectId, ref: 'Wallet'}],
     mnemonic: {type: String},
     defaultCurrency: {type: Schema.Types.ObjectId, ref: 'Currency'}
   }).plugin(timestamps())
-
-  BalanceSchema.set('toJSON', {
-    getters: true,
-    virtuals: true,
-    transform: (doc, ret, options) => {
-      const safeRet = {
-        id: ret._id.toString(),
-        createdAt: ret.created_at,
-        updatedAt: ret.updated_at,
-        currency: ret.currency,
-        blockchainBalance: ret.blockchainBalance,
-        offchainBalance: ret.offchainBalance
-      }
-      return safeRet
-    }
-  })
-
-  WalletSchema.set('toJSON', {
-    getters: true,
-    virtuals: true,
-    transform: (doc, ret, options) => {
-      const safeRet = {
-        id: ret._id.toString(),
-        createdAt: ret.created_at,
-        updatedAt: ret.updated_at,
-        type: ret.type,
-        address: ret.address,
-        index: ret.index,
-        balances: ret.balances
-      }
-      return safeRet
-    }
-  })
 
   CommunitySchema.set('toJSON', {
     getters: true,
@@ -85,7 +28,7 @@ module.exports = (db) => {
     }
   })
 
-  const Community = db.model('community', CommunitySchema)
+  const Community = db.model('Community', CommunitySchema)
 
   function community () {}
 
@@ -147,8 +90,9 @@ module.exports = (db) => {
   }
 
   community.getByWalletAddress = (address) => {
-    return new Promise((resolve, reject) => {
-      Community.findOne({'wallets.address': address}, (err, doc) => {
+    return new Promise(async (resolve, reject) => {
+      const wallet = await osseus.db_models.wallet.getByAddress(address).catch(err => { reject(err) })
+      Community.findOne({'wallets': wallet._id}, (err, doc) => {
         if (err) {
           return reject(err)
         }
@@ -163,7 +107,7 @@ module.exports = (db) => {
 
   community.getAll = () => {
     return new Promise((resolve, reject) => {
-      Community.find({}, (err, docs) => {
+      Community.find({}).populate('wallets').exec((err, docs) => {
         if (err) {
           return reject(err)
         }
@@ -173,46 +117,6 @@ module.exports = (db) => {
         }
         resolve(docs)
       })
-    })
-  }
-
-  community.checkSufficientBalance = (address, currency, balanceType, amount) => {
-    return new Promise((resolve, reject) => {
-      community.getByWalletAddress(address)
-        .then(doc => {
-          const wallet = doc.wallets.filter(wallet => wallet.address === address)[0]
-          const balance = wallet.balances.filter(balance => balance.currency.toString() === currency)[0]
-          if (!balance) {
-            let err = `Balance doesn't exist for address: ${address} and currency: ${currency}`
-            return reject(err)
-          }
-          if (!balance[balanceType]) {
-            let err = `Balance of type: ${balanceType} doesn't exist for address: ${address} and currency: ${currency}`
-            return reject(err)
-          }
-          if (balance[balanceType] <= amount) {
-            let err = `Balance of type: ${balanceType} for address: ${address} and currency: ${currency} is insufficient`
-            return reject(err)
-          }
-          resolve(`OK`)
-        })
-        .catch(err => {
-          reject(err)
-        })
-    })
-  }
-
-  community.updateBalance = () => {
-    return new Promise((resolve, reject) => {
-      /* TODO
-        Input params:
-          manager/users/merchants/etc...
-          blockchain/offchain
-          currency (id)
-          increase/decrease
-          amount
-      */
-      reject(new Error('not implemented yet'))
     })
   }
 
