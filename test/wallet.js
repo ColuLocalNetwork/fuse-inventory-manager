@@ -159,4 +159,10 @@ contract('WALLET', async (accounts) => {
     })
     expect(wallet2).to.be.undefined
   })
+
+  after(async function () {
+    Object.keys(osseus.db_models).forEach(model => {
+      osseus.db_models[model].getModel().remove({}, () => {})
+    })
+  })
 })

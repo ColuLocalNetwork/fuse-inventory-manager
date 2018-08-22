@@ -281,4 +281,10 @@ contract('TRANSACTION', async (accounts) => {
     expect(txs).to.have.lengthOf(1)
     validateTransaction(tx1, txs[0])
   })
+
+  after(async function () {
+    Object.keys(osseus.db_models).forEach(model => {
+      osseus.db_models[model].getModel().remove({}, () => {})
+    })
+  })
 })

@@ -103,4 +103,10 @@ contract('CURRENCY', async (accounts) => {
     expect(currencies).to.have.lengthOf(1)
     validateCurrency(currency1, currencies[0])
   })
+
+  after(async function () {
+    Object.keys(osseus.db_models).forEach(model => {
+      osseus.db_models[model].getModel().remove({}, () => {})
+    })
+  })
 })

@@ -124,4 +124,10 @@ contract('COMMUNITY', async (accounts) => {
     validateCommunity(communities[1], community2, currency, `${communityName} #2`)
     validateCommunity(communities[2], community3, currency, `${communityName} #3`)
   })
+
+  after(async function () {
+    Object.keys(osseus.db_models).forEach(model => {
+      osseus.db_models[model].getModel().remove({}, () => {})
+    })
+  })
 })
