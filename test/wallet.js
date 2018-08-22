@@ -20,7 +20,7 @@ contract('WALLET', async (accounts) => {
   const ccABI = JSON.stringify(require('./helpers/abi/cc'))
   const mmABI = JSON.stringify(require('./helpers/abi/mm'))
 
-  const validateWallet = (wallet1, wallet2, currency) => {
+  const validateWallet = (wallet1, wallet2, currency, offchainAmount, blockchainAmount) => {
     expect(wallet1).to.be.a('Object')
     expect(wallet1.id).to.be.a('string')
     if (wallet2) expect(wallet1.id).to.equal(wallet2.id)
@@ -31,8 +31,8 @@ contract('WALLET', async (accounts) => {
     expect(wallet1.balances).to.be.an('array')
     expect(wallet1.balances).to.have.lengthOf(1)
     expect(wallet1.balances[0].currency.id.toString()).to.equal(wallet2 ? wallet2.balances[0].currency.toString() : currency.id)
-    expect(wallet1.balances[0].blockchainAmount.toNumber()).to.equal(0)
-    expect(wallet1.balances[0].offchainAmount.toNumber()).to.equal(10 * TOKEN_DECIMALS)
+    expect(wallet1.balances[0].blockchainAmount.toNumber()).to.equal(wallet2 ? wallet2.balances[0].blockchainAmount.toNumber() : (blockchainAmount || 0))
+    expect(wallet1.balances[0].offchainAmount.toNumber()).to.equal(wallet2 ? wallet2.balances[0].offchainAmount.toNumber() : (offchainAmount || 0))
   }
 
   before(async function () {
@@ -73,7 +73,7 @@ contract('WALLET', async (accounts) => {
         pendingTxs: []
       }]
     })
-    validateWallet(wallet, undefined, currency)
+    validateWallet(wallet, undefined, currency, 10 * TOKEN_DECIMALS)
   })
 
   it('should not create a wallet with same address', async () => {
@@ -153,14 +153,10 @@ contract('WALLET', async (accounts) => {
         pendingTxs: []
       }]
     })
-    validateWallet(wallet1, undefined, currency)
+    validateWallet(wallet1, undefined, currency, 10 * TOKEN_DECIMALS)
     let wallet2 = await osseus.db_models.wallet.getById(fakeId).catch(err => {
       expect(err).not.to.be.undefined
     })
     expect(wallet2).to.be.undefined
-  })
-
-  it('should update wallet', async () => {
-    // TODO
   })
 })
