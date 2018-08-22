@@ -1,7 +1,8 @@
 const timestamps = require('mongoose-time')
 const BigNumber = require('bignumber.js')
 
-module.exports = (db) => {
+module.exports = (osseus) => {
+  const db = osseus.mongo
   const Schema = db.mongoose.Schema
 
   const setDecimal128 = (bignum) => {
@@ -26,7 +27,7 @@ module.exports = (db) => {
     transactionIndex: {type: Number},
     value: {type: db.mongoose.Schema.Types.Decimal128, set: setDecimal128, get: getDecimal128},
     transmittedAt: {type: Date},
-    state: {type: String, enum: ['NEW', 'PENDING', 'CONFIRMED', 'FINALIZED'], default: 'NEW'} // TODO are those the states we need ?!?!
+    state: {type: String, enum: ['NEW', 'TRANSMITTED', 'CONFIRMED', 'FINALIZED'], default: 'NEW'}
   }).plugin(timestamps())
 
   BlockchainTransactionSchema.set('toJSON', {
@@ -55,7 +56,7 @@ module.exports = (db) => {
     }
   })
 
-  const BlockchainTransaction = db.model('blockchain_transaction', BlockchainTransactionSchema)
+  const BlockchainTransaction = db.model('Blockchain_Transaction', BlockchainTransactionSchema)
 
   function blockchainTransaction () {}
 
@@ -75,6 +76,54 @@ module.exports = (db) => {
     })
   }
 
+  blockchainTransaction.update = (id, data) => {
+    return new Promise((resolve, reject) => {
+      BlockchainTransaction.findOneAndUpdate({_id: id}, {$set: data}, {new: true}, (err, updatedObj) => {
+        if (err) {
+          return reject(err)
+        }
+        resolve(updatedObj)
+      })
+    })
+  }
+
+  blockchainTransaction.getById = (id) => {
+    return new Promise((resolve, reject) => {
+      BlockchainTransaction.findById(id, (err, doc) => {
+        if (err) {
+          return reject(err)
+        }
+        if (!doc) {
+          err = `BlockchainTransaction not found for id ${id}`
+          return reject(err)
+        }
+        resolve(doc)
+      })
+    })
+  }
+
+  blockchainTransaction.get = (address, state) => {
+    const query = {}
+    const conditions = []
+
+    if (address) conditions.push({$or: [{from: address}, {to: address}]})
+    if (state) conditions.push({state: state})
+    if (conditions.length > 0) query.$and = conditions
+
+    return new Promise((resolve, reject) => {
+      BlockchainTransaction.find(query, (err, docs) => {
+        if (err) {
+          return reject(err)
+        }
+        if (!docs || docs.length === 0) {
+          err = `No transactions found`
+          return reject(err)
+        }
+        resolve(docs)
+      })
+    })
+  }
+
   blockchainTransaction.getLastNonceForAddress = (address) => {
     return new Promise((resolve, reject) => {
       const cond = {from: address, $or: [{state: 'FINALIZED'}, {state: 'CONFIRMED'}]}
@@ -86,11 +135,11 @@ module.exports = (db) => {
         .lean()
         .limit(limit)
         .sort(sort)
-        .exec((err, data) => {
+        .exec((err, docs) => {
           if (err) {
             return reject(err)
           }
-          resolve(data && data.length > 0 ? data[0].nonce : 0) // TODO what if no data here ?!?!
+          resolve(docs && docs.length ? docs[0].nonce : 0)
         })
     })
   }
