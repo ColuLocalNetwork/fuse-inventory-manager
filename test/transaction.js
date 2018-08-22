@@ -20,6 +20,15 @@ contract('TRANSACTION', async (accounts) => {
   const ccABI = JSON.stringify(require('./helpers/abi/cc'))
   const mmABI = JSON.stringify(require('./helpers/abi/mm'))
 
+  const managerAccountAddress = accounts[0]
+  const usersAccountAddress = accounts[1]
+  const merchantsAccountAddress = accounts[2]
+
+  const defaultBalances = {}
+  defaultBalances[managerAccountAddress] = 10 * TOKEN_DECIMALS
+  defaultBalances[usersAccountAddress] = 0
+  defaultBalances[merchantsAccountAddress] = 0
+
   const validateTransaction = (tx1, tx2, from, to, amount, state) => {
     expect(tx1).to.be.a('Object')
     expect(tx1.id).to.be.a('string')
@@ -33,6 +42,28 @@ contract('TRANSACTION', async (accounts) => {
     expect(tx1.state).to.equal(tx2 ? tx2.state : (state || 'DONE'))
   }
 
+  const validateBalancesAfterTransaction = (participantEnd, tx) => {
+    return new Promise(async (resolve, reject) => {
+      const accountAddress = tx[participantEnd].accountAddress
+      const currency = tx[participantEnd].currency.toString()
+      const state = tx.state
+      const amount = tx.amount.toNumber()
+      const wallet = await osseus.db_models.wallet.getByAddress(accountAddress)
+      const startingBalance = defaultBalances[accountAddress]
+      const currencyBalance = wallet.balances.filter(balance => balance.currency.toString() === currency)[0]
+      const actualBalance = currencyBalance.offchainAmount.toNumber()
+      if (state === 'DONE') {
+        expect(actualBalance).to.equal(participantEnd === 'from' ? startingBalance - amount : startingBalance + amount)
+      }
+      if (state === 'CANCELED') {
+        expect(actualBalance).to.equal(startingBalance)
+      }
+      expect(currencyBalance.pendingTxs).to.be.an('array')
+      expect(currencyBalance.pendingTxs).to.have.lengthOf(0)
+      resolve()
+    })
+  }
+
   const createCommunity = async (currency) => {
     let newCommunity = await osseus.db_models.community.create({
       name: 'Test Community',
@@ -41,16 +72,40 @@ contract('TRANSACTION', async (accounts) => {
     })
 
     // create the wallets
-    const defaultBalance = {
-      currency: currency,
-      blockchainAmount: 0,
-      offchainAmount: 10 * TOKEN_DECIMALS,
-      pendingTxs: []
-    }
     const wallets = [
-      await osseus.db_models.wallet.create({address: accounts[0], type: 'manager', index: 0, balances: [defaultBalance]}),
-      await osseus.db_models.wallet.create({address: accounts[1], type: 'users', index: 1, balances: [defaultBalance]}),
-      await osseus.db_models.wallet.create({address: accounts[2], type: 'merchants', index: 2, balances: [defaultBalance]})
+      await osseus.db_models.wallet.create({
+        address: managerAccountAddress,
+        type: 'manager',
+        index: 0,
+        balances: [{
+          currency: currency,
+          blockchainAmount: 0,
+          offchainAmount: defaultBalances[managerAccountAddress],
+          pendingTxs: []
+        }]
+      }),
+      await osseus.db_models.wallet.create({
+        address: usersAccountAddress,
+        type: 'users',
+        index: 1,
+        balances: [{
+          currency: currency,
+          blockchainAmount: 0,
+          offchainAmount: defaultBalances[usersAccountAddress],
+          pendingTxs: []
+        }]
+      }),
+      await osseus.db_models.wallet.create({
+        address: merchantsAccountAddress,
+        type: 'merchants',
+        index: 2,
+        balances: [{
+          currency: currency,
+          blockchainAmount: 0,
+          offchainAmount: defaultBalances[merchantsAccountAddress],
+          pendingTxs: []
+        }]
+      })
     ]
 
     // update community wallets in db
@@ -65,8 +120,8 @@ contract('TRANSACTION', async (accounts) => {
     cln = await ColuLocalNetwork.new(CLN_MAX_TOKENS)
     await cln.makeTokensTransferable()
 
-    const currencyFactory = await CurrencyFactory.new(mmLib.address, cln.address, {from: accounts[0]})
-    const result = await currencyFactory.createCurrency('TestLocalCurrency', 'TLC', 18, CC_MAX_TOKENS, 'ipfs://hash', {from: accounts[0]})
+    const currencyFactory = await CurrencyFactory.new(mmLib.address, cln.address, {from: managerAccountAddress})
+    const result = await currencyFactory.createCurrency('TestLocalCurrency', 'TLC', 18, CC_MAX_TOKENS, 'ipfs://hash', {from: managerAccountAddress})
     ccAddress = result.logs[0].args.token
 
     mmAddress = await currencyFactory.getMarketMakerAddressFromToken(ccAddress)
@@ -88,14 +143,16 @@ contract('TRANSACTION', async (accounts) => {
     await createCommunity(currency)
 
     let amount = 10 * TOKEN_DECIMALS
-    let from = {accountAddress: accounts[0], currency: ccAddress}
-    let to = {accountAddress: accounts[1], currency: ccAddress}
+    let from = {accountAddress: managerAccountAddress, currency: ccAddress}
+    let to = {accountAddress: usersAccountAddress, currency: ccAddress}
 
     let tx = await osseus.lib.Transaction.create(from, to, amount)
 
     from.currency = currency.id
     to.currency = currency.id
     validateTransaction(tx, undefined, from, to, amount)
+    await validateBalancesAfterTransaction('from', tx)
+    await validateBalancesAfterTransaction('to', tx)
   })
 
   it('should not make a transaction if not enough balance (state should be CANCELED)', async () => {
@@ -104,14 +161,16 @@ contract('TRANSACTION', async (accounts) => {
     await createCommunity(currency)
 
     let amount = 100 * TOKEN_DECIMALS
-    let from = {accountAddress: accounts[0], currency: ccAddress}
-    let to = {accountAddress: accounts[1], currency: ccAddress}
+    let from = {accountAddress: managerAccountAddress, currency: ccAddress}
+    let to = {accountAddress: usersAccountAddress, currency: ccAddress}
 
     let tx = await osseus.lib.Transaction.create(from, to, amount)
 
     from.currency = currency.id
     to.currency = currency.id
     validateTransaction(tx, undefined, from, to, amount, 'CANCELED')
+    await validateBalancesAfterTransaction('from', tx)
+    await validateBalancesAfterTransaction('to', tx)
   })
 
   it('should get transaction (by id)', async () => {
@@ -120,8 +179,8 @@ contract('TRANSACTION', async (accounts) => {
     await createCommunity(currency)
 
     let amount = 10 * TOKEN_DECIMALS
-    let from = {accountAddress: accounts[0], currency: ccAddress}
-    let to = {accountAddress: accounts[1], currency: ccAddress}
+    let from = {accountAddress: managerAccountAddress, currency: ccAddress}
+    let to = {accountAddress: usersAccountAddress, currency: ccAddress}
 
     let tx1 = await osseus.lib.Transaction.create(from, to, amount)
     let tx2 = await osseus.db_models.tx.getById(tx1.id)
@@ -136,8 +195,8 @@ contract('TRANSACTION', async (accounts) => {
     await createCommunity(currency)
 
     let amount = 10 * TOKEN_DECIMALS
-    let from = {accountAddress: accounts[0], currency: ccAddress}
-    let to = {accountAddress: accounts[1], currency: ccAddress}
+    let from = {accountAddress: managerAccountAddress, currency: ccAddress}
+    let to = {accountAddress: usersAccountAddress, currency: ccAddress}
 
     let tx1 = await osseus.lib.Transaction.create(from, to, amount)
     from.currency = currency.id
@@ -156,17 +215,17 @@ contract('TRANSACTION', async (accounts) => {
     await createCommunity(currency)
 
     let amount = 10 * TOKEN_DECIMALS
-    let from = {accountAddress: accounts[0], currency: ccAddress}
-    let to = {accountAddress: accounts[1], currency: ccAddress}
+    let from = {accountAddress: managerAccountAddress, currency: ccAddress}
+    let to = {accountAddress: usersAccountAddress, currency: ccAddress}
 
     let tx1 = await osseus.lib.Transaction.create(from, to, amount)
 
-    let txs = await osseus.db_models.tx.get({address: accounts[0]}) // from.accountAddress
+    let txs = await osseus.db_models.tx.get({address: managerAccountAddress}) // from.accountAddress
     expect(txs).to.be.an('array')
     expect(txs).to.have.lengthOf(1)
     validateTransaction(tx1, txs[0])
 
-    txs = await osseus.db_models.tx.get({address: accounts[1]}) // to.accountAddress
+    txs = await osseus.db_models.tx.get({address: usersAccountAddress}) // to.accountAddress
     expect(txs).to.be.an('array')
     expect(txs).to.have.lengthOf(1)
     validateTransaction(tx1, txs[0])
@@ -178,12 +237,12 @@ contract('TRANSACTION', async (accounts) => {
     await createCommunity(currency)
 
     let amount = 10 * TOKEN_DECIMALS
-    let from = {accountAddress: accounts[0], currency: ccAddress}
-    let to = {accountAddress: accounts[1], currency: ccAddress}
+    let from = {accountAddress: managerAccountAddress, currency: ccAddress}
+    let to = {accountAddress: usersAccountAddress, currency: ccAddress}
 
     let tx1 = await osseus.lib.Transaction.create(from, to, amount)
 
-    let txs = await osseus.db_models.tx.get({state: 'NEW'})
+    let txs = await osseus.db_models.tx.get({state: 'DONE'})
     expect(txs).to.be.an('array')
     expect(txs).to.have.lengthOf(1)
     validateTransaction(tx1, txs[0])
@@ -195,8 +254,8 @@ contract('TRANSACTION', async (accounts) => {
     await createCommunity(currency)
 
     let amount = 10 * TOKEN_DECIMALS
-    let from = {accountAddress: accounts[0], currency: ccAddress}
-    let to = {accountAddress: accounts[1], currency: ccAddress}
+    let from = {accountAddress: managerAccountAddress, currency: ccAddress}
+    let to = {accountAddress: usersAccountAddress, currency: ccAddress}
 
     let tx1 = await osseus.lib.Transaction.create(from, to, amount)
 
@@ -212,12 +271,12 @@ contract('TRANSACTION', async (accounts) => {
     await createCommunity(currency)
 
     let amount = 10 * TOKEN_DECIMALS
-    let from = {accountAddress: accounts[0], currency: ccAddress}
-    let to = {accountAddress: accounts[1], currency: ccAddress}
+    let from = {accountAddress: managerAccountAddress, currency: ccAddress}
+    let to = {accountAddress: usersAccountAddress, currency: ccAddress}
 
     let tx1 = await osseus.lib.Transaction.create(from, to, amount)
 
-    let txs = await osseus.db_models.tx.get({address: accounts[0], currency: currency.id, state: 'NEW'})
+    let txs = await osseus.db_models.tx.get({address: managerAccountAddress, currency: currency.id, state: 'DONE'})
     expect(txs).to.be.an('array')
     expect(txs).to.have.lengthOf(1)
     validateTransaction(tx1, txs[0])

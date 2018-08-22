@@ -119,7 +119,7 @@ module.exports = (osseus) => {
           }
         }
       }
-      // console.log(`addNewBalance: ${JSON.stringify(condition)}`)
+      // console.log(`addNewBalance: ${JSON.stringify(condition)}, ${JSON.stringify(update)}`)
       bulk.find(condition).updateOne(update)
     }
 
@@ -141,7 +141,7 @@ module.exports = (osseus) => {
           'balances.$.pendingTxs': tx._id.toString()
         }
       }
-      // console.log(`addPendingTxs: ${JSON.stringify(condition)}`)
+      // console.log(`addPendingTxs: ${JSON.stringify(condition)}, ${JSON.stringify(update)}`)
       bulk.find(condition).updateOne(update)
     }
 
@@ -177,10 +177,10 @@ module.exports = (osseus) => {
         const condition = {
           'address': participant.accountAddress,
           'balances.currency': participant.currency,
-          'balances.pendingTxs': tx._id.toString(),
-          'balances.offchainAmount': {
-            '$gte': tx.amount
-          }
+          'balances.pendingTxs': tx._id.toString()
+        }
+        if (participantEnd === 'from') {
+          condition['balances.offchainAmount'] = {'$gte': tx.amount}
         }
         const amount = new BigNumber(tx.amount).multipliedBy(participantEnd === 'from' ? -1 : 1)
         const update = {
@@ -195,7 +195,7 @@ module.exports = (osseus) => {
           upsert: false,
           multi: false
         }
-        // console.log(`updateParticipant: ${JSON.stringify(condition)}`)
+        // console.log(`processPendingTransaction --> updateParticipant ${participantEnd}: ${JSON.stringify(condition)}`)
         Wallet.update(condition, update, opts).exec((err, raw) => {
           if (err) {
             return reject(err)
@@ -205,56 +205,83 @@ module.exports = (osseus) => {
       })
     }
 
-    const cancelTransaction = () => {
-      return new Promise((resolve, reject) => {
-        // TODO
-        console.log('@@@@@@@@@@@ cancelTransaction @@@@@@@@@@@@@')
-        resolve('WTF')
-      })
-    }
-
-    return new Promise((resolve, reject) => {
+    return new Promise(async (resolve, reject) => {
       // console.log(`processPendingTransaction: ${JSON.stringify(tx)}`)
       if (tx.state !== 'PENDING') {
         return reject(new Error(`Illegal state for processPendingTransaction - should be PENDING`))
       }
-      async.waterfall([
-        async.asyncify(() => {
-          return updateParticipant('from')
-        }),
-        async.asyncify(modified => {
-          return modified ? updateParticipant('to') : cancelTransaction()
-        }),
-        async.asyncify(() => {
-          return updateTransactionState(tx, 'PENDING', 'DONE')
-        })
-      ], (err, result) => {
-        if (err) {
-          return reject(err)
+      try {
+        let result
+        let modified = await updateParticipant('from')
+        if (modified) {
+          await updateParticipant('to')
+          result = await updateTransactionState(tx, 'PENDING', 'DONE')
+        } else {
+          result = await cancelTransaction(tx)
         }
         resolve(result)
+      } catch (err) {
+        reject(err)
+      }
+    })
+  }
+
+  const cancelTransaction = (tx) => {
+    const Wallet = osseus.db_models.wallet.getModel()
+
+    const updateParticipant = (participantEnd) => {
+      return new Promise(async (resolve, reject) => {
+        const participant = tx[participantEnd]
+        const condition = {
+          'address': participant.accountAddress,
+          'balances.currency': participant.currency,
+          'balances.pendingTxs': tx._id.toString()
+        }
+        const update = {
+          '$pull': {
+            'balances.$.pendingTxs': tx._id.toString()
+          }
+        }
+        const opts = {
+          upsert: false,
+          multi: false
+        }
+        // console.log(`cancelTransaction --> updateParticipant ${participantEnd}: ${JSON.stringify(condition), ${JSON.stringify(update)}}`)
+        Wallet.update(condition, update, opts).exec((err, raw) => {
+          if (err) {
+            return reject(err)
+          }
+          resolve(!!raw.nModified)
+        })
       })
+    }
+
+    return new Promise(async (resolve, reject) => {
+      // console.log(`cancelTransaction: ${JSON.stringify(tx)}`)
+      if (tx.state !== 'PENDING') {
+        return reject(new Error(`Illegal state for cancelTransaction - should be PENDING`))
+      }
+      try {
+        await updateParticipant('from')
+        await updateParticipant('to')
+        let result = await updateTransactionState(tx, 'PENDING', 'CANCELED')
+        resolve(result)
+      } catch (err) {
+        reject(err)
+      }
     })
   }
 
   transaction.create = (data) => {
-    return new Promise((resolve, reject) => {
-      async.waterfall([
-        async.asyncify(() => {
-          return createNewTransaction(data)
-        }),
-        async.asyncify(tx => {
-          return processNewTransaction(tx)
-        }),
-        async.asyncify(tx => {
-          return processPendingTransaction(tx)
-        })
-      ], (err, result) => {
-        if (err) {
-          return reject(err)
-        }
-        resolve(result)
-      })
+    return new Promise(async (resolve, reject) => {
+      try {
+        let tx = await createNewTransaction(data)
+        tx = await processNewTransaction(tx)
+        tx = await processPendingTransaction(tx)
+        resolve(tx)
+      } catch (err) {
+        reject(err)
+      }
     })
   }
 
