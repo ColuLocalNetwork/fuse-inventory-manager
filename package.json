@@ -5,7 +5,9 @@
   "main": "index.js",
   "scripts": {
     "start": "node index.js",
+    "dev": "node index.js --ENV LOCAL",
     "build": "npm install",
+    "lint": "standard",
     "test": "node ./node_modules/truffle/build/cli.bundled.js test --ENV=TEST"
   },
   "author": "LiorRabin",
@@ -28,5 +30,11 @@
     "ganache-cli": "^6.1.7",
     "standard": "^11.0.1",
     "truffle": "^4.1.14"
+  },
+  "standard": {
+    "ignore": [
+      "/migrations/*",
+      "/test/*"
+    ]
   }
 }
