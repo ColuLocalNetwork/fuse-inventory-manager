@@ -38,7 +38,7 @@ This commands installs everything which is required for building and testing the
 
 ### Unit testing: `npm test`
 `npm test` executes (as you might think) the unit tests, which are located
-in [`test`](https://github.com/colucom/inventory-manager/blob/master/test).
+in [`test`](https://github.com/ColuLocalNetwork/inventory-manager/blob/master/test).
 
 The task uses [truffle framework](https://truffleframework.com/).
 
@@ -48,11 +48,11 @@ This task will run the application and start listening on port `8080`.
 
 Under the hood, we use a complete [Osseus](https://github.com/colucom/osseus) stack.
 
-You will find the local configuration at [LOCAL.js](https://github.com/colucom/inventory-manager/blob/master/config/LOCAL.js).
+You will find the local configuration at [LOCAL.js](https://github.com/ColuLocalNetwork/inventory-manager/blob/master/config/LOCAL.js).
 
 
 ## Contributing
-Please see [contributing guidelines](https://github.com/colucom/inventory-manager/blob/master/.github/CONTRIBUTING.md).
+Please see [contributing guidelines](https://github.com/ColuLocalNetwork/inventory-manager/blob/master/.github/CONTRIBUTING.md).
 
 ## License
-Code released under the [MIT License](https://github.com/colucom/inventory-manager/blob/master/LICENSE).
+Code released under the [MIT License](https://github.com/ColuLocalNetwork/inventory-manager/blob/master/LICENSE).

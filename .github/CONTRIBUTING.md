@@ -2,7 +2,7 @@
 
 Contributing to `inventory-manager` is fairly easy.
 
-Check out the [README](https://github.com/colucom/inventory-manager/blob/master/README.md) on how to get the project, run all provided tests and generate a production-ready build.
+Check out the [README](https://github.com/ColuLocalNetwork/inventory-manager/blob/master/README.md) on how to get the project, run all provided tests and generate a production-ready build.
 
 ## Contributing/Submitting changes
 
@@ -27,7 +27,7 @@ Check out the [README](https://github.com/colucom/inventory-manager/blob/master/
   - Please provide a git message that explains what you've done.
   - Commit to the forked repository.
 - Make a pull request
-  - Make sure you use the [PR template](https://github.com/colucom/inventory-manager/blob/master/.github/PULL_REQUEST_TEMPLATE.md)
+  - Make sure you use the [PR template](https://github.com/ColuLocalNetwork/inventory-manager/blob/master/.github/PULL_REQUEST_TEMPLATE.md)
   - Make sure you send the PR to the <code>master</code> branch.
 
 If you follow these instructions, your PR will land pretty safely in the main repo!
