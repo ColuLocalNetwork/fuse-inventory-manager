@@ -68,8 +68,7 @@ module.exports = (osseus) => {
           return reject(err)
         }
         if (!newObj) {
-          let err = 'BlockchainTransaction not saved'
-          return reject(err)
+          return reject(new Error('BlockchainTransaction not saved'))
         }
         resolve(newObj)
       })
@@ -94,8 +93,7 @@ module.exports = (osseus) => {
           return reject(err)
         }
         if (!doc) {
-          err = `BlockchainTransaction not found for id ${id}`
-          return reject(err)
+          return reject(new Error(`BlockchainTransaction not found for id ${id}`))
         }
         resolve(doc)
       })
@@ -116,8 +114,7 @@ module.exports = (osseus) => {
           return reject(err)
         }
         if (!docs || docs.length === 0) {
-          err = `No transactions found`
-          return reject(err)
+          return reject(new Error(`No transactions found`))
         }
         resolve(docs)
       })

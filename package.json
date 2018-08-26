@@ -5,7 +5,7 @@
   "main": "index.js",
   "scripts": {
     "start": "node index.js",
-    "dev": "node index.js --ENV LOCAL",
+    "dev": "nodemon index.js --ENV LOCAL",
     "build": "npm install",
     "lint": "standard",
     "test": "node ./node_modules/truffle/build/cli.bundled.js test --ENV=TEST"

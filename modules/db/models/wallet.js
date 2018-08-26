@@ -76,8 +76,7 @@ module.exports = (osseus) => {
           return reject(err)
         }
         if (!newObj) {
-          let err = 'Wallet not saved'
-          return reject(err)
+          return reject(new Error('Wallet not saved'))
         }
         resolve(newObj)
       })
@@ -102,8 +101,7 @@ module.exports = (osseus) => {
           return reject(err)
         }
         if (!doc) {
-          err = `Wallet not found for id ${id}`
-          return reject(err)
+          return reject(new Error(`Wallet not found for id ${id}`))
         }
         resolve(doc)
       })
@@ -117,8 +115,7 @@ module.exports = (osseus) => {
           return reject(err)
         }
         if (!doc) {
-          err = `Wallet not found for address: ${address}`
-          return reject(err)
+          return reject(new Error(`Wallet not found for address: ${address}`))
         }
         resolve(doc)
       })

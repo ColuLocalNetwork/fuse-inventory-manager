@@ -40,8 +40,7 @@ module.exports = (osseus) => {
           return reject(err)
         }
         if (!newObj) {
-          let err = 'Community not saved'
-          return reject(err)
+          return reject(new Error('Community not saved'))
         }
         resolve(newObj)
       })
@@ -66,8 +65,7 @@ module.exports = (osseus) => {
           return reject(err)
         }
         if (!doc) {
-          err = `Community not found for id ${id}`
-          return reject(err)
+          return reject(new Error(`Community not found for id ${id}`))
         }
         resolve(doc)
       })
@@ -81,8 +79,7 @@ module.exports = (osseus) => {
           return reject(err)
         }
         if (!doc) {
-          err = `Community not found for name ${name}`
-          return reject(err)
+          return reject(new Error(`Community not found for name ${name}`))
         }
         resolve(doc)
       })
@@ -97,8 +94,7 @@ module.exports = (osseus) => {
           return reject(err)
         }
         if (!doc) {
-          err = `Community not found for wallet address: ${address}`
-          return reject(err)
+          return reject(new Error(`Community not found for wallet address: ${address}`))
         }
         resolve(doc)
       })
@@ -112,8 +108,7 @@ module.exports = (osseus) => {
           return reject(err)
         }
         if (!docs || docs.length === 0) {
-          err = `No communities found`
-          return reject(err)
+          return reject(new Error(`No communities found`))
         }
         resolve(docs)
       })
