@@ -23,7 +23,8 @@ const init = (osseus) => {
     this.osseus.lib = {
       Community: require('./models/community')(this.osseus),
       Currency: require('./models/currency')(this.osseus),
-      Transaction: require('./models/transaction')(this.osseus)
+      Transaction: require('./models/transaction')(this.osseus),
+      BlockchainTransaction: require('./models/blockchainTransaction')(this.osseus)
     }
 
     this.osseus.communities = await getAllCommunities().catch(err => { return reject(err) })
