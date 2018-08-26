@@ -22,7 +22,7 @@
     "osseus-logger": "^0.4.1",
     "osseus-mongo": "~0.2.1",
     "osseus-router": "~0.3.0",
-    "osseus-server": "~0.1.3",
+    "osseus-server": "^0.1.4",
     "truffle-contract": "^3.0.6",
     "truffle-hdwallet-provider": "github:ColuLocalNetwork/truffle-hdwallet-provider"
   },
