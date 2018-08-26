@@ -88,16 +88,21 @@ module.exports = (osseus) => {
 
   community.getByWalletAddress = (address) => {
     return new Promise(async (resolve, reject) => {
-      const wallet = await osseus.db_models.wallet.getByAddress(address).catch(err => { reject(err) })
-      Community.findOne({'wallets': wallet._id}, (err, doc) => {
-        if (err) {
-          return reject(err)
-        }
-        if (!doc) {
-          return reject(new Error(`Community not found for wallet address: ${address}`))
-        }
-        resolve(doc)
-      })
+      await osseus.db_models.wallet.getByAddress(address)
+        .then(wallet => {
+          Community.findOne({'wallets': wallet._id}, (err, doc) => {
+            if (err) {
+              return reject(err)
+            }
+            if (!doc) {
+              return reject(new Error(`Community not found for wallet address: ${address}`))
+            }
+            resolve(doc)
+          })
+        })
+        .catch(err => {
+          reject(err)
+        })
     })
   }
 

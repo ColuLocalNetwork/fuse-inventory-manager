@@ -11,17 +11,22 @@ module.exports = (osseus) => {
         ccABI: ccABI,
         mmABI: mmABI
       }
-      const newCurrency = await osseus.db_models.currency.create(data).catch(err => { reject(err) })
-      resolve(newCurrency)
+      await osseus.db_models.currency.create(data)
+        .then(newCurrency => {
+          resolve(newCurrency)
+        })
+        .catch(err => {
+          reject(err)
+        })
     })
   }
 
   currency.getContracts = (currencyId, provider) => {
     return new Promise(async (resolve, reject) => {
-      const currency = await osseus.db_models.currency.getById(currencyId).catch(err => { reject(err) })
-      const contracts = {}
-
       try {
+        const currency = await osseus.db_models.currency.getById(currencyId)
+        const contracts = {}
+
         const CC = contract({abi: currency.ccABI})
         CC.setProvider(provider)
         contracts.cc = await CC.at(currency.ccAddress)
