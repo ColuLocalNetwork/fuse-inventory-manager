@@ -44,14 +44,16 @@ module.exports = (osseus) => {
     })
   }
 
-  blockchainTransaction.transfer = (from, to, token, amount) => {
+  blockchainTransaction.transfer = (from, to, token, amount, opts) => {
     osseus.logger.debug(`blockchainTransaction.transfer --> from: ${JSON.stringify(from)}, to: ${JSON.stringify(to)}, amount: ${amount}`)
     return new Promise(async (resolve, reject) => {
       try {
         const community = await osseus.db_models.community.getByWalletAddress(from)
         const currency = await getCurrencyFromToken(token, community)
         amount = await validateAmount(amount)
-        const receipt = await currency.contract.transfer(to, amount.toString(), {from: from})
+        opts = opts || {}
+        opts.from = from
+        const receipt = await currency.contract.transfer(to, amount.toString(), opts)
         osseus.logger.debug(`blockchainTransaction.transfer --> receipt: ${JSON.stringify(receipt)}`)
         currency.web3.eth.getTransaction(receipt.tx, async (err, tx) => {
           if (err) {

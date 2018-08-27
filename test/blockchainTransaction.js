@@ -131,18 +131,18 @@ contract('BLOCKCHAIN_TRANSACTION', async (accounts) => {
     expect(communityUsersClnBalanceAfter.toNumber()).to.equal(communityUsersClnBalanceBefore.plus(new BigNumber(amount)).toNumber())
   })
 
-  // it('should send all CLN from `community manager` to `community users`', async () => {
-  //   let amount = COMMUNITY_MANAGER_CLN_BALANCE
+  it('should send all CLN from `community manager` to `community users`', async () => {
+    let amount = COMMUNITY_MANAGER_CLN_BALANCE
 
-  //   let bctx = await osseus.lib.BlockchainTransaction.transfer(communityManagerAddress, communityUsersAddress, cln.address, amount)
-  //   validateBlockchainTranscation(bctx, communityManagerAddress, cln.address)
+    let bctx = await osseus.lib.BlockchainTransaction.transfer(communityManagerAddress, communityUsersAddress, cln.address, amount, {gas: 100000})
+    validateBlockchainTranscation(bctx, communityManagerAddress, cln.address)
 
-  //   let communityManagerClnBalanceAfter = new BigNumber(await cln.balanceOf(communityManagerAddress))
-  //   let communityUsersClnBalanceAfter = new BigNumber(await cln.balanceOf(communityUsersAddress))
+    let communityManagerClnBalanceAfter = new BigNumber(await cln.balanceOf(communityManagerAddress))
+    let communityUsersClnBalanceAfter = new BigNumber(await cln.balanceOf(communityUsersAddress))
 
-  //   expect(communityManagerClnBalanceAfter.toNumber()).to.equal(0)
-  //   expect(communityUsersClnBalanceAfter.toNumber()).to.equal(COMMUNITY_MANAGER_CLN_BALANCE)
-  // })
+    expect(communityManagerClnBalanceAfter.toNumber()).to.equal(0)
+    expect(communityUsersClnBalanceAfter.toNumber()).to.equal(COMMUNITY_MANAGER_CLN_BALANCE)
+  })
 
   it('should send some CC from `community manager` to `community users`', async () => {
     let communityManagerCcBalanceBefore = new BigNumber(await cc.balanceOf(communityManagerAddress))
@@ -160,18 +160,18 @@ contract('BLOCKCHAIN_TRANSACTION', async (accounts) => {
     expect(communityUsersCcBalanceAfter.toNumber()).to.equal(communityUsersCcBalanceBefore.plus(new BigNumber(amount)).toNumber())
   })
 
-  // it('should send all CC from `community manager` to `community users`', async () => {
-  //   let amount = COMMUNITY_MANAGER_CC_BALANCE
+  it('should send all CC from `community manager` to `community users`', async () => {
+    let amount = COMMUNITY_MANAGER_CC_BALANCE
 
-  //   let bctx = await osseus.lib.BlockchainTransaction.transfer(communityManagerAddress, communityUsersAddress, cc.address, amount)
-  //   validateBlockchainTranscation(bctx, communityManagerAddress, cc.address)
+    let bctx = await osseus.lib.BlockchainTransaction.transfer(communityManagerAddress, communityUsersAddress, cc.address, amount, {gas: 100000})
+    validateBlockchainTranscation(bctx, communityManagerAddress, cc.address)
 
-  //   let communityManagerCcBalanceAfter = new BigNumber(await cc.balanceOf(communityManagerAddress))
-  //   let communityUsersCcBalanceAfter = new BigNumber(await cc.balanceOf(communityUsersAddress))
+    let communityManagerCcBalanceAfter = new BigNumber(await cc.balanceOf(communityManagerAddress))
+    let communityUsersCcBalanceAfter = new BigNumber(await cc.balanceOf(communityUsersAddress))
 
-  //   expect(communityManagerCcBalanceAfter.toNumber()).to.equal(0)
-  //   expect(communityUsersCcBalanceAfter.toNumber()).to.equal(COMMUNITY_MANAGER_CC_BALANCE)
-  // })
+    expect(communityManagerCcBalanceAfter.toNumber()).to.equal(0)
+    expect(communityUsersCcBalanceAfter.toNumber()).to.equal(COMMUNITY_MANAGER_CC_BALANCE)
+  })
 
   it('should not be able to send more CLNs than balance from `community manager` to `community users`', async () => {
     let communityManagerClnBalanceBefore = new BigNumber(await cln.balanceOf(communityManagerAddress))
@@ -207,25 +207,6 @@ contract('BLOCKCHAIN_TRANSACTION', async (accounts) => {
 
     expect(communityManagerCcBalanceAfter.toNumber()).to.equal(communityManagerCcBalanceBefore.toNumber())
     expect(communityUsersCcBalanceAfter.toNumber()).to.equal(communityUsersCcBalanceBefore.toNumber())
-  })
-
-  it('should not be able to send from/to unrecognized account', async () => {
-    let amount = 10 * TOKEN_DECIMALS
-
-    let bctx = await osseus.lib.BlockchainTransaction.transfer(accounts[0], accounts[1], cc.address, amount).catch(err => {
-      expect(err).not.to.be.undefined
-    })
-    expect(bctx).to.be.undefined
-  })
-
-  it('should not be able to send unrecognized token', async () => {
-    let fakeAddress = '0xB8ef4FF697Df6586b9C73412904A6AB7b8dD727E'
-    let amount = 10 * TOKEN_DECIMALS
-
-    let bctx = await osseus.lib.BlockchainTransaction.transfer(communityManagerAddress, communityUsersAddress, fakeAddress, amount).catch(err => {
-      expect(err).not.to.be.undefined
-    })
-    expect(bctx).to.be.undefined
   })
 
   after(async function () {
