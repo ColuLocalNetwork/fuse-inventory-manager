@@ -35,6 +35,8 @@ module.exports = (osseus) => {
         MM.setProvider(provider)
         contracts.mm = await MM.at(currency.mmAddress)
 
+        contracts.web3 = CC.web3
+
         resolve(contracts)
       } catch (err) {
         reject(err)

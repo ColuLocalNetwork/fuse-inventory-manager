@@ -1,17 +1,30 @@
 const BigNumber = require('bignumber.js')
+const contract = require('truffle-contract')
 
 module.exports = (osseus) => {
   function blockchainTransaction () {}
 
-  const validateParticipant = (participant) => {
+  const getCurrencyFromToken = (token, community) => {
     return new Promise(async (resolve, reject) => {
       try {
-        await osseus.db_models.community.getByWalletAddress(participant.accountAddress)
-        let currency = await osseus.db_models.currency.getByCurrencyAddress(participant.currency)
-        resolve({
-          accountAddress: participant.accountAddress,
-          currency: currency
-        })
+        const result = {}
+        if (token === osseus.config.cln_address) {
+          osseus.logger.silly(`getCurrencyFromToken --> CLN: ${token}`)
+          const provider = await osseus.lib.Community.getProvider(community)
+          const CLN = contract({abi: osseus.config.cln_abi})
+          CLN.setProvider(provider)
+          result.contract = await CLN.at(token)
+          result.web3 = CLN.web3
+        } else {
+          osseus.logger.silly(`getCurrencyFromToken --> CC: ${token}`)
+          const communityWithContracts = await osseus.lib.Community.get(community.id, community)
+          if (communityWithContracts.currencyContracts.cc.address !== token) {
+            return reject(new Error(`Unrecognized token: ${token} for community: ${community.id}`))
+          }
+          result.contract = communityWithContracts.currencyContracts.cc
+          result.web3 = communityWithContracts.currencyContracts.web3
+        }
+        resolve(result)
       } catch (err) {
         reject(err)
       }
@@ -31,18 +44,23 @@ module.exports = (osseus) => {
     })
   }
 
-  // https://github.com/colucom/ethereum-demo/blob/master/transferToken.js
-  // https://github.com/ColuLocalNetwork/CLN-solidity/blob/master/test/BasicToken.js
-  // https://github.com/ColuLocalNetwork/CLN-solidity/blob/master/test/ColuLocalNetwork.js
-  blockchainTransaction.transfer = (from, to, amount) => {
+  blockchainTransaction.transfer = (from, to, token, amount) => {
+    osseus.logger.debug(`blockchainTransaction.transfer --> from: ${JSON.stringify(from)}, to: ${JSON.stringify(to)}, amount: ${amount}`)
     return new Promise(async (resolve, reject) => {
-      osseus.logger.debug(`blockchainTransaction.transfer --> from: ${JSON.stringify(from)}, to: ${JSON.stringify(to)}, amount: ${amount}`)
       try {
-        from = await validateParticipant(from)
-        to = await validateParticipant(to)
+        const community = await osseus.db_models.community.getByWalletAddress(from)
+        const currency = await getCurrencyFromToken(token, community)
         amount = await validateAmount(amount)
-        // !!! TODO !!!
-        resolve({from: from, to: to, amount: amount})
+        const receipt = await currency.contract.transfer(to, amount.toString(), {from: from})
+        osseus.logger.debug(`blockchainTransaction.transfer --> receipt: ${JSON.stringify(receipt)}`)
+        currency.web3.eth.getTransaction(receipt.tx, async (err, tx) => {
+          if (err) {
+            return reject(err)
+          }
+          const result = await osseus.db_models.bctx.create(tx) // TODO what should be the state of the created transaction
+          osseus.logger.debug(`blockchainTransaction.transfer --> result: ${JSON.stringify(result)}`)
+          resolve(result)
+        })
       } catch (err) {
         reject(err)
       }
