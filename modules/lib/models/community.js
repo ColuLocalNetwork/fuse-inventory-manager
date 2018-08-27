@@ -13,6 +13,10 @@ module.exports = (osseus) => {
     return provider
   }
 
+  community.getProvider = (community) => {
+    return getProvider(community)
+  }
+
   community.create = (name, defaultCurrency) => {
     return new Promise(async (resolve, reject) => {
       try {
