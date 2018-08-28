@@ -74,8 +74,7 @@ module.exports = (osseus) => {
           return reject(err)
         }
         if (!newTx) {
-          let err = 'Transaction not saved'
-          return reject(err)
+          return reject(new Error('Transaction not saved'))
         }
         resolve(newTx)
       })
@@ -292,8 +291,7 @@ module.exports = (osseus) => {
           return reject(err)
         }
         if (!doc) {
-          err = `Transaction not found for id ${id}`
-          return reject(err)
+          return reject(new Error(`Transaction not found for id ${id}`))
         }
         resolve(doc)
       })
@@ -323,8 +321,7 @@ module.exports = (osseus) => {
           return reject(err)
         }
         if (!docs || docs.length === 0) {
-          err = `No transactions found`
-          return reject(err)
+          return reject(new Error(`No transactions found`))
         }
         resolve(docs)
       })

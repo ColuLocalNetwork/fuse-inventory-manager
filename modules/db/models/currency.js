@@ -43,8 +43,7 @@ module.exports = (osseus) => {
           return reject(err)
         }
         if (!newObj) {
-          let err = 'Currency not saved'
-          return reject(err)
+          return reject(new Error('Currency not saved'))
         }
         resolve(newObj)
       })
@@ -58,8 +57,7 @@ module.exports = (osseus) => {
           return reject(err)
         }
         if (!doc) {
-          err = `Currency not found for id ${id}`
-          return reject(err)
+          return reject(new Error(`Currency not found for id ${id}`))
         }
         resolve(doc)
       })
@@ -73,8 +71,7 @@ module.exports = (osseus) => {
           return reject(err)
         }
         if (!doc) {
-          err = `Currency not found for ccAddress: ${address}`
-          return reject(err)
+          return reject(new Error(`Currency not found for ccAddress: ${address}`))
         }
         resolve(doc)
       })
@@ -88,8 +85,7 @@ module.exports = (osseus) => {
           return reject(err)
         }
         if (!doc) {
-          err = `Currency not found for mmAddress: ${address}`
-          return reject(err)
+          return reject(new Error(`Currency not found for mmAddress: ${address}`))
         }
         resolve(doc)
       })
@@ -103,8 +99,7 @@ module.exports = (osseus) => {
           return reject(err)
         }
         if (!docs || docs.length === 0) {
-          err = `No currencies found`
-          return reject(err)
+          return reject(new Error(`No currencies found`))
         }
         resolve(docs)
       })
