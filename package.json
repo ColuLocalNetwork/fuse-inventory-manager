@@ -7,8 +7,8 @@
     "start": "node index.js",
     "dev": "nodemon index.js --ENV LOCAL",
     "build": "npm install",
-    "lint": "standard",
-    "test": "node ./node_modules/truffle/build/cli.bundled.js test --ENV=TEST"
+    "lint": "./node_modules/.bin/standard",
+    "test": "./node_modules/.bin/truffle test --ENV=TEST"
   },
   "author": "LiorRabin",
   "license": "MIT",
