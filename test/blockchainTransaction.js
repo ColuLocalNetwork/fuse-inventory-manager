@@ -51,7 +51,11 @@ const validateBlockchainTranscation = (tx, from, to) => {
 contract('BLOCKCHAIN_TRANSACTION', async (accounts) => {
   let osseus
 
+  let mmLib
+
   let cln
+
+  let currencyFactory
 
   let cc
   let mm
@@ -71,12 +75,12 @@ contract('BLOCKCHAIN_TRANSACTION', async (accounts) => {
   before(async function () {
     this.timeout(60000)
 
-    const mmLib = await EllipseMarketMakerLib.new()
+    mmLib = await EllipseMarketMakerLib.new()
 
     cln = await ColuLocalNetwork.new(CLN_MAX_TOKENS)
     await cln.makeTokensTransferable()
 
-    const currencyFactory = await CurrencyFactory.new(mmLib.address, cln.address, {from: accounts[0]})
+    currencyFactory = await CurrencyFactory.new(mmLib.address, cln.address, {from: accounts[0]})
     const result = await currencyFactory.createCurrency('TestLocalCurrency', 'TLC', 18, CC_MAX_TOKENS, 'ipfs://hash', {from: accounts[0]})
     ccAddress = result.logs[0].args.token
     cc = await ColuLocalCurrency.at(ccAddress)
@@ -122,7 +126,7 @@ contract('BLOCKCHAIN_TRANSACTION', async (accounts) => {
       let amount = COMMUNITY_MANAGER_CLN_BALANCE / 2
 
       let bctx = await osseus.lib.BlockchainTransaction.transfer(communityManagerAddress, communityUsersAddress, cln.address, amount)
-      validateBlockchainTranscation(bctx, communityManagerAddress, cln.address)
+      validateBlockchainTranscation(bctx.result, communityManagerAddress, cln.address)
 
       let communityManagerClnBalanceAfter = new BigNumber(await cln.balanceOf(communityManagerAddress))
       let communityUsersClnBalanceAfter = new BigNumber(await cln.balanceOf(communityUsersAddress))
@@ -134,8 +138,8 @@ contract('BLOCKCHAIN_TRANSACTION', async (accounts) => {
     it('should send all CLN from `community manager` to `community users`', async () => {
       let amount = COMMUNITY_MANAGER_CLN_BALANCE
 
-      let bctx = await osseus.lib.BlockchainTransaction.transfer(communityManagerAddress, communityUsersAddress, cln.address, amount, {gas: 100000})
-      validateBlockchainTranscation(bctx, communityManagerAddress, cln.address)
+      let bctx = await osseus.lib.BlockchainTransaction.transfer(communityManagerAddress, communityUsersAddress, cln.address, amount, {gas: 1000000})
+      validateBlockchainTranscation(bctx.result, communityManagerAddress, cln.address)
 
       let communityManagerClnBalanceAfter = new BigNumber(await cln.balanceOf(communityManagerAddress))
       let communityUsersClnBalanceAfter = new BigNumber(await cln.balanceOf(communityUsersAddress))
@@ -151,7 +155,7 @@ contract('BLOCKCHAIN_TRANSACTION', async (accounts) => {
       let amount = COMMUNITY_MANAGER_CC_BALANCE / 2
 
       let bctx = await osseus.lib.BlockchainTransaction.transfer(communityManagerAddress, communityUsersAddress, cc.address, amount)
-      validateBlockchainTranscation(bctx, communityManagerAddress, cc.address)
+      validateBlockchainTranscation(bctx.result, communityManagerAddress, cc.address)
 
       let communityManagerCcBalanceAfter = new BigNumber(await cc.balanceOf(communityManagerAddress))
       let communityUsersCcBalanceAfter = new BigNumber(await cc.balanceOf(communityUsersAddress))
@@ -163,8 +167,8 @@ contract('BLOCKCHAIN_TRANSACTION', async (accounts) => {
     it('should send all CC from `community manager` to `community users`', async () => {
       let amount = COMMUNITY_MANAGER_CC_BALANCE
 
-      let bctx = await osseus.lib.BlockchainTransaction.transfer(communityManagerAddress, communityUsersAddress, cc.address, amount, {gas: 100000})
-      validateBlockchainTranscation(bctx, communityManagerAddress, cc.address)
+      let bctx = await osseus.lib.BlockchainTransaction.transfer(communityManagerAddress, communityUsersAddress, cc.address, amount, {gas: 1000000})
+      validateBlockchainTranscation(bctx.result, communityManagerAddress, cc.address)
 
       let communityManagerCcBalanceAfter = new BigNumber(await cc.balanceOf(communityManagerAddress))
       let communityUsersCcBalanceAfter = new BigNumber(await cc.balanceOf(communityUsersAddress))
@@ -211,27 +215,42 @@ contract('BLOCKCHAIN_TRANSACTION', async (accounts) => {
   })
 
   describe('CHANGE', async () => {
-    it('#1', async () => {
+    it('should be able to change CLN to CC', async () => {
+      let communityManagerClnBalanceBefore = new BigNumber(await cln.balanceOf(communityManagerAddress))
+      let communityManagerCcBalanceBefore = new BigNumber(await cc.balanceOf(communityManagerAddress))
+
+      let amount = 10 * TOKEN_DECIMALS
+
+      let bctx = await osseus.lib.BlockchainTransaction.change(communityManagerAddress, cln.address, cc.address, mm.address, amount, {gas: 1000000})
+      validateBlockchainTranscation(bctx.result, communityManagerAddress, cln.address)
+
+      let returnAmountLog = bctx.receipt.logs.filter(log => log.args.to === communityManagerAddress)[0]
+      let returnAmount = returnAmountLog.args.value
+
+      let communityManagerClnBalanceAfter = new BigNumber(await cln.balanceOf(communityManagerAddress))
+      let communityManagerCcBalanceAfter = new BigNumber(await cc.balanceOf(communityManagerAddress))
+
+      expect(communityManagerClnBalanceAfter.toNumber()).to.equal(communityManagerClnBalanceBefore.minus(new BigNumber(amount)).toNumber())
+      expect(communityManagerCcBalanceAfter.toNumber()).to.equal(communityManagerCcBalanceBefore.plus(new BigNumber(returnAmount)).toNumber())
+    })
+
+    it('should be able to change CC to CLN', async () => {
       // TODO
     })
 
-    it('#2', async () => {
+    it('should be able to change same CLN amount couple of times in a row and get a different CC amount each time', async () => {
       // TODO
     })
 
-    it('#3', async () => {
+    it('should be able to change same CC amount couple of times in a row and get a different CLN amount each time', async () => {
       // TODO
     })
 
-    it('#4', async () => {
+    it('should not be able to change more CLNs than balance to CC', async () => {
       // TODO
     })
 
-    it('#5', async () => {
-      // TODO
-    })
-
-    it('#6', async () => {
+    it('should not be able to change more CCs than balance to CLN', async () => {
       // TODO
     })
   })

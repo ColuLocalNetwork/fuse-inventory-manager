@@ -91,7 +91,7 @@ module.exports = (osseus) => {
         const currency = await getCurrencyFromToken(token, community)
         amount = await validateAmount(amount)
         opts = opts || {}
-        opts.from = from
+        opts.from = opts.from || from
         const receipt = await currency.contract.transfer(to, amount.toString(), opts)
         osseus.logger.debug(`blockchainTransaction.transfer --> receipt: ${JSON.stringify(receipt)}`)
         currency.web3.eth.getTransaction(receipt.tx, async (err, tx) => {
@@ -100,7 +100,10 @@ module.exports = (osseus) => {
           }
           const result = await osseus.db_models.bctx.create(tx) // TODO what should be the state of the created transaction
           osseus.logger.debug(`blockchainTransaction.transfer --> result: ${JSON.stringify(result)}`)
-          resolve(result)
+          resolve({
+            receipt: receipt,
+            result: result
+          })
         })
       } catch (err) {
         reject(err)
@@ -111,22 +114,29 @@ module.exports = (osseus) => {
   blockchainTransaction.change = (from, fromToken, toToken, marketMaker, amount, opts) => {
     osseus.logger.debug(`blockchainTransaction.change --> from: ${from}, fromToken: ${fromToken}, toToken: ${toToken}, marketMaker: ${marketMaker}, amount: ${amount}, opts: ${JSON.stringify(opts)}`)
     return new Promise(async (resolve, reject) => {
-      const community = await osseus.db_models.community.getByWalletAddress(from)
-      const currency = await getCurrencyFromToken(fromToken, community)
-      amount = await validateAmount(amount)
-      opts = opts || {}
-      opts.from = from
-      const changeData = encodeChangeData(toToken, opts.minReturn)
-      const receipt = await currency.contract.transferAndCall(marketMaker, amount.toString(), changeData, opts)
-      osseus.logger.debug(`blockchainTransaction.change --> receipt: ${JSON.stringify(receipt)}`)
-      currency.web3.eth.getTransaction(receipt.tx, async (err, tx) => {
-        if (err) {
-          return reject(err)
-        }
-        const result = await osseus.db_models.bctx.create(tx) // TODO what should be the state of the created transaction
-        osseus.logger.debug(`blockchainTransaction.change --> result: ${JSON.stringify(result)}`)
-        resolve(result)
-      })
+      try {
+        const community = await osseus.db_models.community.getByWalletAddress(from)
+        const currency = await getCurrencyFromToken(fromToken, community)
+        amount = await validateAmount(amount)
+        opts = opts || {}
+        opts.from = opts.from || from
+        const changeData = encodeChangeData(toToken, opts.minReturn)
+        const receipt = await currency.contract.transferAndCall(marketMaker, amount.toString(), changeData, opts)
+        osseus.logger.debug(`blockchainTransaction.change --> receipt: ${JSON.stringify(receipt)}`)
+        currency.web3.eth.getTransaction(receipt.tx, async (err, tx) => {
+          if (err) {
+            return reject(err)
+          }
+          const result = await osseus.db_models.bctx.create(tx) // TODO what should be the state of the created transaction
+          osseus.logger.debug(`blockchainTransaction.change --> result: ${JSON.stringify(result)}`)
+          resolve({
+            receipt: receipt,
+            result: result
+          })
+        })
+      } catch (err) {
+        reject(err)
+      }
     })
   }
 
