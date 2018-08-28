@@ -98,7 +98,9 @@ module.exports = (osseus) => {
           if (err) {
             return reject(err)
           }
-          const result = await osseus.db_models.bctx.create(tx) // TODO what should be the state of the created transaction
+          tx.type = 'TRANSFER'
+          tx.meta = {from: from, to: to, token: token, amount: amount.toString()}
+          const result = await osseus.db_models.bctx.create(tx)
           osseus.logger.debug(`blockchainTransaction.transfer --> result: ${JSON.stringify(result)}`)
           resolve({
             receipt: receipt,
@@ -127,7 +129,9 @@ module.exports = (osseus) => {
           if (err) {
             return reject(err)
           }
-          const result = await osseus.db_models.bctx.create(tx) // TODO what should be the state of the created transaction
+          tx.type = 'CHANGE'
+          tx.meta = {from: from, fromToken: fromToken, toToken: toToken, amount: amount.toString()}
+          const result = await osseus.db_models.bctx.create(tx)
           osseus.logger.debug(`blockchainTransaction.change --> result: ${JSON.stringify(result)}`)
           resolve({
             receipt: receipt,
