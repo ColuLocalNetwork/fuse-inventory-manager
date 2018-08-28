@@ -61,7 +61,7 @@ const validateBlockchainTranscation = (tx, from, to, type, meta) => {
   expect(tx.state).to.equal('TRANSMITTED')
 }
 
-contract('BLOCKCHAIN_TRANSACTION', async (accounts) => {
+contract.only('BLOCKCHAIN_TRANSACTION', async (accounts) => {
   let osseus
 
   let mmLib
@@ -140,7 +140,7 @@ contract('BLOCKCHAIN_TRANSACTION', async (accounts) => {
         from: communityManagerAddress,
         to: communityUsersAddress,
         token: cln.address,
-        amount: COMMUNITY_MANAGER_CLN_BALANCE / 2
+        amount: communityManagerClnBalanceBefore.div(2)
       }
       let bctx = await osseus.lib.BlockchainTransaction.transfer(data.from, data.to, data.token, data.amount)
       validateBlockchainTranscation(bctx.result, communityManagerAddress, cln.address, 'TRANSFER', data)
@@ -166,7 +166,7 @@ contract('BLOCKCHAIN_TRANSACTION', async (accounts) => {
       let communityUsersClnBalanceAfter = new BigNumber(await cln.balanceOf(communityUsersAddress))
 
       expect(communityManagerClnBalanceAfter.toNumber()).to.equal(0)
-      expect(communityUsersClnBalanceAfter.toNumber()).to.equal(COMMUNITY_MANAGER_CLN_BALANCE)
+      expect(communityUsersClnBalanceAfter.toNumber()).to.equal(data.amount)
     })
 
     it('should send some CC from `community manager` to `community users`', async () => {
@@ -177,7 +177,7 @@ contract('BLOCKCHAIN_TRANSACTION', async (accounts) => {
         from: communityManagerAddress,
         to: communityUsersAddress,
         token: cc.address,
-        amount: COMMUNITY_MANAGER_CC_BALANCE / 2
+        amount: communityManagerCcBalanceBefore.div(2)
       }
       let bctx = await osseus.lib.BlockchainTransaction.transfer(data.from, data.to, data.token, data.amount)
       validateBlockchainTranscation(bctx.result, communityManagerAddress, cc.address, 'TRANSFER', data)
@@ -214,7 +214,7 @@ contract('BLOCKCHAIN_TRANSACTION', async (accounts) => {
         from: communityManagerAddress,
         to: communityUsersAddress,
         token: cln.address,
-        amount: COMMUNITY_MANAGER_CLN_BALANCE + 1
+        amount: communityManagerClnBalanceBefore.plus(1)
       }
       let bctx = await osseus.lib.BlockchainTransaction.transfer(data.from, data.to, data.token, data.amount).catch(err => {
         expect(err).not.to.be.undefined
@@ -236,7 +236,7 @@ contract('BLOCKCHAIN_TRANSACTION', async (accounts) => {
         from: communityManagerAddress,
         to: communityUsersAddress,
         token: cc.address,
-        amount: COMMUNITY_MANAGER_CC_BALANCE + 1
+        amount: communityManagerCcBalanceBefore.plus(1)
       }
       let bctx = await osseus.lib.BlockchainTransaction.transfer(data.from, data.to, data.token, data.amount).catch(err => {
         expect(err).not.to.be.undefined
@@ -277,7 +277,27 @@ contract('BLOCKCHAIN_TRANSACTION', async (accounts) => {
     })
 
     it('should be able to change CC to CLN', async () => {
-      // TODO
+      let communityManagerClnBalanceBefore = new BigNumber(await cln.balanceOf(communityManagerAddress))
+      let communityManagerCcBalanceBefore = new BigNumber(await cc.balanceOf(communityManagerAddress))
+
+      const data = {
+        from: communityManagerAddress,
+        fromToken: cc.address,
+        toToken: cln.address,
+        marketMaker: mm.address,
+        amount: 10 * TOKEN_DECIMALS
+      }
+      let bctx = await osseus.lib.BlockchainTransaction.change(data.from, data.fromToken, data.toToken, data.marketMaker, data.amount, {gas: 1000000})
+      validateBlockchainTranscation(bctx.result, communityManagerAddress, cc.address, 'CHANGE', data)
+
+      let returnAmountLog = bctx.receipt.logs.filter(log => log.args.to === communityManagerAddress)[0]
+      let returnAmount = returnAmountLog.args.value
+
+      let communityManagerClnBalanceAfter = new BigNumber(await cln.balanceOf(communityManagerAddress))
+      let communityManagerCcBalanceAfter = new BigNumber(await cc.balanceOf(communityManagerAddress))
+
+      expect(communityManagerClnBalanceAfter.toNumber()).to.equal(communityManagerClnBalanceBefore.plus(new BigNumber(returnAmount)).toNumber())
+      expect(communityManagerCcBalanceAfter.toNumber()).to.equal(communityManagerCcBalanceBefore.minus(new BigNumber(data.amount)).toNumber())
     })
 
     it('should be able to change same CLN amount couple of times in a row and get a different CC amount each time', async () => {
@@ -293,11 +313,49 @@ contract('BLOCKCHAIN_TRANSACTION', async (accounts) => {
     })
 
     it('should not be able to change more CLNs than balance to CC', async () => {
-      // TODO
+      let communityManagerClnBalanceBefore = new BigNumber(await cln.balanceOf(communityManagerAddress))
+      let communityManagerCcBalanceBefore = new BigNumber(await cc.balanceOf(communityManagerAddress))
+
+      const data = {
+        from: communityManagerAddress,
+        fromToken: cln.address,
+        toToken: cc.address,
+        marketMaker: mm.address,
+        amount: communityManagerClnBalanceBefore.plus(1)
+      }
+      let bctx = await osseus.lib.BlockchainTransaction.change(data.from, data.fromToken, data.toToken, data.marketMaker, data.amount, {gas: 1000000}).catch(err => {
+        expect(err).not.to.be.undefined
+      })
+      expect(bctx).to.be.undefined
+
+      let communityManagerClnBalanceAfter = new BigNumber(await cln.balanceOf(communityManagerAddress))
+      let communityManagerCcBalanceAfter = new BigNumber(await cc.balanceOf(communityManagerAddress))
+
+      expect(communityManagerClnBalanceAfter.toNumber()).to.equal(communityManagerClnBalanceBefore.toNumber())
+      expect(communityManagerCcBalanceAfter.toNumber()).to.equal(communityManagerCcBalanceBefore.toNumber())
     })
 
     it('should not be able to change more CCs than balance to CLN', async () => {
-      // TODO
+      let communityManagerClnBalanceBefore = new BigNumber(await cln.balanceOf(communityManagerAddress))
+      let communityManagerCcBalanceBefore = new BigNumber(await cc.balanceOf(communityManagerAddress))
+
+      const data = {
+        from: communityManagerAddress,
+        fromToken: cc.address,
+        toToken: cln.address,
+        marketMaker: mm.address,
+        amount: communityManagerCcBalanceBefore.plus(1)
+      }
+      let bctx = await osseus.lib.BlockchainTransaction.change(data.from, data.fromToken, data.toToken, data.marketMaker, data.amount, {gas: 1000000}).catch(err => {
+        expect(err).not.to.be.undefined
+      })
+      expect(bctx).to.be.undefined
+
+      let communityManagerClnBalanceAfter = new BigNumber(await cln.balanceOf(communityManagerAddress))
+      let communityManagerCcBalanceAfter = new BigNumber(await cc.balanceOf(communityManagerAddress))
+
+      expect(communityManagerClnBalanceAfter.toNumber()).to.equal(communityManagerClnBalanceBefore.toNumber())
+      expect(communityManagerCcBalanceAfter.toNumber()).to.equal(communityManagerCcBalanceBefore.toNumber())
     })
   })
 
