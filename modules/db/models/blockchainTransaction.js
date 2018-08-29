@@ -27,7 +27,9 @@ module.exports = (osseus) => {
     transactionIndex: {type: Number},
     value: {type: db.mongoose.Schema.Types.Decimal128, set: setDecimal128, get: getDecimal128},
     transmittedAt: {type: Date},
-    state: {type: String, enum: ['NEW', 'TRANSMITTED', 'CONFIRMED', 'FINALIZED'], default: 'NEW'}
+    type: {type: String, enum: ['TRANSFER', 'CHANGE']},
+    meta: {type: db.mongoose.Schema.Types.Mixed},
+    state: {type: String, enum: ['TRANSMITTED', 'CONFIRMED', 'FINALIZED'], default: 'TRANSMITTED'}
   }).plugin(timestamps())
 
   BlockchainTransactionSchema.set('toJSON', {
@@ -50,6 +52,8 @@ module.exports = (osseus) => {
         transactionIndex: ret.transactionIndex,
         value: ret.value,
         transmittedAt: ret.transmittedAt,
+        type: ret.type,
+        meta: ret.meta,
         state: ret.state
       }
       return safeRet

@@ -1,5 +1,6 @@
 const BigNumber = require('bignumber.js')
 const contract = require('truffle-contract')
+const coder = require('web3-eth-abi')
 
 module.exports = (osseus) => {
   function blockchainTransaction () {}
@@ -44,24 +45,98 @@ module.exports = (osseus) => {
     })
   }
 
+  const encodeChangeData = (toToken, minReturn) => {
+    const CHANGE_ON_TRANSFER_ABI = {
+      name: 'change',
+      type: 'function',
+      inputs: [
+        {
+          type: 'address',
+          name: 'toToken'
+        }
+      ]
+    }
+
+    const CHANGE_ON_TRANSFER_WITH_MIN_ABI = {
+      name: 'change',
+      type: 'function',
+      inputs: [
+        {
+          type: 'address',
+          name: 'toToken'
+        },
+        {
+          type: 'uint256',
+          name: 'minReturn'
+        }
+      ]
+    }
+
+    let abi, params
+    if (minReturn) {
+      abi = CHANGE_ON_TRANSFER_WITH_MIN_ABI
+      params = [toToken, minReturn]
+    } else {
+      abi = CHANGE_ON_TRANSFER_ABI
+      params = [toToken]
+    }
+    return coder.encodeFunctionCall(abi, params)
+  }
+
   blockchainTransaction.transfer = (from, to, token, amount, opts) => {
-    osseus.logger.debug(`blockchainTransaction.transfer --> from: ${JSON.stringify(from)}, to: ${JSON.stringify(to)}, amount: ${amount}`)
+    osseus.logger.debug(`blockchainTransaction.transfer --> from: ${from}, to: ${to}, token: ${token}, amount: ${amount}, opts: ${JSON.stringify(opts)}`)
     return new Promise(async (resolve, reject) => {
       try {
         const community = await osseus.db_models.community.getByWalletAddress(from)
         const currency = await getCurrencyFromToken(token, community)
         amount = await validateAmount(amount)
         opts = opts || {}
-        opts.from = from
+        opts.from = opts.from || from
         const receipt = await currency.contract.transfer(to, amount.toString(), opts)
         osseus.logger.debug(`blockchainTransaction.transfer --> receipt: ${JSON.stringify(receipt)}`)
         currency.web3.eth.getTransaction(receipt.tx, async (err, tx) => {
           if (err) {
             return reject(err)
           }
-          const result = await osseus.db_models.bctx.create(tx) // TODO what should be the state of the created transaction
+          tx.type = 'TRANSFER'
+          tx.meta = {from: from, to: to, token: token, amount: amount.toString()}
+          const result = await osseus.db_models.bctx.create(tx)
           osseus.logger.debug(`blockchainTransaction.transfer --> result: ${JSON.stringify(result)}`)
-          resolve(result)
+          resolve({
+            receipt: receipt,
+            result: result
+          })
+        })
+      } catch (err) {
+        reject(err)
+      }
+    })
+  }
+
+  blockchainTransaction.change = (from, fromToken, toToken, marketMaker, amount, opts) => {
+    osseus.logger.debug(`blockchainTransaction.change --> from: ${from}, fromToken: ${fromToken}, toToken: ${toToken}, marketMaker: ${marketMaker}, amount: ${amount}, opts: ${JSON.stringify(opts)}`)
+    return new Promise(async (resolve, reject) => {
+      try {
+        const community = await osseus.db_models.community.getByWalletAddress(from)
+        const currency = await getCurrencyFromToken(fromToken, community)
+        amount = await validateAmount(amount)
+        opts = opts || {}
+        opts.from = opts.from || from
+        const changeData = encodeChangeData(toToken, opts.minReturn)
+        const receipt = await currency.contract.transferAndCall(marketMaker, amount.toString(), changeData, opts)
+        osseus.logger.debug(`blockchainTransaction.change --> receipt: ${JSON.stringify(receipt)}`)
+        currency.web3.eth.getTransaction(receipt.tx, async (err, tx) => {
+          if (err) {
+            return reject(err)
+          }
+          tx.type = 'CHANGE'
+          tx.meta = {from: from, fromToken: fromToken, toToken: toToken, amount: amount.toString()}
+          const result = await osseus.db_models.bctx.create(tx)
+          osseus.logger.debug(`blockchainTransaction.change --> result: ${JSON.stringify(result)}`)
+          resolve({
+            receipt: receipt,
+            result: result
+          })
         })
       } catch (err) {
         reject(err)

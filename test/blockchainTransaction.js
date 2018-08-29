@@ -10,13 +10,12 @@ const EllipseMarketMaker = artifacts.require('cln-solidity/contracts/EllipseMark
 const EllipseMarketMakerLib = artifacts.require('cln-solidity/contracts/EllipseMarketMakerLib.sol')
 
 const TOKEN_DECIMALS = 10 ** 18
-const THOUSAND_CLN = 1000 * TOKEN_DECIMALS
 const CLN_MAX_TOKENS = 15 * 10 ** 8 * TOKEN_DECIMALS
 const CC_MAX_TOKENS = 15 * 10 ** 6 * TOKEN_DECIMALS
 
 const COMMUNITY_MANAGER_ETH_BALANCE = 5 * TOKEN_DECIMALS
-const COMMUNITY_MANAGER_CLN_BALANCE = THOUSAND_CLN
-const COMMUNITY_MANAGER_CC_BALANCE = 2500 * TOKEN_DECIMALS
+const COMMUNITY_MANAGER_CLN_BALANCE = 100 * TOKEN_DECIMALS
+const COMMUNITY_MANAGER_CC_BALANCE = 250 * TOKEN_DECIMALS
 
 const encodeInsertData = (toToken) => {
   const abi = {
@@ -37,7 +36,7 @@ const encodeInsertData = (toToken) => {
   return coder.encodeFunctionCall(abi, params)
 }
 
-const validateBlockchainTranscation = (tx, from, to) => {
+const validateBlockchainTranscation = (tx, from, to, type, meta) => {
   expect(tx).to.be.a('Object')
   expect(tx.id).to.be.a('String')
   expect(tx.hash).to.be.a('String')
@@ -46,13 +45,30 @@ const validateBlockchainTranscation = (tx, from, to) => {
   expect(tx.blockNumber).to.be.a('Number')
   expect(tx.from).to.equal(from)
   expect(tx.to).to.equal(to)
-  expect(tx.state).to.equal('NEW')
+  expect(tx.type).to.equal(type)
+  expect(tx.meta).to.be.a('Object')
+  if (type === 'TRANSFER') {
+    expect(tx.meta.from).to.equal(meta.from)
+    expect(tx.meta.to).to.equal(meta.to)
+    expect(tx.meta.token).to.equal(meta.token)
+    expect(tx.meta.amount.toString()).to.equal(meta.amount.toString())
+  } else if (type === 'CHANGE') {
+    expect(tx.meta.from).to.equal(meta.from)
+    expect(tx.meta.fromToken).to.equal(meta.fromToken)
+    expect(tx.meta.toToken).to.equal(meta.toToken)
+    expect(tx.meta.amount.toString()).to.equal(meta.amount.toString())
+  }
+  expect(tx.state).to.equal('TRANSMITTED')
 }
 
 contract('BLOCKCHAIN_TRANSACTION', async (accounts) => {
   let osseus
 
+  let mmLib
+
   let cln
+
+  let currencyFactory
 
   let cc
   let mm
@@ -72,18 +88,18 @@ contract('BLOCKCHAIN_TRANSACTION', async (accounts) => {
   before(async function () {
     this.timeout(60000)
 
-    const mmLib = await EllipseMarketMakerLib.new()
+    mmLib = await EllipseMarketMakerLib.new()
 
     cln = await ColuLocalNetwork.new(CLN_MAX_TOKENS)
     await cln.makeTokensTransferable()
 
-    const currencyFactory = await CurrencyFactory.new(mmLib.address, cln.address, {from: accounts[0]})
+    currencyFactory = await CurrencyFactory.new(mmLib.address, cln.address, {from: accounts[0]})
     const result = await currencyFactory.createCurrency('TestLocalCurrency', 'TLC', 18, CC_MAX_TOKENS, 'ipfs://hash', {from: accounts[0]})
     ccAddress = result.logs[0].args.token
     cc = await ColuLocalCurrency.at(ccAddress)
 
     let insertCLNtoMarketMakerData = encodeInsertData(ccAddress)
-    await cln.transferAndCall(currencyFactory.address, THOUSAND_CLN, insertCLNtoMarketMakerData)
+    await cln.transferAndCall(currencyFactory.address, 100000 * TOKEN_DECIMALS, insertCLNtoMarketMakerData)
 
     await currencyFactory.openMarket(ccAddress)
 
@@ -115,98 +131,442 @@ contract('BLOCKCHAIN_TRANSACTION', async (accounts) => {
     await cc.transfer(communityManagerAddress, COMMUNITY_MANAGER_CC_BALANCE, {from: accounts[0]})
   })
 
-  it('should send some CLN from `community manager` to `community users`', async () => {
-    let communityManagerClnBalanceBefore = new BigNumber(await cln.balanceOf(communityManagerAddress))
-    let communityUsersClnBalanceBefore = new BigNumber(await cln.balanceOf(communityUsersAddress))
+  describe('TRANSFER', async () => {
+    const transfer = async (data, shouldFail) => {
+      let bctx
 
-    let amount = COMMUNITY_MANAGER_CLN_BALANCE / 2
+      if (shouldFail) {
+        bctx = await osseus.lib.BlockchainTransaction.transfer(data.from, data.to, data.token, data.amount).catch(err => {
+          expect(err).not.to.be.undefined
+        })
+        expect(bctx).to.be.undefined
+      } else {
+        bctx = await osseus.lib.BlockchainTransaction.transfer(data.from, data.to, data.token, data.amount, data.opts)
+        validateBlockchainTranscation(bctx.result, data.from, data.token, 'TRANSFER', data)
+      }
+    }
 
-    let bctx = await osseus.lib.BlockchainTransaction.transfer(communityManagerAddress, communityUsersAddress, cln.address, amount)
-    validateBlockchainTranscation(bctx, communityManagerAddress, cln.address)
+    it('should send some CLN from `community manager` to `community users`', async () => {
+      let communityManagerClnBalanceBefore = new BigNumber(await cln.balanceOf(communityManagerAddress))
+      let communityUsersClnBalanceBefore = new BigNumber(await cln.balanceOf(communityUsersAddress))
 
-    let communityManagerClnBalanceAfter = new BigNumber(await cln.balanceOf(communityManagerAddress))
-    let communityUsersClnBalanceAfter = new BigNumber(await cln.balanceOf(communityUsersAddress))
+      const data = {
+        from: communityManagerAddress,
+        to: communityUsersAddress,
+        token: cln.address,
+        amount: communityManagerClnBalanceBefore.div(2)
+      }
 
-    expect(communityManagerClnBalanceAfter.toNumber()).to.equal(communityManagerClnBalanceBefore.minus(new BigNumber(amount)).toNumber())
-    expect(communityUsersClnBalanceAfter.toNumber()).to.equal(communityUsersClnBalanceBefore.plus(new BigNumber(amount)).toNumber())
-  })
+      await transfer(data)
 
-  it('should send all CLN from `community manager` to `community users`', async () => {
-    let amount = COMMUNITY_MANAGER_CLN_BALANCE
+      let communityManagerClnBalanceAfter = new BigNumber(await cln.balanceOf(communityManagerAddress))
+      let communityUsersClnBalanceAfter = new BigNumber(await cln.balanceOf(communityUsersAddress))
 
-    let bctx = await osseus.lib.BlockchainTransaction.transfer(communityManagerAddress, communityUsersAddress, cln.address, amount, {gas: 100000})
-    validateBlockchainTranscation(bctx, communityManagerAddress, cln.address)
-
-    let communityManagerClnBalanceAfter = new BigNumber(await cln.balanceOf(communityManagerAddress))
-    let communityUsersClnBalanceAfter = new BigNumber(await cln.balanceOf(communityUsersAddress))
-
-    expect(communityManagerClnBalanceAfter.toNumber()).to.equal(0)
-    expect(communityUsersClnBalanceAfter.toNumber()).to.equal(COMMUNITY_MANAGER_CLN_BALANCE)
-  })
-
-  it('should send some CC from `community manager` to `community users`', async () => {
-    let communityManagerCcBalanceBefore = new BigNumber(await cc.balanceOf(communityManagerAddress))
-    let communityUsersCcBalanceBefore = new BigNumber(await cc.balanceOf(communityUsersAddress))
-
-    let amount = COMMUNITY_MANAGER_CC_BALANCE / 2
-
-    let bctx = await osseus.lib.BlockchainTransaction.transfer(communityManagerAddress, communityUsersAddress, cc.address, amount)
-    validateBlockchainTranscation(bctx, communityManagerAddress, cc.address)
-
-    let communityManagerCcBalanceAfter = new BigNumber(await cc.balanceOf(communityManagerAddress))
-    let communityUsersCcBalanceAfter = new BigNumber(await cc.balanceOf(communityUsersAddress))
-
-    expect(communityManagerCcBalanceAfter.toNumber()).to.equal(communityManagerCcBalanceBefore.minus(new BigNumber(amount)).toNumber())
-    expect(communityUsersCcBalanceAfter.toNumber()).to.equal(communityUsersCcBalanceBefore.plus(new BigNumber(amount)).toNumber())
-  })
-
-  it('should send all CC from `community manager` to `community users`', async () => {
-    let amount = COMMUNITY_MANAGER_CC_BALANCE
-
-    let bctx = await osseus.lib.BlockchainTransaction.transfer(communityManagerAddress, communityUsersAddress, cc.address, amount, {gas: 100000})
-    validateBlockchainTranscation(bctx, communityManagerAddress, cc.address)
-
-    let communityManagerCcBalanceAfter = new BigNumber(await cc.balanceOf(communityManagerAddress))
-    let communityUsersCcBalanceAfter = new BigNumber(await cc.balanceOf(communityUsersAddress))
-
-    expect(communityManagerCcBalanceAfter.toNumber()).to.equal(0)
-    expect(communityUsersCcBalanceAfter.toNumber()).to.equal(COMMUNITY_MANAGER_CC_BALANCE)
-  })
-
-  it('should not be able to send more CLNs than balance from `community manager` to `community users`', async () => {
-    let communityManagerClnBalanceBefore = new BigNumber(await cln.balanceOf(communityManagerAddress))
-    let communityUsersClnBalanceBefore = new BigNumber(await cln.balanceOf(communityUsersAddress))
-
-    let amount = COMMUNITY_MANAGER_CLN_BALANCE + 1
-
-    let bctx = await osseus.lib.BlockchainTransaction.transfer(communityManagerAddress, communityUsersAddress, cln.address, amount).catch(err => {
-      expect(err).not.to.be.undefined
+      expect(communityManagerClnBalanceAfter.toNumber()).to.equal(communityManagerClnBalanceBefore.minus(new BigNumber(data.amount)).toNumber())
+      expect(communityUsersClnBalanceAfter.toNumber()).to.equal(communityUsersClnBalanceBefore.plus(new BigNumber(data.amount)).toNumber())
     })
-    expect(bctx).to.be.undefined
 
-    let communityManagerClnBalanceAfter = new BigNumber(await cln.balanceOf(communityManagerAddress))
-    let communityUsersClnBalanceAfter = new BigNumber(await cln.balanceOf(communityUsersAddress))
+    it('should send all CLN from `community manager` to `community users`', async () => {
+      const data = {
+        from: communityManagerAddress,
+        to: communityUsersAddress,
+        token: cln.address,
+        amount: COMMUNITY_MANAGER_CLN_BALANCE,
+        opts: {gas: 1000000}
+      }
 
-    expect(communityManagerClnBalanceAfter.toNumber()).to.equal(communityManagerClnBalanceBefore.toNumber())
-    expect(communityUsersClnBalanceAfter.toNumber()).to.equal(communityUsersClnBalanceBefore.toNumber())
+      await transfer(data)
+
+      let communityManagerClnBalanceAfter = new BigNumber(await cln.balanceOf(communityManagerAddress))
+      let communityUsersClnBalanceAfter = new BigNumber(await cln.balanceOf(communityUsersAddress))
+
+      expect(communityManagerClnBalanceAfter.toNumber()).to.equal(0)
+      expect(communityUsersClnBalanceAfter.toNumber()).to.equal(data.amount)
+    })
+
+    it('should send some CC from `community manager` to `community users`', async () => {
+      let communityManagerCcBalanceBefore = new BigNumber(await cc.balanceOf(communityManagerAddress))
+      let communityUsersCcBalanceBefore = new BigNumber(await cc.balanceOf(communityUsersAddress))
+
+      const data = {
+        from: communityManagerAddress,
+        to: communityUsersAddress,
+        token: cc.address,
+        amount: communityManagerCcBalanceBefore.div(2)
+      }
+
+      await transfer(data)
+
+      let communityManagerCcBalanceAfter = new BigNumber(await cc.balanceOf(communityManagerAddress))
+      let communityUsersCcBalanceAfter = new BigNumber(await cc.balanceOf(communityUsersAddress))
+
+      expect(communityManagerCcBalanceAfter.toNumber()).to.equal(communityManagerCcBalanceBefore.minus(new BigNumber(data.amount)).toNumber())
+      expect(communityUsersCcBalanceAfter.toNumber()).to.equal(communityUsersCcBalanceBefore.plus(new BigNumber(data.amount)).toNumber())
+    })
+
+    it('should send all CC from `community manager` to `community users`', async () => {
+      const data = {
+        from: communityManagerAddress,
+        to: communityUsersAddress,
+        token: cc.address,
+        amount: COMMUNITY_MANAGER_CC_BALANCE,
+        opts: {gas: 1000000}
+      }
+
+      await transfer(data)
+
+      let communityManagerCcBalanceAfter = new BigNumber(await cc.balanceOf(communityManagerAddress))
+      let communityUsersCcBalanceAfter = new BigNumber(await cc.balanceOf(communityUsersAddress))
+
+      expect(communityManagerCcBalanceAfter.toNumber()).to.equal(0)
+      expect(communityUsersCcBalanceAfter.toNumber()).to.equal(COMMUNITY_MANAGER_CC_BALANCE)
+    })
+
+    it('should not be able to send more CLNs than balance from `community manager` to `community users`', async () => {
+      let communityManagerClnBalanceBefore = new BigNumber(await cln.balanceOf(communityManagerAddress))
+      let communityUsersClnBalanceBefore = new BigNumber(await cln.balanceOf(communityUsersAddress))
+
+      const data = {
+        from: communityManagerAddress,
+        to: communityUsersAddress,
+        token: cln.address,
+        amount: communityManagerClnBalanceBefore.plus(1)
+      }
+
+      await transfer(data, true)
+
+      let communityManagerClnBalanceAfter = new BigNumber(await cln.balanceOf(communityManagerAddress))
+      let communityUsersClnBalanceAfter = new BigNumber(await cln.balanceOf(communityUsersAddress))
+
+      expect(communityManagerClnBalanceAfter.toNumber()).to.equal(communityManagerClnBalanceBefore.toNumber())
+      expect(communityUsersClnBalanceAfter.toNumber()).to.equal(communityUsersClnBalanceBefore.toNumber())
+    })
+
+    it('should not be able to send more CCs than balance from `community manager` to `community users`', async () => {
+      let communityManagerCcBalanceBefore = new BigNumber(await cc.balanceOf(communityManagerAddress))
+      let communityUsersCcBalanceBefore = new BigNumber(await cc.balanceOf(communityUsersAddress))
+
+      const data = {
+        from: communityManagerAddress,
+        to: communityUsersAddress,
+        token: cc.address,
+        amount: communityManagerCcBalanceBefore.plus(1)
+      }
+
+      await transfer(data, true)
+
+      let communityManagerCcBalanceAfter = new BigNumber(await cc.balanceOf(communityManagerAddress))
+      let communityUsersCcBalanceAfter = new BigNumber(await cc.balanceOf(communityUsersAddress))
+
+      expect(communityManagerCcBalanceAfter.toNumber()).to.equal(communityManagerCcBalanceBefore.toNumber())
+      expect(communityUsersCcBalanceAfter.toNumber()).to.equal(communityUsersCcBalanceBefore.toNumber())
+    })
   })
 
-  it('should not be able to send more CCs than balance from `community manager` to `community users`', async () => {
-    let communityManagerCcBalanceBefore = new BigNumber(await cc.balanceOf(communityManagerAddress))
-    let communityUsersCcBalanceBefore = new BigNumber(await cc.balanceOf(communityUsersAddress))
+  describe('CHANGE', async () => {
+    const change = async (data, shouldFail) => {
+      let bctx
 
-    let amount = COMMUNITY_MANAGER_CC_BALANCE + 1
+      if (shouldFail) {
+        bctx = await osseus.lib.BlockchainTransaction.change(data.from, data.fromToken, data.toToken, data.marketMaker, data.amount, {gas: 1000000}).catch(err => {
+          expect(err).not.to.be.undefined
+        })
+        expect(bctx).to.be.undefined
+      } else {
+        bctx = await osseus.lib.BlockchainTransaction.change(data.from, data.fromToken, data.toToken, data.marketMaker, data.amount, {gas: 1000000})
+        validateBlockchainTranscation(bctx.result, data.from, data.fromToken, 'CHANGE', data)
+        let returnAmount = bctx.receipt.logs.filter(log => log.args.to === data.from)[0].args.value
+        return returnAmount
+      }
+    }
 
-    let bctx = await osseus.lib.BlockchainTransaction.transfer(communityManagerAddress, communityUsersAddress, cc.address, amount).catch(err => {
-      expect(err).not.to.be.undefined
+    it('should be able to change CLN to CC', async () => {
+      let communityManagerClnBalanceBefore = new BigNumber(await cln.balanceOf(communityManagerAddress))
+      let communityManagerCcBalanceBefore = new BigNumber(await cc.balanceOf(communityManagerAddress))
+
+      const data = {
+        from: communityManagerAddress,
+        fromToken: cln.address,
+        toToken: cc.address,
+        marketMaker: mm.address,
+        amount: 10 * TOKEN_DECIMALS
+      }
+
+      let returnAmount = await change(data)
+
+      let communityManagerClnBalanceAfter = new BigNumber(await cln.balanceOf(communityManagerAddress))
+      let communityManagerCcBalanceAfter = new BigNumber(await cc.balanceOf(communityManagerAddress))
+
+      expect(communityManagerClnBalanceAfter.toNumber()).to.equal(communityManagerClnBalanceBefore.minus(new BigNumber(data.amount)).toNumber())
+      expect(communityManagerCcBalanceAfter.toNumber()).to.equal(communityManagerCcBalanceBefore.plus(new BigNumber(returnAmount)).toNumber())
     })
-    expect(bctx).to.be.undefined
 
-    let communityManagerCcBalanceAfter = new BigNumber(await cc.balanceOf(communityManagerAddress))
-    let communityUsersCcBalanceAfter = new BigNumber(await cc.balanceOf(communityUsersAddress))
+    it('should be able to change CC to CLN', async () => {
+      let communityManagerClnBalanceBefore = new BigNumber(await cln.balanceOf(communityManagerAddress))
+      let communityManagerCcBalanceBefore = new BigNumber(await cc.balanceOf(communityManagerAddress))
 
-    expect(communityManagerCcBalanceAfter.toNumber()).to.equal(communityManagerCcBalanceBefore.toNumber())
-    expect(communityUsersCcBalanceAfter.toNumber()).to.equal(communityUsersCcBalanceBefore.toNumber())
+      const data = {
+        from: communityManagerAddress,
+        fromToken: cc.address,
+        toToken: cln.address,
+        marketMaker: mm.address,
+        amount: 10 * TOKEN_DECIMALS
+      }
+
+      let returnAmount = await change(data)
+
+      let communityManagerClnBalanceAfter = new BigNumber(await cln.balanceOf(communityManagerAddress))
+      let communityManagerCcBalanceAfter = new BigNumber(await cc.balanceOf(communityManagerAddress))
+
+      expect(communityManagerClnBalanceAfter.toNumber()).to.equal(communityManagerClnBalanceBefore.plus(new BigNumber(returnAmount)).toNumber())
+      expect(communityManagerCcBalanceAfter.toNumber()).to.equal(communityManagerCcBalanceBefore.minus(new BigNumber(data.amount)).toNumber())
+    })
+
+    it('should be able to change same CLN amount couple of times in a row and get a different CC amount each time', async () => {
+      let communityManagerClnBalanceInitial = new BigNumber(await cln.balanceOf(communityManagerAddress))
+      let communityManagerCcBalanceInitial = new BigNumber(await cc.balanceOf(communityManagerAddress))
+      const data = {
+        from: communityManagerAddress,
+        fromToken: cln.address,
+        toToken: cc.address,
+        marketMaker: mm.address,
+        amount: 10 * TOKEN_DECIMALS
+      }
+
+      // make 1st change
+      let returnAmount1 = await change(data)
+
+      let communityManagerClnBalanceAfter1 = new BigNumber(await cln.balanceOf(communityManagerAddress))
+      let communityManagerCcBalanceAfter1 = new BigNumber(await cc.balanceOf(communityManagerAddress))
+
+      expect(communityManagerClnBalanceAfter1.toNumber()).to.equal(communityManagerClnBalanceInitial.minus(new BigNumber(data.amount)).toNumber())
+      expect(communityManagerCcBalanceAfter1.toNumber()).to.equal(communityManagerCcBalanceInitial.plus(new BigNumber(returnAmount1)).toNumber())
+
+      // make 2nd change
+      let returnAmount2 = await change(data)
+
+      let communityManagerClnBalanceAfter2 = new BigNumber(await cln.balanceOf(communityManagerAddress))
+      let communityManagerCcBalanceAfter2 = new BigNumber(await cc.balanceOf(communityManagerAddress))
+
+      expect(communityManagerClnBalanceAfter2.toNumber()).to.equal(communityManagerClnBalanceAfter1.minus(new BigNumber(data.amount)).toNumber())
+      expect(communityManagerCcBalanceAfter2.toNumber()).to.equal(communityManagerCcBalanceAfter1.plus(new BigNumber(returnAmount2)).toNumber())
+
+      expect(returnAmount2.toNumber()).to.not.equal(returnAmount1.toNumber())
+
+      // make 3rd change
+      let returnAmount3 = await change(data)
+
+      let communityManagerClnBalanceAfter3 = new BigNumber(await cln.balanceOf(communityManagerAddress))
+      let communityManagerCcBalanceAfter3 = new BigNumber(await cc.balanceOf(communityManagerAddress))
+
+      expect(communityManagerClnBalanceAfter3.toNumber()).to.equal(communityManagerClnBalanceAfter2.minus(new BigNumber(data.amount)).toNumber())
+      expect(communityManagerCcBalanceAfter3.toNumber()).to.equal(communityManagerCcBalanceAfter2.plus(new BigNumber(returnAmount3)).toNumber())
+
+      expect(returnAmount3.toNumber()).to.not.equal(returnAmount2.toNumber())
+
+      // price of CCs should go up - meaning each change less CCs will return for same CLN amount
+      expect(returnAmount1.toNumber()).to.be.above(returnAmount2.toNumber())
+      expect(returnAmount2.toNumber()).to.be.above(returnAmount3.toNumber())
+    })
+
+    it('should be able to change same CC amount couple of times in a row and get a different CLN amount each time', async () => {
+      let communityManagerClnBalanceInitial = new BigNumber(await cln.balanceOf(communityManagerAddress))
+      let communityManagerCcBalanceInitial = new BigNumber(await cc.balanceOf(communityManagerAddress))
+      const data = {
+        from: communityManagerAddress,
+        fromToken: cc.address,
+        toToken: cln.address,
+        marketMaker: mm.address,
+        amount: 10 * TOKEN_DECIMALS
+      }
+
+      // make 1st change
+      let returnAmount1 = await change(data)
+
+      let communityManagerClnBalanceAfter1 = new BigNumber(await cln.balanceOf(communityManagerAddress))
+      let communityManagerCcBalanceAfter1 = new BigNumber(await cc.balanceOf(communityManagerAddress))
+
+      expect(communityManagerClnBalanceAfter1.toNumber()).to.equal(communityManagerClnBalanceInitial.plus(new BigNumber(returnAmount1)).toNumber())
+      expect(communityManagerCcBalanceAfter1.toNumber()).to.equal(communityManagerCcBalanceInitial.minus(new BigNumber(data.amount)).toNumber())
+
+      // make 2nd change
+      let returnAmount2 = await change(data)
+
+      let communityManagerClnBalanceAfter2 = new BigNumber(await cln.balanceOf(communityManagerAddress))
+      let communityManagerCcBalanceAfter2 = new BigNumber(await cc.balanceOf(communityManagerAddress))
+
+      expect(communityManagerClnBalanceAfter2.toNumber()).to.equal(communityManagerClnBalanceAfter1.plus(new BigNumber(returnAmount2)).toNumber())
+      expect(communityManagerCcBalanceAfter2.toNumber()).to.equal(communityManagerCcBalanceAfter1.minus(new BigNumber(data.amount)).toNumber())
+
+      expect(returnAmount2.toNumber()).to.not.equal(returnAmount1.toNumber())
+
+      // make 3rd change
+      let returnAmount3 = await change(data)
+
+      let communityManagerClnBalanceAfter3 = new BigNumber(await cln.balanceOf(communityManagerAddress))
+      let communityManagerCcBalanceAfter3 = new BigNumber(await cc.balanceOf(communityManagerAddress))
+
+      expect(communityManagerClnBalanceAfter3.toNumber()).to.equal(communityManagerClnBalanceAfter2.plus(new BigNumber(returnAmount3)).toNumber())
+      expect(communityManagerCcBalanceAfter3.toNumber()).to.equal(communityManagerCcBalanceAfter2.minus(new BigNumber(data.amount)).toNumber())
+
+      expect(returnAmount3.toNumber()).to.not.equal(returnAmount2.toNumber())
+
+      // price of CCs should go down - meaning each change less CLNs will return for same CC amount
+      expect(returnAmount1.toNumber()).to.be.above(returnAmount2.toNumber())
+      expect(returnAmount2.toNumber()).to.be.above(returnAmount3.toNumber())
+    })
+
+    it('should be able to change CLN and CC back and forth and the price should alter', async () => {
+      let communityManagerClnBalanceInitial = new BigNumber(await cln.balanceOf(communityManagerAddress))
+      let communityManagerCcBalanceInitial = new BigNumber(await cc.balanceOf(communityManagerAddress))
+
+      const data = {
+        clnToCC: {
+          from: communityManagerAddress,
+          fromToken: cln.address,
+          toToken: cc.address,
+          marketMaker: mm.address,
+          amount: 10 * TOKEN_DECIMALS
+        },
+        ccToCLN: {
+          from: communityManagerAddress,
+          fromToken: cc.address,
+          toToken: cln.address,
+          marketMaker: mm.address,
+          amount: 10 * TOKEN_DECIMALS
+        }
+      }
+
+      // make 1st change - CLN to CC
+      let returnAmount1 = await change(data.clnToCC)
+
+      let communityManagerClnBalanceAfter1 = new BigNumber(await cln.balanceOf(communityManagerAddress))
+      let communityManagerCcBalanceAfter1 = new BigNumber(await cc.balanceOf(communityManagerAddress))
+
+      expect(communityManagerClnBalanceAfter1.toNumber()).to.equal(communityManagerClnBalanceInitial.minus(new BigNumber(data.clnToCC.amount)).toNumber())
+      expect(communityManagerCcBalanceAfter1.toNumber()).to.equal(communityManagerCcBalanceInitial.plus(new BigNumber(returnAmount1)).toNumber())
+
+      // make 2nd change - CC to CLN
+      let returnAmount2 = await change(data.ccToCLN)
+
+      let communityManagerClnBalanceAfter2 = new BigNumber(await cln.balanceOf(communityManagerAddress))
+      let communityManagerCcBalanceAfter2 = new BigNumber(await cc.balanceOf(communityManagerAddress))
+
+      expect(communityManagerClnBalanceAfter2.toNumber()).to.equal(communityManagerClnBalanceAfter1.plus(new BigNumber(returnAmount2)).toNumber())
+      expect(communityManagerCcBalanceAfter2.toNumber()).to.equal(communityManagerCcBalanceAfter1.minus(new BigNumber(data.ccToCLN.amount)).toNumber())
+
+      expect(returnAmount2.toNumber()).to.not.equal(returnAmount1.toNumber())
+
+      // make 3rd change - CLN to CC
+      let returnAmount3 = await change(data.clnToCC)
+
+      let communityManagerClnBalanceAfter3 = new BigNumber(await cln.balanceOf(communityManagerAddress))
+      let communityManagerCcBalanceAfter3 = new BigNumber(await cc.balanceOf(communityManagerAddress))
+
+      expect(communityManagerClnBalanceAfter3.toNumber()).to.equal(communityManagerClnBalanceAfter2.minus(new BigNumber(data.clnToCC.amount)).toNumber())
+      expect(communityManagerCcBalanceAfter3.toNumber()).to.equal(communityManagerCcBalanceAfter2.plus(new BigNumber(returnAmount3)).toNumber())
+
+      expect(returnAmount3.toNumber()).to.not.equal(returnAmount1.toNumber())
+      expect(returnAmount3.toNumber()).to.not.equal(returnAmount2.toNumber())
+
+      // make 4th change - CC to CLN
+      let returnAmount4 = await change(data.ccToCLN)
+
+      let communityManagerClnBalanceAfter4 = new BigNumber(await cln.balanceOf(communityManagerAddress))
+      let communityManagerCcBalanceAfter4 = new BigNumber(await cc.balanceOf(communityManagerAddress))
+
+      expect(communityManagerClnBalanceAfter4.toNumber()).to.equal(communityManagerClnBalanceAfter3.plus(new BigNumber(returnAmount4)).toNumber())
+      expect(communityManagerCcBalanceAfter4.toNumber()).to.equal(communityManagerCcBalanceAfter3.minus(new BigNumber(data.ccToCLN.amount)).toNumber())
+
+      expect(returnAmount4.toNumber()).to.not.equal(returnAmount1.toNumber())
+      expect(returnAmount4.toNumber()).to.not.equal(returnAmount2.toNumber())
+      expect(returnAmount4.toNumber()).to.not.equal(returnAmount3.toNumber())
+    })
+
+    it('should not be able to change the same token', async () => {
+      let communityManagerClnBalanceBefore = new BigNumber(await cln.balanceOf(communityManagerAddress))
+      let communityManagerCcBalanceBefore = new BigNumber(await cc.balanceOf(communityManagerAddress))
+
+      const data = {
+        from: communityManagerAddress,
+        fromToken: cln.address,
+        toToken: cln.address,
+        marketMaker: mm.address,
+        amount: 10 * TOKEN_DECIMALS
+      }
+
+      await change(data, true)
+
+      let communityManagerClnBalanceAfter = new BigNumber(await cln.balanceOf(communityManagerAddress))
+      let communityManagerCcBalanceAfter = new BigNumber(await cc.balanceOf(communityManagerAddress))
+
+      expect(communityManagerClnBalanceAfter.toNumber()).to.equal(communityManagerClnBalanceBefore.toNumber())
+      expect(communityManagerCcBalanceAfter.toNumber()).to.equal(communityManagerCcBalanceBefore.toNumber())
+    })
+
+    it('should not be able to change an unsupported token', async () => {
+      let communityManagerClnBalanceBefore = new BigNumber(await cln.balanceOf(communityManagerAddress))
+      let communityManagerCcBalanceBefore = new BigNumber(await cc.balanceOf(communityManagerAddress))
+      let fakeToken = '0xD352492eBEB9Fad92147a3719766D7Afe38fe26E'
+
+      const data = {
+        from: communityManagerAddress,
+        fromToken: cln.address,
+        toToken: fakeToken,
+        marketMaker: mm.address,
+        amount: 10 * TOKEN_DECIMALS
+      }
+
+      await change(data, true)
+
+      let communityManagerClnBalanceAfter = new BigNumber(await cln.balanceOf(communityManagerAddress))
+      let communityManagerCcBalanceAfter = new BigNumber(await cc.balanceOf(communityManagerAddress))
+
+      expect(communityManagerClnBalanceAfter.toNumber()).to.equal(communityManagerClnBalanceBefore.toNumber())
+      expect(communityManagerCcBalanceAfter.toNumber()).to.equal(communityManagerCcBalanceBefore.toNumber())
+    })
+
+    it('should not be able to change more CLNs than balance to CC', async () => {
+      let communityManagerClnBalanceBefore = new BigNumber(await cln.balanceOf(communityManagerAddress))
+      let communityManagerCcBalanceBefore = new BigNumber(await cc.balanceOf(communityManagerAddress))
+
+      const data = {
+        from: communityManagerAddress,
+        fromToken: cln.address,
+        toToken: cc.address,
+        marketMaker: mm.address,
+        amount: communityManagerClnBalanceBefore.plus(1)
+      }
+
+      await change(data, true)
+
+      let communityManagerClnBalanceAfter = new BigNumber(await cln.balanceOf(communityManagerAddress))
+      let communityManagerCcBalanceAfter = new BigNumber(await cc.balanceOf(communityManagerAddress))
+
+      expect(communityManagerClnBalanceAfter.toNumber()).to.equal(communityManagerClnBalanceBefore.toNumber())
+      expect(communityManagerCcBalanceAfter.toNumber()).to.equal(communityManagerCcBalanceBefore.toNumber())
+    })
+
+    it('should not be able to change more CCs than balance to CLN', async () => {
+      let communityManagerClnBalanceBefore = new BigNumber(await cln.balanceOf(communityManagerAddress))
+      let communityManagerCcBalanceBefore = new BigNumber(await cc.balanceOf(communityManagerAddress))
+
+      const data = {
+        from: communityManagerAddress,
+        fromToken: cc.address,
+        toToken: cln.address,
+        marketMaker: mm.address,
+        amount: communityManagerCcBalanceBefore.plus(1)
+      }
+
+      await change(data, true)
+
+      let communityManagerClnBalanceAfter = new BigNumber(await cln.balanceOf(communityManagerAddress))
+      let communityManagerCcBalanceAfter = new BigNumber(await cc.balanceOf(communityManagerAddress))
+
+      expect(communityManagerClnBalanceAfter.toNumber()).to.equal(communityManagerClnBalanceBefore.toNumber())
+      expect(communityManagerCcBalanceAfter.toNumber()).to.equal(communityManagerCcBalanceBefore.toNumber())
+    })
   })
 
   after(async function () {
