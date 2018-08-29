@@ -261,6 +261,13 @@ contract('BLOCKCHAIN_TRANSACTION', async (accounts) => {
       expect(communityManagerCcBalanceAfter.toNumber()).to.equal(communityManagerCcBalanceBefore.toNumber())
       expect(communityUsersCcBalanceAfter.toNumber()).to.equal(communityUsersCcBalanceBefore.toNumber())
     })
+
+    describe('A LOT', async () => {
+      it('this is a test', async () => {
+        // TODO
+        expect(1).to.equal(1)
+      })
+    })
   })
 
   describe('CHANGE', async () => {
@@ -322,7 +329,7 @@ contract('BLOCKCHAIN_TRANSACTION', async (accounts) => {
       expect(communityManagerCcBalanceAfter.toNumber()).to.equal(communityManagerCcBalanceBefore.minus(new BigNumber(data.amount)).toNumber())
     })
 
-    it('should be able to change same CLN amount couple of times in a row and get a different CC amount each time', async () => {
+    it('should be able to change same CLN amount couple of times and get a different CC amount each time', async () => {
       let communityManagerClnBalanceInitial = new BigNumber(await cln.balanceOf(communityManagerAddress))
       let communityManagerCcBalanceInitial = new BigNumber(await cc.balanceOf(communityManagerAddress))
       const data = {
@@ -369,7 +376,7 @@ contract('BLOCKCHAIN_TRANSACTION', async (accounts) => {
       expect(returnAmount2.toNumber()).to.be.above(returnAmount3.toNumber())
     })
 
-    it('should be able to change same CC amount couple of times in a row and get a different CLN amount each time', async () => {
+    it('should be able to change same CC amount couple of times and get a different CLN amount each time', async () => {
       let communityManagerClnBalanceInitial = new BigNumber(await cln.balanceOf(communityManagerAddress))
       let communityManagerCcBalanceInitial = new BigNumber(await cc.balanceOf(communityManagerAddress))
       const data = {
@@ -566,6 +573,13 @@ contract('BLOCKCHAIN_TRANSACTION', async (accounts) => {
 
       expect(communityManagerClnBalanceAfter.toNumber()).to.equal(communityManagerClnBalanceBefore.toNumber())
       expect(communityManagerCcBalanceAfter.toNumber()).to.equal(communityManagerCcBalanceBefore.toNumber())
+    })
+
+    describe('A LOT', async () => {
+      it('this is a test', async () => {
+        // TODO
+        expect(1).to.equal(1)
+      })
     })
   })
 

@@ -282,6 +282,13 @@ contract('TRANSACTION', async (accounts) => {
     validateTransaction(tx1, txs[0])
   })
 
+  describe('A LOT', async () => {
+    it('this is a test', async () => {
+      // TODO
+      expect(1).to.equal(1)
+    })
+  })
+
   after(async function () {
     Object.keys(osseus.db_models).forEach(model => {
       osseus.db_models[model].getModel().remove({}, () => {})
