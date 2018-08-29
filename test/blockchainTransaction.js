@@ -327,6 +327,53 @@ contract('BLOCKCHAIN_TRANSACTION', async (accounts) => {
       let communityManagerCcBalanceInitial = new BigNumber(await cc.balanceOf(communityManagerAddress))
       const data = {
         from: communityManagerAddress,
+        fromToken: cln.address,
+        toToken: cc.address,
+        marketMaker: mm.address,
+        amount: 10 * TOKEN_DECIMALS
+      }
+
+      // make 1st change
+      let returnAmount1 = await change(data)
+
+      let communityManagerClnBalanceAfter1 = new BigNumber(await cln.balanceOf(communityManagerAddress))
+      let communityManagerCcBalanceAfter1 = new BigNumber(await cc.balanceOf(communityManagerAddress))
+
+      expect(communityManagerClnBalanceAfter1.toNumber()).to.equal(communityManagerClnBalanceInitial.minus(new BigNumber(data.amount)).toNumber())
+      expect(communityManagerCcBalanceAfter1.toNumber()).to.equal(communityManagerCcBalanceInitial.plus(new BigNumber(returnAmount1)).toNumber())
+
+      // make 2nd change
+      let returnAmount2 = await change(data)
+
+      let communityManagerClnBalanceAfter2 = new BigNumber(await cln.balanceOf(communityManagerAddress))
+      let communityManagerCcBalanceAfter2 = new BigNumber(await cc.balanceOf(communityManagerAddress))
+
+      expect(communityManagerClnBalanceAfter2.toNumber()).to.equal(communityManagerClnBalanceAfter1.minus(new BigNumber(data.amount)).toNumber())
+      expect(communityManagerCcBalanceAfter2.toNumber()).to.equal(communityManagerCcBalanceAfter1.plus(new BigNumber(returnAmount2)).toNumber())
+
+      expect(returnAmount2.toNumber()).to.not.equal(returnAmount1.toNumber())
+
+      // make 3rd change
+      let returnAmount3 = await change(data)
+
+      let communityManagerClnBalanceAfter3 = new BigNumber(await cln.balanceOf(communityManagerAddress))
+      let communityManagerCcBalanceAfter3 = new BigNumber(await cc.balanceOf(communityManagerAddress))
+
+      expect(communityManagerClnBalanceAfter3.toNumber()).to.equal(communityManagerClnBalanceAfter2.minus(new BigNumber(data.amount)).toNumber())
+      expect(communityManagerCcBalanceAfter3.toNumber()).to.equal(communityManagerCcBalanceAfter2.plus(new BigNumber(returnAmount3)).toNumber())
+
+      expect(returnAmount3.toNumber()).to.not.equal(returnAmount2.toNumber())
+
+      // price of CCs should go up - meaning each change less CCs will return for same CLN amount
+      expect(returnAmount1.toNumber()).to.be.above(returnAmount2.toNumber())
+      expect(returnAmount2.toNumber()).to.be.above(returnAmount3.toNumber())
+    })
+
+    it('should be able to change same CC amount couple of times in a row and get a different CLN amount each time', async () => {
+      let communityManagerClnBalanceInitial = new BigNumber(await cln.balanceOf(communityManagerAddress))
+      let communityManagerCcBalanceInitial = new BigNumber(await cc.balanceOf(communityManagerAddress))
+      const data = {
+        from: communityManagerAddress,
         fromToken: cc.address,
         toToken: cln.address,
         marketMaker: mm.address,
@@ -364,17 +411,119 @@ contract('BLOCKCHAIN_TRANSACTION', async (accounts) => {
 
       expect(returnAmount3.toNumber()).to.not.equal(returnAmount2.toNumber())
 
-      // price of CCs should go up - meaning each change less CCs will return for same CLN amount
+      // price of CCs should go down - meaning each change less CLNs will return for same CC amount
       expect(returnAmount1.toNumber()).to.be.above(returnAmount2.toNumber())
       expect(returnAmount2.toNumber()).to.be.above(returnAmount3.toNumber())
     })
 
-    it('should be able to change same CC amount couple of times in a row and get a different CLN amount each time', async () => {
-      // TODO
+    it('should be able to change CLN and CC back and forth and the price should alter', async () => {
+      let communityManagerClnBalanceInitial = new BigNumber(await cln.balanceOf(communityManagerAddress))
+      let communityManagerCcBalanceInitial = new BigNumber(await cc.balanceOf(communityManagerAddress))
+
+      const data = {
+        clnToCC: {
+          from: communityManagerAddress,
+          fromToken: cln.address,
+          toToken: cc.address,
+          marketMaker: mm.address,
+          amount: 10 * TOKEN_DECIMALS
+        },
+        ccToCLN: {
+          from: communityManagerAddress,
+          fromToken: cc.address,
+          toToken: cln.address,
+          marketMaker: mm.address,
+          amount: 10 * TOKEN_DECIMALS
+        }
+      }
+
+      // make 1st change - CLN to CC
+      let returnAmount1 = await change(data.clnToCC)
+
+      let communityManagerClnBalanceAfter1 = new BigNumber(await cln.balanceOf(communityManagerAddress))
+      let communityManagerCcBalanceAfter1 = new BigNumber(await cc.balanceOf(communityManagerAddress))
+
+      expect(communityManagerClnBalanceAfter1.toNumber()).to.equal(communityManagerClnBalanceInitial.minus(new BigNumber(data.clnToCC.amount)).toNumber())
+      expect(communityManagerCcBalanceAfter1.toNumber()).to.equal(communityManagerCcBalanceInitial.plus(new BigNumber(returnAmount1)).toNumber())
+
+      // make 2nd change - CC to CLN
+      let returnAmount2 = await change(data.ccToCLN)
+
+      let communityManagerClnBalanceAfter2 = new BigNumber(await cln.balanceOf(communityManagerAddress))
+      let communityManagerCcBalanceAfter2 = new BigNumber(await cc.balanceOf(communityManagerAddress))
+
+      expect(communityManagerClnBalanceAfter2.toNumber()).to.equal(communityManagerClnBalanceAfter1.plus(new BigNumber(returnAmount2)).toNumber())
+      expect(communityManagerCcBalanceAfter2.toNumber()).to.equal(communityManagerCcBalanceAfter1.minus(new BigNumber(data.ccToCLN.amount)).toNumber())
+
+      expect(returnAmount2.toNumber()).to.not.equal(returnAmount1.toNumber())
+
+      // make 3rd change - CLN to CC
+      let returnAmount3 = await change(data.clnToCC)
+
+      let communityManagerClnBalanceAfter3 = new BigNumber(await cln.balanceOf(communityManagerAddress))
+      let communityManagerCcBalanceAfter3 = new BigNumber(await cc.balanceOf(communityManagerAddress))
+
+      expect(communityManagerClnBalanceAfter3.toNumber()).to.equal(communityManagerClnBalanceAfter2.minus(new BigNumber(data.clnToCC.amount)).toNumber())
+      expect(communityManagerCcBalanceAfter3.toNumber()).to.equal(communityManagerCcBalanceAfter2.plus(new BigNumber(returnAmount3)).toNumber())
+
+      expect(returnAmount3.toNumber()).to.not.equal(returnAmount1.toNumber())
+      expect(returnAmount3.toNumber()).to.not.equal(returnAmount2.toNumber())
+
+      // make 4th change - CC to CLN
+      let returnAmount4 = await change(data.ccToCLN)
+
+      let communityManagerClnBalanceAfter4 = new BigNumber(await cln.balanceOf(communityManagerAddress))
+      let communityManagerCcBalanceAfter4 = new BigNumber(await cc.balanceOf(communityManagerAddress))
+
+      expect(communityManagerClnBalanceAfter4.toNumber()).to.equal(communityManagerClnBalanceAfter3.plus(new BigNumber(returnAmount4)).toNumber())
+      expect(communityManagerCcBalanceAfter4.toNumber()).to.equal(communityManagerCcBalanceAfter3.minus(new BigNumber(data.ccToCLN.amount)).toNumber())
+
+      expect(returnAmount4.toNumber()).to.not.equal(returnAmount1.toNumber())
+      expect(returnAmount4.toNumber()).to.not.equal(returnAmount2.toNumber())
+      expect(returnAmount4.toNumber()).to.not.equal(returnAmount3.toNumber())
     })
 
-    it('should be able to change CLN and CC back and forth', async () => {
-      // TODO
+    it('should not be able to change the same token', async () => {
+      let communityManagerClnBalanceBefore = new BigNumber(await cln.balanceOf(communityManagerAddress))
+      let communityManagerCcBalanceBefore = new BigNumber(await cc.balanceOf(communityManagerAddress))
+
+      const data = {
+        from: communityManagerAddress,
+        fromToken: cln.address,
+        toToken: cln.address,
+        marketMaker: mm.address,
+        amount: 10 * TOKEN_DECIMALS
+      }
+
+      await change(data, true)
+
+      let communityManagerClnBalanceAfter = new BigNumber(await cln.balanceOf(communityManagerAddress))
+      let communityManagerCcBalanceAfter = new BigNumber(await cc.balanceOf(communityManagerAddress))
+
+      expect(communityManagerClnBalanceAfter.toNumber()).to.equal(communityManagerClnBalanceBefore.toNumber())
+      expect(communityManagerCcBalanceAfter.toNumber()).to.equal(communityManagerCcBalanceBefore.toNumber())
+    })
+
+    it('should not be able to change an unsupported token', async () => {
+      let communityManagerClnBalanceBefore = new BigNumber(await cln.balanceOf(communityManagerAddress))
+      let communityManagerCcBalanceBefore = new BigNumber(await cc.balanceOf(communityManagerAddress))
+      let fakeToken = '0xD352492eBEB9Fad92147a3719766D7Afe38fe26E'
+
+      const data = {
+        from: communityManagerAddress,
+        fromToken: cln.address,
+        toToken: fakeToken,
+        marketMaker: mm.address,
+        amount: 10 * TOKEN_DECIMALS
+      }
+
+      await change(data, true)
+
+      let communityManagerClnBalanceAfter = new BigNumber(await cln.balanceOf(communityManagerAddress))
+      let communityManagerCcBalanceAfter = new BigNumber(await cc.balanceOf(communityManagerAddress))
+
+      expect(communityManagerClnBalanceAfter.toNumber()).to.equal(communityManagerClnBalanceBefore.toNumber())
+      expect(communityManagerCcBalanceAfter.toNumber()).to.equal(communityManagerCcBalanceBefore.toNumber())
     })
 
     it('should not be able to change more CLNs than balance to CC', async () => {
