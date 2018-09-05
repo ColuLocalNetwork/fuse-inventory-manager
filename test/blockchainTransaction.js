@@ -2,6 +2,7 @@ const OsseusHelper = require('./helpers/osseus')
 const BigNumber = require('bignumber.js')
 const coder = require('web3-eth-abi')
 const expect = require('chai').expect
+const Promise = require('bluebird')
 
 const ColuLocalCurrency = artifacts.require('cln-solidity/contracts/ColuLocalCurrency.sol')
 const ColuLocalNetwork = artifacts.require('cln-solidity/contracts/ColuLocalNetwork.sol')
@@ -16,6 +17,8 @@ const CC_MAX_TOKENS = 15 * 10 ** 6 * TOKEN_DECIMALS
 const COMMUNITY_MANAGER_ETH_BALANCE = 5 * TOKEN_DECIMALS
 const COMMUNITY_MANAGER_CLN_BALANCE = 100 * TOKEN_DECIMALS
 const COMMUNITY_MANAGER_CC_BALANCE = 250 * TOKEN_DECIMALS
+
+const A_LOT_OF_TXS = 250
 
 const encodeInsertData = (toToken) => {
   const abi = {
@@ -144,6 +147,7 @@ contract('BLOCKCHAIN_TRANSACTION', async (accounts) => {
         bctx = await osseus.lib.BlockchainTransaction.transfer(data.from, data.to, data.token, data.amount, data.opts)
         validateBlockchainTranscation(bctx.result, data.from, data.token, 'TRANSFER', data)
       }
+      return bctx
     }
 
     it('should send some CLN from `community manager` to `community users`', async () => {
@@ -263,9 +267,28 @@ contract('BLOCKCHAIN_TRANSACTION', async (accounts) => {
     })
 
     describe('A LOT', async () => {
-      it('this is a test', async () => {
-        // TODO
-        expect(1).to.equal(1)
+      it('should make a lot of successful tranasctions', async () => {
+        const generateTransactions = async (n) => {
+          const txs = []
+          for (let i = 0; i < n; i++) {
+            let from = communityManagerAddress
+            let to = communityUsersAddress
+            let token = [cln.address, cc.address][Math.floor(Math.random() * 2)]
+            let amount = 1 * TOKEN_DECIMALS
+            txs.push({from: from, to: to, token: token, amount: amount, opts: {nonce: i}})
+          }
+          return txs
+        }
+
+        const lotsOfTxs = generateTransactions(A_LOT_OF_TXS)
+
+        await Promise.each(lotsOfTxs, tx => { return tx })
+          .then(results => {
+            expect(results).to.have.lengthOf(A_LOT_OF_TXS)
+            results.forEach(result => {
+              expect(result).not.to.be.undefined
+            })
+          })
       })
     })
   })
@@ -576,9 +599,30 @@ contract('BLOCKCHAIN_TRANSACTION', async (accounts) => {
     })
 
     describe('A LOT', async () => {
-      it('this is a test', async () => {
-        // TODO
-        expect(1).to.equal(1)
+      it('should make a lot of successful tranasctions', async () => {
+        const generateTransactions = (n) => {
+          const txs = []
+          for (let i = 0; i < n; i++) {
+            let from = communityManagerAddress
+            let random = Math.floor(Math.random() * 2)
+            let fromToken = [cln.address, cc.address][random]
+            let toToken = [cln.address, cc.address][1 - random]
+            let marketMaker = mm.address
+            let amount = 1 * TOKEN_DECIMALS
+            txs.push(change({from: from, fromToken: fromToken, toToken: toToken, marketMaker: marketMaker, amount: amount, opts: {nonce: i}}))
+          }
+          return txs
+        }
+
+        const lotsOfTxs = generateTransactions(A_LOT_OF_TXS)
+
+        await Promise.each(lotsOfTxs, tx => { return tx })
+          .then(results => {
+            expect(results).to.have.lengthOf(A_LOT_OF_TXS)
+            results.forEach(result => {
+              expect(result).not.to.be.undefined
+            })
+          })
       })
     })
   })
