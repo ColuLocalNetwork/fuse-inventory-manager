@@ -27,6 +27,7 @@
     "truffle-hdwallet-provider": "github:ColuLocalNetwork/truffle-hdwallet-provider"
   },
   "devDependencies": {
+    "bluebird": "^3.5.2",
     "ganache-cli": "^6.1.8",
     "standard": "^11.0.1",
     "truffle": "^4.1.14",

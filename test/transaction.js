@@ -1,5 +1,6 @@
 const OsseusHelper = require('./helpers/osseus')
 const expect = require('chai').expect
+const Promise = require('bluebird')
 
 const ColuLocalNetwork = artifacts.require('cln-solidity/contracts/ColuLocalNetwork.sol')
 const CurrencyFactory = artifacts.require('cln-solidity/contracts/CurrencyFactory.sol')
@@ -8,6 +9,8 @@ const EllipseMarketMakerLib = artifacts.require('cln-solidity/contracts/EllipseM
 const TOKEN_DECIMALS = 10 ** 18
 const CLN_MAX_TOKENS = 15 * 10 ** 8 * TOKEN_DECIMALS
 const CC_MAX_TOKENS = 15 * 10 ** 6 * TOKEN_DECIMALS
+
+const A_LOT_OF_TXS = 1000
 
 contract('TRANSACTION', async (accounts) => {
   let osseus
@@ -25,9 +28,9 @@ contract('TRANSACTION', async (accounts) => {
   const merchantsAccountAddress = accounts[2]
 
   const defaultBalances = {}
-  defaultBalances[managerAccountAddress] = 10 * TOKEN_DECIMALS
-  defaultBalances[usersAccountAddress] = 0
-  defaultBalances[merchantsAccountAddress] = 0
+  defaultBalances[managerAccountAddress] = A_LOT_OF_TXS * TOKEN_DECIMALS
+  defaultBalances[usersAccountAddress] = A_LOT_OF_TXS * TOKEN_DECIMALS
+  defaultBalances[merchantsAccountAddress] = A_LOT_OF_TXS * TOKEN_DECIMALS
 
   const validateTransaction = (tx1, tx2, from, to, amount, state) => {
     expect(tx1).to.be.a('Object')
@@ -160,7 +163,7 @@ contract('TRANSACTION', async (accounts) => {
 
     await createCommunity(currency)
 
-    let amount = 100 * TOKEN_DECIMALS
+    let amount = 10001 * TOKEN_DECIMALS
     let from = {accountAddress: managerAccountAddress, currency: ccAddress}
     let to = {accountAddress: usersAccountAddress, currency: ccAddress}
 
@@ -283,9 +286,47 @@ contract('TRANSACTION', async (accounts) => {
   })
 
   describe('A LOT', async () => {
-    it('this is a test', async () => {
-      // TODO
-      expect(1).to.equal(1)
+    it('should make a lot of successful tranasctions', async () => {
+      const generateTransactions = (n) => {
+        const txs = []
+        for (let i = 0; i < n; i++) {
+          const fromAccount = accounts[Math.floor(Math.random() * 3)]
+          const toAccount = accounts[Math.floor(Math.random() * 3)]
+          let from = {accountAddress: fromAccount, currency: ccAddress}
+          let to = {accountAddress: toAccount, currency: ccAddress}
+          let amount = 1 * TOKEN_DECIMALS
+          txs.push(makeTransaction(from, to, amount))
+        }
+        return txs
+      }
+
+      const makeTransaction = (from, to, amount) => {
+        return new Promise(async (resolve, reject) => {
+          try {
+            let tx = await osseus.lib.Transaction.create(from, to, amount)
+            from.currency = currency.id
+            to.currency = currency.id
+            validateTransaction(tx, undefined, from, to, amount)
+            resolve(tx)
+          } catch (err) {
+            reject(err)
+          }
+        })
+      }
+
+      let currency = await osseus.lib.Currency.create(ccAddress, mmAddress, ccABI, mmABI)
+
+      await createCommunity(currency)
+
+      const lotsOfTxs = generateTransactions(A_LOT_OF_TXS)
+
+      await Promise.each(lotsOfTxs, tx => { return tx })
+        .then(results => {
+          expect(results).to.have.lengthOf(A_LOT_OF_TXS)
+          results.forEach(result => {
+            expect(result).not.to.be.undefined
+          })
+        })
     })
   })
 
