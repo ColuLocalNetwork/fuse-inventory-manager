@@ -296,14 +296,16 @@ contract('BLOCKCHAIN_TRANSACTION', async (accounts) => {
   describe('CHANGE', async () => {
     const change = async (data, shouldFail) => {
       let bctx
+      let opts = data.opts || {}
+      opts.gas = 1000000
 
       if (shouldFail) {
-        bctx = await osseus.lib.BlockchainTransaction.change(data.from, data.fromToken, data.toToken, data.marketMaker, data.amount, {gas: 1000000}).catch(err => {
+        bctx = await osseus.lib.BlockchainTransaction.change(data.from, data.fromToken, data.toToken, data.marketMaker, data.amount, opts).catch(err => {
           expect(err).not.to.be.undefined
         })
         expect(bctx).to.be.undefined
       } else {
-        bctx = await osseus.lib.BlockchainTransaction.change(data.from, data.fromToken, data.toToken, data.marketMaker, data.amount, {gas: 1000000})
+        bctx = await osseus.lib.BlockchainTransaction.change(data.from, data.fromToken, data.toToken, data.marketMaker, data.amount, opts)
         validateBlockchainTranscation(bctx.result, data.from, data.fromToken, 'CHANGE', data)
         let returnAmount = bctx.receipt.logs.filter(log => log.args.to === data.from)[0].args.value
         return returnAmount
