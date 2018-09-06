@@ -10,7 +10,7 @@ const TOKEN_DECIMALS = 10 ** 18
 const CLN_MAX_TOKENS = 15 * 10 ** 8 * TOKEN_DECIMALS
 const CC_MAX_TOKENS = 15 * 10 ** 6 * TOKEN_DECIMALS
 
-const A_LOT_OF_TXS = 250
+const A_LOT_OF_TXS = process.env.TEST_A_LOT ? 250 : 0
 
 contract('TRANSACTION', async (accounts) => {
   let osseus
@@ -28,9 +28,9 @@ contract('TRANSACTION', async (accounts) => {
   const merchantsAccountAddress = accounts[2]
 
   const defaultBalances = {}
-  defaultBalances[managerAccountAddress] = A_LOT_OF_TXS * TOKEN_DECIMALS
-  defaultBalances[usersAccountAddress] = A_LOT_OF_TXS * TOKEN_DECIMALS
-  defaultBalances[merchantsAccountAddress] = A_LOT_OF_TXS * TOKEN_DECIMALS
+  defaultBalances[managerAccountAddress] = (A_LOT_OF_TXS || 1000) * TOKEN_DECIMALS
+  defaultBalances[usersAccountAddress] = (A_LOT_OF_TXS || 1000) * TOKEN_DECIMALS
+  defaultBalances[merchantsAccountAddress] = (A_LOT_OF_TXS || 1000) * TOKEN_DECIMALS
 
   const validateTransaction = (tx1, tx2, from, to, amount, state) => {
     expect(tx1).to.be.a('Object')
@@ -285,7 +285,7 @@ contract('TRANSACTION', async (accounts) => {
     validateTransaction(tx1, txs[0])
   })
 
-  describe('A LOT', async () => {
+  describe(`A LOT (${A_LOT_OF_TXS})`, async () => {
     it('should make a lot of successful tranasctions', async () => {
       const generateTransactions = (n) => {
         const txs = []

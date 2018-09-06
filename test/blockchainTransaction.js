@@ -18,7 +18,7 @@ const COMMUNITY_MANAGER_ETH_BALANCE = 5 * TOKEN_DECIMALS
 const COMMUNITY_MANAGER_CLN_BALANCE = 100 * TOKEN_DECIMALS
 const COMMUNITY_MANAGER_CC_BALANCE = 250 * TOKEN_DECIMALS
 
-const A_LOT_OF_TXS = 250
+const A_LOT_OF_TXS = process.env.TEST_A_LOT ? 250 : 0
 
 const encodeInsertData = (toToken) => {
   const abi = {
@@ -266,7 +266,7 @@ contract('BLOCKCHAIN_TRANSACTION', async (accounts) => {
       expect(communityUsersCcBalanceAfter.toNumber()).to.equal(communityUsersCcBalanceBefore.toNumber())
     })
 
-    describe('A LOT', async () => {
+    describe(`A LOT (${A_LOT_OF_TXS})`, async () => {
       it('should make a lot of successful tranasctions', async () => {
         const generateTransactions = async (n) => {
           const txs = []
@@ -600,7 +600,7 @@ contract('BLOCKCHAIN_TRANSACTION', async (accounts) => {
       expect(communityManagerCcBalanceAfter.toNumber()).to.equal(communityManagerCcBalanceBefore.toNumber())
     })
 
-    describe('A LOT', async () => {
+    describe(`A LOT (${A_LOT_OF_TXS})`, async () => {
       it('should make a lot of successful tranasctions', async () => {
         const generateTransactions = (n) => {
           const txs = []

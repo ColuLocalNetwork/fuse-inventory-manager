@@ -40,6 +40,13 @@ This commands installs everything which is required for building and testing the
 `npm test` executes (as you might think) the unit tests, which are located
 in [`test`](https://github.com/ColuLocalNetwork/inventory-manager/blob/master/test).
 
+#### Enable a lot of transactions test
+Before running `npm test` you should:
+
+```
+$ export TEST_A_LOT=1
+```
+
 The task uses [truffle framework](https://truffleframework.com/).
 
 ## Developing
