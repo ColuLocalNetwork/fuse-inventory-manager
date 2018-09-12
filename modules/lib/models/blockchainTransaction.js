@@ -1,5 +1,6 @@
 const BigNumber = require('bignumber.js')
 const coder = require('web3-eth-abi')
+const async = require('async')
 
 module.exports = (osseus) => {
   function blockchainTransaction () {}
@@ -109,6 +110,60 @@ module.exports = (osseus) => {
             receipt: receipt,
             result: result
           })
+        })
+      } catch (err) {
+        reject(err)
+      }
+    })
+  }
+
+  blockchainTransaction.checkTransmittedAndUpdate = (address, type, limit, sort) => {
+    osseus.logger.debug(`blockchainTransaction.checkTransmittedAndUpdate`)
+    return new Promise(async (resolve, reject) => {
+      try {
+        const filters = {
+          state: 'TRANSMITTED',
+          address: address,
+          type: type
+        }
+
+        const projection = {
+          hash: 1
+        }
+
+        osseus.logger.debug(`filters: ${JSON.stringify(filters)}, projection: ${JSON.stringify(projection)}, limit: ${limit}, sort: ${JSON.stringify(sort)}`)
+        const transactions = await osseus.db_models.bctx.get(filters, projection, limit, sort)
+        osseus.logger.debug(`got ${transactions.length} transactions`)
+
+        const latestBlock = await osseus.web3.eth.getBlock('latest')
+        osseus.logger.debug(`latestBlock.number: ${latestBlock.number}`)
+
+        transactions && async.map(transactions, (transaction, done) => {
+          osseus.web3.eth.getTransaction(transaction.hash, async (err, tx) => {
+            if (err) {
+              return done(err)
+            }
+
+            if (!tx) {
+              return done(new Error(`could not getTransaction for hash: ${transaction.hash}`))
+            }
+
+            osseus.logger.silly(`tx: ${JSON.stringify(tx)}`)
+            let newState
+            if (tx.blockNumber) {
+              newState = 'CONFIRMED'
+            }
+            if (Math.abs(tx.blockNumber - latestBlock.number) >= osseus.config.blocks_to_finalize_bctx) {
+              newState = 'FINALIZED'
+            }
+            let updatedTransaction = await osseus.db_models.bctx.update(transaction._id, {state: newState, blockHash: tx.blockHash, blockNumber: tx.blockNumber})
+            done(null, updatedTransaction)
+          })
+        }, (err, updatedTransactions) => {
+          if (err) {
+            return reject(err)
+          }
+          resolve(updatedTransactions)
         })
       } catch (err) {
         reject(err)

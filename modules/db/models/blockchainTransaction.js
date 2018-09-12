@@ -104,30 +104,42 @@ module.exports = (osseus) => {
     })
   }
 
-  blockchainTransaction.get = (address, state) => {
-    const query = {}
-    const conditions = []
-
-    if (address) conditions.push({$or: [{from: address}, {to: address}]})
-    if (state) conditions.push({state: state})
-    if (conditions.length > 0) query.$and = conditions
-
+  blockchainTransaction.get = (filters, projection, limit, sort) => {
     return new Promise((resolve, reject) => {
-      BlockchainTransaction.find(query, (err, docs) => {
-        if (err) {
-          return reject(err)
-        }
-        if (!docs || docs.length === 0) {
-          return reject(new Error(`No transactions found`))
-        }
-        resolve(docs)
-      })
+      const query = {}
+      const conditions = []
+
+      if (filters) {
+        if (filters.address) conditions.push({$or: [{from: filters.address}, {to: filters.address}]})
+        if (filters.hash) conditions.push({hash: filters.hash})
+        if (filters.type) conditions.push({type: filters.type})
+        if (filters.state) conditions.push({state: filters.state})
+      }
+      if (conditions.length > 0) query.$and = conditions
+
+      projection = projection || {}
+      limit = limit || 100
+      sort = sort || {transmittedAt: 1}
+
+      BlockchainTransaction.find(query, projection)
+        .lean()
+        .limit(limit)
+        .sort(sort)
+        .exec((err, docs) => {
+          if (err) {
+            return reject(err)
+          }
+          if (!docs || docs.length === 0) {
+            return reject(new Error(`No transactions found`))
+          }
+          resolve(docs)
+        })
     })
   }
 
   blockchainTransaction.getLastNonceForAddress = (address) => {
     return new Promise((resolve, reject) => {
-      const cond = {from: address, $or: [{state: 'FINALIZED'}, {state: 'CONFIRMED'}]}
+      const cond = {from: address}
       const projection = {nonce: 1}
       const limit = 1
       const sort = {blockNumber: -1}
