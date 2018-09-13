@@ -13,5 +13,6 @@ module.exports = {
   OSSEUS_ROUTER_URL_PREFIX: '/api',
   OSSEUS_MONGO_DEPENDENCIES: ['logger'],
   CLN_ADDRESS: '0x41C9d91E96b933b74ae21bCBb617369CBE022530',
-  CLN_ABI: require('./abi/ColuLocalNetwork')
+  CLN_ABI: require('./abi/ColuLocalNetwork'),
+  BLOCKS_TO_FINALIZE_BCTX: 20
 }
