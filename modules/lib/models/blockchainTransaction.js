@@ -117,15 +117,16 @@ module.exports = (osseus) => {
     })
   }
 
-  blockchainTransaction.checkTransmittedAndUpdate = (address, type, limit, sort) => {
-    osseus.logger.debug(`blockchainTransaction.checkTransmittedAndUpdate`)
+  blockchainTransaction.syncState = (address, type, limit, sort) => {
+    osseus.logger.debug(`blockchainTransaction.syncState --> address: ${address}, type: ${type}, limit: ${limit}, sort: ${sort}`)
     return new Promise(async (resolve, reject) => {
       try {
         const filters = {
-          state: 'TRANSMITTED',
-          address: address,
-          type: type
+          state: {$ne: 'FINALIZED'}
         }
+
+        if (address) filters.address = address
+        if (type) filters.type = type
 
         const projection = {
           hash: 1

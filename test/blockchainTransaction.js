@@ -14,13 +14,15 @@ const TOKEN_DECIMALS = 10 ** 18
 const CLN_MAX_TOKENS = 15 * 10 ** 8 * TOKEN_DECIMALS
 const CC_MAX_TOKENS = 15 * 10 ** 6 * TOKEN_DECIMALS
 
-const COMMUNITY_MANAGER_ETH_BALANCE = 5 * TOKEN_DECIMALS
+const COMMUNITY_MANAGER_ETH_BALANCE = 1 * TOKEN_DECIMALS
 const COMMUNITY_MANAGER_CLN_BALANCE = 100 * TOKEN_DECIMALS
 const COMMUNITY_MANAGER_CC_BALANCE = 250 * TOKEN_DECIMALS
 
 const A_LOT_OF_TXS = process.env.A_LOT_OF_TXS || 0
 
 const delay = (ms) => new Promise(resolve => setTimeout(() => resolve(ms), ms))
+
+const random = (n) => { return Math.floor(Math.random() * n) }
 
 const encodeInsertData = (toToken) => {
   const abi = {
@@ -90,6 +92,8 @@ contract('BLOCKCHAIN_TRANSACTION', async (accounts) => {
   let communityManagerAddress
   let communityUsersAddress
 
+  let nonce
+
   before(async function () {
     this.timeout(60000)
 
@@ -134,6 +138,8 @@ contract('BLOCKCHAIN_TRANSACTION', async (accounts) => {
 
     // community manager should have CC
     await cc.transfer(communityManagerAddress, COMMUNITY_MANAGER_CC_BALANCE, {from: accounts[0]})
+
+    nonce = 0
   })
 
   describe('TRANSFER', async () => {
@@ -275,9 +281,10 @@ contract('BLOCKCHAIN_TRANSACTION', async (accounts) => {
           for (let i = 0; i < n; i++) {
             let from = communityManagerAddress
             let to = communityUsersAddress
-            let token = [cln.address, cc.address][Math.floor(Math.random() * 2)]
+            let token = [cln.address, cc.address][random(2)]
             let amount = 1 * TOKEN_DECIMALS
-            txs.push({from: from, to: to, token: token, amount: amount, opts: {nonce: i}})
+            txs.push({from: from, to: to, token: token, amount: amount, opts: {nonce: nonce}})
+            nonce += 1
           }
           return txs
         }
@@ -638,12 +645,13 @@ contract('BLOCKCHAIN_TRANSACTION', async (accounts) => {
           const txs = []
           for (let i = 0; i < n; i++) {
             let from = communityManagerAddress
-            let random = Math.floor(Math.random() * 2)
-            let fromToken = [cln.address, cc.address][random]
-            let toToken = [cln.address, cc.address][1 - random]
+            let r = random(2)
+            let fromToken = [cln.address, cc.address][r]
+            let toToken = [cln.address, cc.address][1 - r]
             let marketMaker = mm.address
             let amount = 1 * TOKEN_DECIMALS
-            txs.push({from: from, fromToken: fromToken, toToken: toToken, marketMaker: marketMaker, amount: amount, opts: {nonce: i}})
+            txs.push({from: from, fromToken: fromToken, toToken: toToken, marketMaker: marketMaker, amount: amount, opts: {nonce: nonce}})
+            nonce += 1
           }
           return txs
         }
@@ -686,6 +694,130 @@ contract('BLOCKCHAIN_TRANSACTION', async (accounts) => {
         results.forEach(result => {
           expect(result).not.to.be.undefined
         })
+      })
+    })
+  })
+
+  describe('SYNC', () => {
+    const makeSomeTransferTransactions = async (n) => {
+      const transfer = async (data) => {
+        let bctx = await osseus.lib.BlockchainTransaction.transfer(data.from, data.to, data.token, data.amount, data.opts)
+        validateBlockchainTranscation(bctx.result, data.from, data.token, 'TRANSFER', data)
+        return bctx
+      }
+
+      const generateTransactions = (n) => {
+        const txs = []
+        for (let i = 0; i < n; i++) {
+          let from = communityManagerAddress
+          let to = communityUsersAddress
+          let token = [cln.address, cc.address][random(2)]
+          let amount = 1 * TOKEN_DECIMALS
+          txs.push({from: from, to: to, token: token, amount: amount, opts: {nonce: nonce}})
+          nonce += 1
+        }
+        return txs
+      }
+
+      const makeTransaction = async (data) => {
+        await delay(1000)
+        let tx = await transfer(data)
+        return tx
+      }
+
+      const txs = generateTransactions(n)
+      const results = await Promise.mapSeries(txs, tx => { return makeTransaction(tx) })
+      return results
+    }
+
+    const makeSomeChangeTransactions = async (n) => {
+      const change = async (data) => {
+        let opts = data.opts || {}
+        opts.gas = 1000000
+
+        let bctx = await osseus.lib.BlockchainTransaction.change(data.from, data.fromToken, data.toToken, data.marketMaker, data.amount, opts)
+        validateBlockchainTranscation(bctx.result, data.from, data.fromToken, 'CHANGE', data)
+        // let returnAmount = bctx.receipt.logs.filter(log => log.args.to === data.from)[0].args.value
+        return bctx
+      }
+
+      const generateTransactions = (n) => {
+        const txs = []
+        for (let i = 0; i < n; i++) {
+          let from = communityManagerAddress
+          let r = random(2)
+          let fromToken = [cln.address, cc.address][r]
+          let toToken = [cln.address, cc.address][1 - r]
+          let marketMaker = mm.address
+          let amount = 1 * TOKEN_DECIMALS
+          txs.push({from: from, fromToken: fromToken, toToken: toToken, marketMaker: marketMaker, amount: amount, opts: {nonce: nonce}})
+          nonce += 1
+        }
+        return txs
+      }
+
+      const makeTransaction = async (data) => {
+        await delay(1000)
+        let returnAmount = await change(data)
+        return returnAmount
+      }
+
+      const txs = generateTransactions(n)
+      const results = await Promise.mapSeries(txs, tx => { return makeTransaction(tx) })
+      return results
+    }
+
+    it('should make some successful tranasctions (transfers and changes) and be able to update their state accordingly', async () => {
+      const transferTxs = await makeSomeTransferTransactions(random(10))
+      const changeTxs = await makeSomeChangeTransactions(random(10))
+
+      const updatedTxs = await osseus.lib.BlockchainTransaction.syncState()
+      expect(updatedTxs).to.have.lengthOf(transferTxs.length + changeTxs.length)
+      updatedTxs.forEach(tx => {
+        expect(tx.state).to.equal('CONFIRMED')
+        expect(tx.blockHash).not.to.be.undefined
+        expect(tx.blockNumber).not.to.be.undefined
+      })
+    })
+
+    it('should make some successful tranasctions (transfers and changes) and be able to update their state accordingly (using address & type filters)', async () => {
+      const transferTxs = await makeSomeTransferTransactions(random(10))
+
+      const updatedTxs = await osseus.lib.BlockchainTransaction.syncState(communityManagerAddress, 'TRANSFER')
+      expect(updatedTxs).to.have.lengthOf(transferTxs.length)
+      updatedTxs.forEach(tx => {
+        expect(tx.state).to.equal('CONFIRMED')
+        expect(tx.blockHash).not.to.be.undefined
+        expect(tx.blockNumber).not.to.be.undefined
+      })
+
+      const updatedTxs2 = await osseus.lib.BlockchainTransaction.syncState(communityManagerAddress, 'CHANGE').catch(err => {
+        expect(err).not.to.be.undefined
+      })
+      expect(updatedTxs2).to.be.undefined
+    })
+
+    it('should make some successful tranasctions (transfers and changes) and be able to update their state accordingly (CONFIRMED and FINALIZED)', async () => {
+      const transferTxs = await makeSomeTransferTransactions(random(10))
+      const changeTxs = await makeSomeChangeTransactions(random(10))
+
+      osseus.config.blocks_to_finalize_bctx = 20
+
+      const updatedTxs = await osseus.lib.BlockchainTransaction.syncState()
+      expect(updatedTxs).to.have.lengthOf(transferTxs.length + changeTxs.length)
+      updatedTxs.forEach(tx => {
+        expect(tx.state).to.equal('CONFIRMED')
+        expect(tx.blockHash).not.to.be.undefined
+        expect(tx.blockNumber).not.to.be.undefined
+      })
+
+      osseus.config.blocks_to_finalize_bctx = 1
+
+      const updatedTxs2 = await osseus.lib.BlockchainTransaction.syncState()
+      expect(updatedTxs2).to.have.lengthOf(updatedTxs.length)
+      updatedTxs2.forEach((tx, i) => {
+        let isLast = i < updatedTxs2.length - 1
+        expect(tx.state).to.equal(isLast ? 'FINALIZED' : 'CONFIRMED')
       })
     })
   })
