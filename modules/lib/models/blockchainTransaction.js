@@ -153,9 +153,9 @@ module.exports = (osseus) => {
             let newState
             if (tx.blockNumber) {
               newState = 'CONFIRMED'
-            }
-            if (Math.abs(tx.blockNumber - latestBlock.number) >= osseus.config.blocks_to_finalize_bctx) {
-              newState = 'FINALIZED'
+              if (latestBlock.number - tx.blockNumber >= osseus.config.blocks_to_finalize_bctx) {
+                newState = 'FINALIZED'
+              }
             }
             let updatedTransaction = await osseus.db_models.bctx.update(transaction._id, {state: newState, blockHash: tx.blockHash, blockNumber: tx.blockNumber})
             done(null, updatedTransaction)
