@@ -20,6 +20,8 @@ const COMMUNITY_MANAGER_CC_BALANCE = 250 * TOKEN_DECIMALS
 
 const A_LOT_OF_TXS = process.env.A_LOT_OF_TXS || 0
 
+const delay = (ms) => new Promise(resolve => setTimeout(() => resolve(ms), ms))
+
 const encodeInsertData = (toToken) => {
   const abi = {
     name: 'insertCLNtoMarketMaker',
@@ -275,14 +277,17 @@ contract('BLOCKCHAIN_TRANSACTION', async (accounts) => {
             let to = communityUsersAddress
             let token = [cln.address, cc.address][Math.floor(Math.random() * 2)]
             let amount = 1 * TOKEN_DECIMALS
-            txs.push(makeTransactionAndValidate({from: from, to: to, token: token, amount: amount, opts: {nonce: i}}))
+            txs.push({from: from, to: to, token: token, amount: amount, opts: {nonce: i}})
           }
           return txs
         }
 
         const makeTransactionAndValidate = (data) => {
+          osseus.logger.debug(`makeTransactionAndValidate: ${JSON.stringify(data)}`)
           return new Promise(async (resolve, reject) => {
             try {
+              await delay(1000)
+
               let communityManagerClnBalanceBefore = new BigNumber(await cln.balanceOf(communityManagerAddress))
               let communityUsersClnBalanceBefore = new BigNumber(await cln.balanceOf(communityUsersAddress))
               let communityManagerCcBalanceBefore = new BigNumber(await cc.balanceOf(communityManagerAddress))
@@ -311,13 +316,11 @@ contract('BLOCKCHAIN_TRANSACTION', async (accounts) => {
 
         const txs = generateTransactions(A_LOT_OF_TXS)
 
-        await Promise.each(txs, tx => { return tx })
-          .then(results => {
-            expect(results).to.have.lengthOf(A_LOT_OF_TXS)
-            results.forEach(result => {
-              expect(result).not.to.be.undefined
-            })
-          })
+        let results = await Promise.mapSeries(txs, tx => { return makeTransactionAndValidate(tx) })
+        expect(results).to.have.lengthOf(A_LOT_OF_TXS)
+        results.forEach(result => {
+          expect(result).not.to.be.undefined
+        })
       })
     })
   })
@@ -640,14 +643,17 @@ contract('BLOCKCHAIN_TRANSACTION', async (accounts) => {
             let toToken = [cln.address, cc.address][1 - random]
             let marketMaker = mm.address
             let amount = 1 * TOKEN_DECIMALS
-            txs.push(makeTransactionAndValidate({from: from, fromToken: fromToken, toToken: toToken, marketMaker: marketMaker, amount: amount, opts: {nonce: i}}))
+            txs.push({from: from, fromToken: fromToken, toToken: toToken, marketMaker: marketMaker, amount: amount, opts: {nonce: i}})
           }
           return txs
         }
 
         const makeTransactionAndValidate = (data) => {
+          osseus.logger.debug(`makeTransactionAndValidate: ${JSON.stringify(data)}`)
           return new Promise(async (resolve, reject) => {
             try {
+              await delay(1000)
+
               let clnBalanceBefore = new BigNumber(await cln.balanceOf(communityManagerAddress))
               let ccBalanceBefore = new BigNumber(await cc.balanceOf(communityManagerAddress))
 
@@ -675,13 +681,11 @@ contract('BLOCKCHAIN_TRANSACTION', async (accounts) => {
 
         const txs = generateTransactions(A_LOT_OF_TXS)
 
-        await Promise.each(txs, tx => { return tx })
-          .then(results => {
-            expect(results).to.have.lengthOf(A_LOT_OF_TXS)
-            results.forEach(result => {
-              expect(result).not.to.be.undefined
-            })
-          })
+        let results = await Promise.mapSeries(txs, tx => { return makeTransactionAndValidate(tx) })
+        expect(results).to.have.lengthOf(A_LOT_OF_TXS)
+        results.forEach(result => {
+          expect(result).not.to.be.undefined
+        })
       })
     })
   })
