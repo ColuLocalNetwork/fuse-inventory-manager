@@ -268,21 +268,50 @@ contract('BLOCKCHAIN_TRANSACTION', async (accounts) => {
 
     describe(`A LOT (${A_LOT_OF_TXS})`, async () => {
       it('should make a lot of successful tranasctions', async () => {
-        const generateTransactions = async (n) => {
+        const generateTransactions = (n) => {
           const txs = []
           for (let i = 0; i < n; i++) {
             let from = communityManagerAddress
             let to = communityUsersAddress
             let token = [cln.address, cc.address][Math.floor(Math.random() * 2)]
             let amount = 1 * TOKEN_DECIMALS
-            txs.push({from: from, to: to, token: token, amount: amount, opts: {nonce: i}})
+            txs.push(makeTransactionAndValidate({from: from, to: to, token: token, amount: amount, opts: {nonce: i}}))
           }
           return txs
         }
 
-        const lotsOfTxs = generateTransactions(A_LOT_OF_TXS)
+        const makeTransactionAndValidate = (data) => {
+          return new Promise(async (resolve, reject) => {
+            try {
+              let communityManagerClnBalanceBefore = new BigNumber(await cln.balanceOf(communityManagerAddress))
+              let communityUsersClnBalanceBefore = new BigNumber(await cln.balanceOf(communityUsersAddress))
+              let communityManagerCcBalanceBefore = new BigNumber(await cc.balanceOf(communityManagerAddress))
+              let communityUsersCcBalanceBefore = new BigNumber(await cc.balanceOf(communityUsersAddress))
 
-        await Promise.each(lotsOfTxs, tx => { return tx })
+              let tx = await transfer(data)
+              let clnAmountTransferred = new BigNumber(data.token === cln.address ? data.amount : 0)
+              let ccAmountTransferred = new BigNumber(data.token === cc.address ? data.amount : 0)
+
+              let communityManagerClnBalanceAfter = new BigNumber(await cln.balanceOf(communityManagerAddress))
+              let communityUsersClnBalanceAfter = new BigNumber(await cln.balanceOf(communityUsersAddress))
+              let communityManagerCcBalanceAfter = new BigNumber(await cc.balanceOf(communityManagerAddress))
+              let communityUsersCcBalanceAfter = new BigNumber(await cc.balanceOf(communityUsersAddress))
+
+              expect(communityManagerClnBalanceAfter.toNumber()).to.equal(communityManagerClnBalanceBefore.minus(clnAmountTransferred).toNumber())
+              expect(communityUsersClnBalanceAfter.toNumber()).to.equal(communityUsersClnBalanceBefore.plus(clnAmountTransferred).toNumber())
+              expect(communityManagerCcBalanceAfter.toNumber()).to.equal(communityManagerCcBalanceBefore.minus(ccAmountTransferred).toNumber())
+              expect(communityUsersCcBalanceAfter.toNumber()).to.equal(communityUsersCcBalanceBefore.plus(ccAmountTransferred).toNumber())
+
+              resolve(tx)
+            } catch (err) {
+              reject(err)
+            }
+          })
+        }
+
+        const txs = generateTransactions(A_LOT_OF_TXS)
+
+        await Promise.each(txs, tx => { return tx })
           .then(results => {
             expect(results).to.have.lengthOf(A_LOT_OF_TXS)
             results.forEach(result => {
@@ -611,14 +640,42 @@ contract('BLOCKCHAIN_TRANSACTION', async (accounts) => {
             let toToken = [cln.address, cc.address][1 - random]
             let marketMaker = mm.address
             let amount = 1 * TOKEN_DECIMALS
-            txs.push(change({from: from, fromToken: fromToken, toToken: toToken, marketMaker: marketMaker, amount: amount, opts: {nonce: i}}))
+            txs.push(makeTransactionAndValidate({from: from, fromToken: fromToken, toToken: toToken, marketMaker: marketMaker, amount: amount, opts: {nonce: i}}))
           }
           return txs
         }
 
-        const lotsOfTxs = generateTransactions(A_LOT_OF_TXS)
+        const makeTransactionAndValidate = (data) => {
+          return new Promise(async (resolve, reject) => {
+            try {
+              let clnBalanceBefore = new BigNumber(await cln.balanceOf(communityManagerAddress))
+              let ccBalanceBefore = new BigNumber(await cc.balanceOf(communityManagerAddress))
 
-        await Promise.each(lotsOfTxs, tx => { return tx })
+              let returnAmount = await change(data)
+
+              let clnBalanceAfter = new BigNumber(await cln.balanceOf(communityManagerAddress))
+              let ccBalanceAfter = new BigNumber(await cc.balanceOf(communityManagerAddress))
+
+              if (data.fromToken === cln.address && data.toToken === cc.address) {
+                // CLN to CC
+                expect(clnBalanceAfter.toNumber()).to.equal(clnBalanceBefore.minus(new BigNumber(data.amount)).toNumber())
+                expect(ccBalanceAfter.toNumber()).to.equal(ccBalanceBefore.plus(new BigNumber(returnAmount)).toNumber())
+              } else {
+                // CC to CLN
+                expect(clnBalanceAfter.toNumber()).to.equal(clnBalanceBefore.plus(new BigNumber(returnAmount)).toNumber())
+                expect(ccBalanceAfter.toNumber()).to.equal(ccBalanceBefore.minus(new BigNumber(data.amount)).toNumber())
+              }
+
+              resolve(returnAmount)
+            } catch (err) {
+              reject(err)
+            }
+          })
+        }
+
+        const txs = generateTransactions(A_LOT_OF_TXS)
+
+        await Promise.each(txs, tx => { return tx })
           .then(results => {
             expect(results).to.have.lengthOf(A_LOT_OF_TXS)
             results.forEach(result => {
