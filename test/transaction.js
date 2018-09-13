@@ -1,6 +1,5 @@
 const OsseusHelper = require('./helpers/osseus')
 const expect = require('chai').expect
-const Promise = require('bluebird')
 
 const ColuLocalNetwork = artifacts.require('cln-solidity/contracts/ColuLocalNetwork.sol')
 const CurrencyFactory = artifacts.require('cln-solidity/contracts/CurrencyFactory.sol')
@@ -288,16 +287,24 @@ contract('TRANSACTION', async (accounts) => {
   describe(`A LOT (${A_LOT_OF_TXS})`, async () => {
     it('should make a lot of successful tranasctions', async () => {
       const generateTransactions = (n) => {
-        const txs = []
+        const result = {
+          txs: [],
+          checks: {}
+        }
         for (let i = 0; i < n; i++) {
           const fromAccount = accounts[Math.floor(Math.random() * 3)]
-          const toAccount = accounts[Math.floor(Math.random() * 3)]
+          let otherAccounts = accounts.filter(a => a !== fromAccount)
+          const toAccount = otherAccounts[Math.floor(Math.random() * 2)]
           let from = {accountAddress: fromAccount, currency: ccAddress}
           let to = {accountAddress: toAccount, currency: ccAddress}
           let amount = 1 * TOKEN_DECIMALS
-          txs.push(makeTransaction(from, to, amount))
+          result.txs.push(makeTransaction(from, to, amount))
+          result.checks[fromAccount] = result.checks[fromAccount] || 0
+          result.checks[fromAccount] -= amount
+          result.checks[toAccount] = result.checks[toAccount] || 0
+          result.checks[toAccount] += amount
         }
-        return txs
+        return result
       }
 
       const makeTransaction = (from, to, amount) => {
@@ -318,15 +325,24 @@ contract('TRANSACTION', async (accounts) => {
 
       await createCommunity(currency)
 
-      const lotsOfTxs = generateTransactions(A_LOT_OF_TXS)
+      const data = generateTransactions(A_LOT_OF_TXS)
 
-      await Promise.each(lotsOfTxs, tx => { return tx })
+      await Promise.all(data.txs, tx => { return tx })
         .then(results => {
           expect(results).to.have.lengthOf(A_LOT_OF_TXS)
           results.forEach(result => {
             expect(result).not.to.be.undefined
           })
         })
+
+      Object.keys(data.checks).forEach(async accountAddress => {
+        const amount = data.checks[accountAddress]
+        const wallet = await osseus.db_models.wallet.getByAddress(accountAddress)
+        const startingBalance = defaultBalances[accountAddress]
+        const currencyBalance = wallet.balances.filter(balance => balance.currency.toString() === currency.id)[0]
+        const actualBalance = currencyBalance.offchainAmount.toNumber()
+        expect(actualBalance).to.equal(startingBalance + amount)
+      })
     })
   })
 
