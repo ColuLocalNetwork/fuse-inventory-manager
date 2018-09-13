@@ -10,7 +10,7 @@ const TOKEN_DECIMALS = 10 ** 18
 const CLN_MAX_TOKENS = 15 * 10 ** 8 * TOKEN_DECIMALS
 const CC_MAX_TOKENS = 15 * 10 ** 6 * TOKEN_DECIMALS
 
-const A_LOT_OF_TXS = process.env.TEST_A_LOT ? 250 : 0
+const A_LOT_OF_TXS = process.env.A_LOT_OF_TXS || 0
 
 contract('TRANSACTION', async (accounts) => {
   let osseus

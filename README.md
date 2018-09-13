@@ -44,8 +44,9 @@ in [`test`](https://github.com/ColuLocalNetwork/inventory-manager/blob/master/te
 Before running `npm test` you should:
 
 ```
-$ export TEST_A_LOT=1
+$ export A_LOT_OF_TXS={n}
 ```
+where `{n}` is number of transactions to test
 
 The task uses [truffle framework](https://truffleframework.com/).
 

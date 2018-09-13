@@ -18,7 +18,7 @@ const COMMUNITY_MANAGER_ETH_BALANCE = 5 * TOKEN_DECIMALS
 const COMMUNITY_MANAGER_CLN_BALANCE = 100 * TOKEN_DECIMALS
 const COMMUNITY_MANAGER_CC_BALANCE = 250 * TOKEN_DECIMALS
 
-const A_LOT_OF_TXS = process.env.TEST_A_LOT ? 250 : 0
+const A_LOT_OF_TXS = process.env.A_LOT_OF_TXS || 0
 
 const encodeInsertData = (toToken) => {
   const abi = {
