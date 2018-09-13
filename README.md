@@ -46,7 +46,10 @@ Before running `npm test` you should:
 ```
 $ export A_LOT_OF_TXS={n}
 ```
-where `{n}` is number of transactions to test
+***Notes***
+
+* `{n}` is number of transactions to test
+* There's a 1 second delay between each blockchain transaction so be patient :)
 
 The task uses [truffle framework](https://truffleframework.com/).
 
