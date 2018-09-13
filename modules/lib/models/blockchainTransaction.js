@@ -1,36 +1,8 @@
 const BigNumber = require('bignumber.js')
-const contract = require('truffle-contract')
 const coder = require('web3-eth-abi')
 
 module.exports = (osseus) => {
   function blockchainTransaction () {}
-
-  const getCurrencyFromToken = (token, community) => {
-    return new Promise(async (resolve, reject) => {
-      try {
-        const result = {}
-        if (token === osseus.config.cln_address) {
-          osseus.logger.silly(`getCurrencyFromToken --> CLN: ${token}`)
-          const provider = await osseus.lib.Community.getProvider(community)
-          const CLN = contract({abi: osseus.config.cln_abi})
-          CLN.setProvider(provider)
-          result.contract = await CLN.at(token)
-          result.web3 = CLN.web3
-        } else {
-          osseus.logger.silly(`getCurrencyFromToken --> CC: ${token}`)
-          const communityWithContracts = await osseus.lib.Community.get(community.id, community)
-          if (communityWithContracts.currencyContracts.cc.address !== token) {
-            return reject(new Error(`Unrecognized token: ${token} for community: ${community.id}`))
-          }
-          result.contract = communityWithContracts.currencyContracts.cc
-          result.web3 = communityWithContracts.currencyContracts.web3
-        }
-        resolve(result)
-      } catch (err) {
-        reject(err)
-      }
-    })
-  }
 
   const validateAmount = (amount) => {
     return new Promise(async (resolve, reject) => {
@@ -88,7 +60,7 @@ module.exports = (osseus) => {
     return new Promise(async (resolve, reject) => {
       try {
         const community = await osseus.db_models.community.getByWalletAddress(from)
-        const currency = await getCurrencyFromToken(token, community)
+        const currency = await osseus.utils.getCurrencyFromToken(token, community)
         amount = await validateAmount(amount)
         opts = opts || {}
         opts.from = opts.from || from
@@ -118,7 +90,7 @@ module.exports = (osseus) => {
     return new Promise(async (resolve, reject) => {
       try {
         const community = await osseus.db_models.community.getByWalletAddress(from)
-        const currency = await getCurrencyFromToken(fromToken, community)
+        const currency = await osseus.utils.getCurrencyFromToken(fromToken, community)
         amount = await validateAmount(amount)
         opts = opts || {}
         opts.from = opts.from || from
