@@ -146,6 +146,9 @@ module.exports = (osseus) => {
 
     return new Promise((resolve, reject) => {
       // console.log(`processNewTransaction: ${JSON.stringify(tx)}`)
+      if (!tx) {
+        return reject(new Error(`transaction undefined in processNewTransaction`))
+      }
       if (tx.state !== 'NEW') {
         return reject(new Error(`Illegal state for processNewTransaction - should be NEW`))
       }
@@ -206,6 +209,9 @@ module.exports = (osseus) => {
 
     return new Promise(async (resolve, reject) => {
       // console.log(`processPendingTransaction: ${JSON.stringify(tx)}`)
+      if (!tx) {
+        return reject(new Error(`transaction undefined in processPendingTransaction`))
+      }
       if (tx.state !== 'PENDING') {
         return reject(new Error(`Illegal state for processPendingTransaction - should be PENDING`))
       }
@@ -257,6 +263,9 @@ module.exports = (osseus) => {
 
     return new Promise(async (resolve, reject) => {
       // console.log(`cancelTransaction: ${JSON.stringify(tx)}`)
+      if (!tx) {
+        return reject(new Error(`transaction undefined in cancelTransaction`))
+      }
       if (tx.state !== 'PENDING') {
         return reject(new Error(`Illegal state for cancelTransaction - should be PENDING`))
       }
@@ -284,47 +293,45 @@ module.exports = (osseus) => {
     })
   }
 
-  transaction.getById = (id) => {
-    return new Promise((resolve, reject) => {
-      Transaction.findById(id, (err, doc) => {
-        if (err) {
-          return reject(err)
-        }
-        if (!doc) {
-          return reject(new Error(`Transaction not found for id ${id}`))
-        }
-        resolve(doc)
-      })
-    })
-  }
-
-  transaction.get = (cond) => {
+  transaction.get = (filters, projection, limit, sort, populate) => {
     const query = {}
     const conditions = []
 
-    if (cond.address) {
-      conditions.push({$or: [{'from.accountAddress': cond.address}, {'to.accountAddress': cond.address}]})
+    if (filters) {
+      if (filters.id) conditions.push({_id: filters.id})
+      if (filters.address) {
+        conditions.push({$or: [{'from.accountAddress': filters.address}, {'to.accountAddress': filters.address}]})
+      } else {
+        if (filters.fromAddress) conditions.push({'from.accountAddress': filters.fromAddress})
+        if (filters.toAddress) conditions.push({'to.accountAddress': filters.toAddress})
+      }
+      if (filters.state) conditions.push({state: filters.state})
+      if (filters.currency) conditions.push({$or: [{'from.currency': filters.currency}, {'to.currency': filters.currency}]})
     }
-    if (cond.state) {
-      conditions.push({state: cond.state})
-    }
-    if (cond.currency) {
-      conditions.push({$or: [{'from.currency': cond.currency}, {'to.currency': cond.currency}]})
-    }
-    if (conditions.length > 0) {
-      query.$and = conditions
-    }
+    if (conditions.length > 0) query.$and = conditions
+
+    projection = projection || {}
+    sort = sort || {created_at: 1}
 
     return new Promise((resolve, reject) => {
-      Transaction.find(query, (err, docs) => {
-        if (err) {
-          return reject(err)
-        }
-        if (!docs || docs.length === 0) {
-          return reject(new Error(`No transactions found`))
-        }
-        resolve(docs)
-      })
+      Transaction.find(query, projection)
+        .lean()
+        .limit(limit)
+        .sort(sort)
+        .populate(populate ? 'from.currency to.currency' : '')
+        .exec((err, docs) => {
+          if (err) {
+            return reject(err)
+          }
+          if (!docs || docs.length === 0) {
+            return reject(new Error(`No transactions found`))
+          }
+          docs = docs.map(doc => {
+            doc.amount = getDecimal128(doc.amount)
+            return doc
+          })
+          resolve(docs)
+        })
     })
   }
 

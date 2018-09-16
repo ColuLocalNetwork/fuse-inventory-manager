@@ -1,6 +1,9 @@
 const OsseusHelper = require('./helpers/osseus')
+const BigNumber = require('bignumber.js')
+const coder = require('web3-eth-abi')
 const expect = require('chai').expect
 
+const ColuLocalCurrency = artifacts.require('cln-solidity/contracts/ColuLocalCurrency.sol')
 const ColuLocalNetwork = artifacts.require('cln-solidity/contracts/ColuLocalNetwork.sol')
 const CurrencyFactory = artifacts.require('cln-solidity/contracts/CurrencyFactory.sol')
 const EllipseMarketMakerLib = artifacts.require('cln-solidity/contracts/EllipseMarketMakerLib.sol')
@@ -9,12 +12,39 @@ const TOKEN_DECIMALS = 10 ** 18
 const CLN_MAX_TOKENS = 15 * 10 ** 8 * TOKEN_DECIMALS
 const CC_MAX_TOKENS = 15 * 10 ** 6 * TOKEN_DECIMALS
 
+const COMMUNITY_MANAGER_ETH_BALANCE = 1 * TOKEN_DECIMALS
+const COMMUNITY_MANAGER_CLN_BALANCE = 100 * TOKEN_DECIMALS
+const COMMUNITY_MANAGER_CC_BALANCE = 250 * TOKEN_DECIMALS
+
 const A_LOT_OF_TXS = process.env.A_LOT_OF_TXS || 0
+
+const random = (n) => { return Math.floor(Math.random() * n) }
+
+const encodeInsertData = (toToken) => {
+  const abi = {
+    name: 'insertCLNtoMarketMaker',
+    type: 'function',
+    inputs: [{
+      type: 'address',
+      name: 'token'
+    }],
+    outputs: [
+      {
+        type: 'bool',
+        name: 'success'
+      }
+    ]
+  }
+  const params = [toToken]
+  return coder.encodeFunctionCall(abi, params)
+}
 
 contract('TRANSACTION', async (accounts) => {
   let osseus
 
   let cln
+
+  let cc
 
   let ccAddress
   let mmAddress
@@ -22,9 +52,9 @@ contract('TRANSACTION', async (accounts) => {
   const ccABI = JSON.stringify(require('./helpers/abi/cc'))
   const mmABI = JSON.stringify(require('./helpers/abi/mm'))
 
-  const managerAccountAddress = accounts[0]
-  const usersAccountAddress = accounts[1]
-  const merchantsAccountAddress = accounts[2]
+  let managerAccountAddress = accounts[0]
+  let usersAccountAddress = accounts[1]
+  let merchantsAccountAddress = accounts[2]
 
   const defaultBalances = {}
   defaultBalances[managerAccountAddress] = (A_LOT_OF_TXS || 1000) * TOKEN_DECIMALS
@@ -34,7 +64,7 @@ contract('TRANSACTION', async (accounts) => {
   const validateTransaction = (tx1, tx2, from, to, amount, state) => {
     expect(tx1).to.be.a('Object')
     expect(tx1.id).to.be.a('string')
-    if (tx2) expect(tx1.id).to.equal(tx2.id)
+    if (tx2) expect(tx1.id).to.equal(tx2._id.toString())
     expect(tx1.from.accountAddress).to.equal(tx2 ? tx2.from.accountAddress : from.accountAddress)
     expect(tx1.from.currency.toString()).to.equal(tx2 ? tx2.from.currency.toString() : from.currency)
     expect(tx1.to.accountAddress).to.equal(tx2 ? tx2.to.accountAddress : to.accountAddress)
@@ -123,17 +153,24 @@ contract('TRANSACTION', async (accounts) => {
     await cln.makeTokensTransferable()
 
     const currencyFactory = await CurrencyFactory.new(mmLib.address, cln.address, {from: managerAccountAddress})
-    const result = await currencyFactory.createCurrency('TestLocalCurrency', 'TLC', 18, CC_MAX_TOKENS, 'ipfs://hash', {from: managerAccountAddress})
+    const result = await currencyFactory.createCurrency('TestLocalCurrency', 'TLC', 18, CC_MAX_TOKENS, 'ipfs://hash', {from: accounts[0]})
     ccAddress = result.logs[0].args.token
+    cc = await ColuLocalCurrency.at(ccAddress)
+
+    let insertCLNtoMarketMakerData = encodeInsertData(ccAddress)
+    await cln.transferAndCall(currencyFactory.address, 100000 * TOKEN_DECIMALS, insertCLNtoMarketMakerData)
+
+    await currencyFactory.openMarket(ccAddress)
 
     mmAddress = await currencyFactory.getMarketMakerAddressFromToken(ccAddress)
 
     await currencyFactory.openMarket(ccAddress)
 
     osseus = await OsseusHelper()
+    osseus.config.cln_address = cln.address
   })
 
-  beforeEach(function () {
+  beforeEach(async function () {
     Object.keys(osseus.db_models).forEach(model => {
       osseus.db_models[model].getModel().remove({}, () => {})
     })
@@ -185,8 +222,8 @@ contract('TRANSACTION', async (accounts) => {
     let to = {accountAddress: usersAccountAddress, currency: ccAddress}
 
     let tx1 = await osseus.lib.Transaction.create(from, to, amount)
-    let tx2 = await osseus.db_models.tx.getById(tx1.id)
-    validateTransaction(tx1, tx2)
+    let tx2 = await osseus.db_models.tx.get({id: tx1.id})
+    validateTransaction(tx1, tx2[0])
   })
 
   it('should get error if transaction not found (by id)', async () => {
@@ -205,7 +242,7 @@ contract('TRANSACTION', async (accounts) => {
     to.currency = currency.id
     validateTransaction(tx1, undefined, from, to, amount)
 
-    let tx2 = await osseus.db_models.tx.getById(fakeId).catch(err => {
+    let tx2 = await osseus.db_models.tx.get({id: fakeId}).catch(err => {
       expect(err).not.to.be.undefined
     })
     expect(tx2).to.be.undefined
@@ -222,12 +259,12 @@ contract('TRANSACTION', async (accounts) => {
 
     let tx1 = await osseus.lib.Transaction.create(from, to, amount)
 
-    let txs = await osseus.db_models.tx.get({address: managerAccountAddress}) // from.accountAddress
+    let txs = await osseus.db_models.tx.get({fromAddress: managerAccountAddress})
     expect(txs).to.be.an('array')
     expect(txs).to.have.lengthOf(1)
     validateTransaction(tx1, txs[0])
 
-    txs = await osseus.db_models.tx.get({address: usersAccountAddress}) // to.accountAddress
+    txs = await osseus.db_models.tx.get({toAddress: usersAccountAddress})
     expect(txs).to.be.an('array')
     expect(txs).to.have.lengthOf(1)
     validateTransaction(tx1, txs[0])
@@ -292,9 +329,9 @@ contract('TRANSACTION', async (accounts) => {
           checks: {}
         }
         for (let i = 0; i < n; i++) {
-          const fromAccount = accounts[Math.floor(Math.random() * 3)]
+          const fromAccount = accounts[random(3)]
           let otherAccounts = accounts.filter(a => a !== fromAccount)
-          const toAccount = otherAccounts[Math.floor(Math.random() * 2)]
+          const toAccount = otherAccounts[random(2)]
           let from = {accountAddress: fromAccount, currency: ccAddress}
           let to = {accountAddress: toAccount, currency: ccAddress}
           let amount = 1 * TOKEN_DECIMALS
@@ -346,9 +383,128 @@ contract('TRANSACTION', async (accounts) => {
     })
   })
 
-  after(async function () {
-    Object.keys(osseus.db_models).forEach(model => {
-      osseus.db_models[model].getModel().remove({}, () => {})
+  describe('TRANSMIT', async () => {
+    beforeEach(async function () {
+      let currency = await osseus.lib.Currency.create(ccAddress, mmAddress, ccABI, mmABI)
+      let community = await osseus.lib.Community.create('Test Community', currency)
+
+      managerAccountAddress = community.wallets.filter(wallet => wallet.type === 'manager')[0].address
+      usersAccountAddress = community.wallets.filter(wallet => wallet.type === 'users')[0].address
+      merchantsAccountAddress = community.wallets.filter(wallet => wallet.type === 'merchants')[0].address
+
+      // should have ETH
+      await web3.eth.sendTransaction({from: accounts[0], to: managerAccountAddress, value: COMMUNITY_MANAGER_ETH_BALANCE})
+      await web3.eth.sendTransaction({from: accounts[0], to: usersAccountAddress, value: COMMUNITY_MANAGER_ETH_BALANCE})
+      await web3.eth.sendTransaction({from: accounts[0], to: merchantsAccountAddress, value: COMMUNITY_MANAGER_ETH_BALANCE})
+
+      // should have CLN
+      await cln.transfer(managerAccountAddress, COMMUNITY_MANAGER_CLN_BALANCE, {from: accounts[0]})
+      await cln.transfer(usersAccountAddress, COMMUNITY_MANAGER_CLN_BALANCE, {from: accounts[0]})
+      await cln.transfer(merchantsAccountAddress, COMMUNITY_MANAGER_CLN_BALANCE, {from: accounts[0]})
+
+      // should have CC
+      await cc.transfer(managerAccountAddress, COMMUNITY_MANAGER_CC_BALANCE, {from: accounts[0]})
+      await cc.transfer(usersAccountAddress, COMMUNITY_MANAGER_CC_BALANCE, {from: accounts[0]})
+      await cc.transfer(merchantsAccountAddress, COMMUNITY_MANAGER_CC_BALANCE, {from: accounts[0]})
+
+      // should have offchain balance
+      let initialOffchainBalance = new BigNumber(1000 * TOKEN_DECIMALS)
+      await updateOffchainAmount(managerAccountAddress, currency.id, initialOffchainBalance)
+      await updateOffchainAmount(usersAccountAddress, currency.id, initialOffchainBalance)
+      await updateOffchainAmount(merchantsAccountAddress, currency.id, initialOffchainBalance)
     })
+
+    const updateOffchainAmount = (address, currency, amount) => {
+      return new Promise(async (resolve, reject) => {
+        const Wallet = osseus.db_models.wallet.getModel()
+
+        const condition = {
+          'address': address,
+          'balances.currency': currency
+        }
+        const update = {
+          '$inc': {
+            'balances.$.offchainAmount': amount
+          }
+        }
+        const opts = {
+          upsert: false,
+          multi: false
+        }
+
+        Wallet.update(condition, update, opts).exec((err, raw) => {
+          if (err) {
+            return reject(err)
+          }
+          resolve(!!raw.nModified)
+        })
+      })
+    }
+
+    const makeSomeTransactions = (n) => {
+      let txs = []
+
+      const makeTransaction = (from, to, amount) => {
+        return new Promise(async (resolve, reject) => {
+          try {
+            let tx = await osseus.lib.Transaction.create(from, to, amount)
+            resolve(tx)
+          } catch (err) {
+            reject(err)
+          }
+        })
+      }
+
+      let localAccounts = [managerAccountAddress, usersAccountAddress, merchantsAccountAddress]
+
+      for (let i = 0; i < n; i++) {
+        const fromAccount = localAccounts[random(3)]
+        let otherAccounts = localAccounts.filter(a => a !== fromAccount)
+        const toAccount = otherAccounts[random(2)]
+        let from = {accountAddress: fromAccount, currency: ccAddress}
+        let to = {accountAddress: toAccount, currency: ccAddress}
+        let amount = (random(5) + 1) * TOKEN_DECIMALS
+        txs.push(makeTransaction(from, to, amount))
+      }
+
+      return txs
+    }
+
+    // TODO test transfer of both CLN & CC
+
+    it('should be able to transmit transactions for specific account', async () => {
+      const txs = makeSomeTransactions(random(100) + 1)
+      await Promise.all(txs, tx => { return tx })
+        .then(async results => {
+          const transmittedTxs = await osseus.lib.Transaction.transmit(managerAccountAddress)
+          // TODO add some checks: txs state, blockchain balances, etc...
+        })
+    })
+
+    it('should be able to transmit transactions for specific currency', async () => {
+      // TODO
+    })
+
+    it('should be able to transmit all transactions', async () => {
+      // TODO
+    })
+
+    it('should not be able to transmit transactions for specific account if not enough blockchain balance', async () => {
+      // TODO
+    })
+
+    it('should be able to transmit only transactions with enough blockchain balance of relevant accounts', async () => {
+      // TODO
+    })
+
+    it('should be able to transmit relevant transacions, create some more and transmit only the ones not transmitted', async () => {
+      // TODO
+    })
+  })
+
+  after(async function () {
+    // Object.keys(osseus.db_models).forEach(model => {
+    //   osseus.db_models[model].getModel().remove({}, () => {})
+    // })
   })
 })
