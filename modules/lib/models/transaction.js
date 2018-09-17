@@ -141,7 +141,7 @@ module.exports = (osseus) => {
     })
   }
 
-  const prepareTransactionsToBeTransmitted = (transactions) => {
+  const prepareTransactionsToBeTransmitted = (transactions, bctxOpts) => {
     return new Promise(async (resolve, reject) => {
       try {
         const transmitDataPerToken = {}
@@ -183,7 +183,7 @@ module.exports = (osseus) => {
             let nObj = negatives[0]
             let pObj = positives.splice(0, 1)[0]
             nObj.amount += pObj.amount
-            bctxs.push({from: nObj.account, to: pObj.account, amount: pObj.amount, token: token})
+            bctxs.push({from: nObj.account, to: pObj.account, amount: pObj.amount, token: token, opts: bctxOpts})
             if (nObj.amount < 0) {
               negatives.push(nObj)
             }
@@ -276,8 +276,8 @@ module.exports = (osseus) => {
 
         const transactions = await selectTransactionsToTransmit(opts)
         const txids = transactions.map(transaction => transaction._id.toString())
-        const bctxs = await prepareTransactionsToBeTransmitted(transactions)
-        const result = await transmitToBlockchain(bctxs, txids)
+        const bctxs = await prepareTransactionsToBeTransmitted(transactions, opts.bc)
+        const result = await transmitToBlockchain(bctxs, txids, opts)
 
         await updateBlockchainBalances()
         await validateBlockchainBalances()

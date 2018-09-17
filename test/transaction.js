@@ -466,9 +466,9 @@ contract('TRANSACTION', async (accounts) => {
     it('should be able to transmit transactions for specific account', async () => {
       const txs = makeSomeTransactions(random(100) + 1)
       const results = await Promise.all(txs, tx => { return tx })
-      console.log('!!! results !!!', results)
-      const transmittedTxs = await osseus.lib.Transaction.transmit({filters: {address: managerAccountAddress}})
-      console.log('!!! transmittedTxs !!!', transmittedTxs)
+      // console.log('!!! results !!!', results)
+      const transmittedTxs = await osseus.lib.Transaction.transmit({filters: {address: managerAccountAddress}, bc: {gas: 1000000}})
+      // console.log('!!! transmittedTxs !!!', transmittedTxs)
     })
 
     it('should be able to transmit transactions for specific currency', async () => {
