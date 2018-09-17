@@ -24,7 +24,7 @@ module.exports = (osseus) => {
     from: {type: ParticipantSchema},
     to: {type: ParticipantSchema},
     amount: {type: db.mongoose.Schema.Types.Decimal128, set: setDecimal128, get: getDecimal128},
-    bctx: {type: Schema.Types.ObjectId, ref: 'Blockchain_Transaction'},
+    transmit: {type: Schema.Types.ObjectId, ref: 'Transmit'},
     state: {type: String, enum: ['NEW', 'PENDING', 'DONE', 'CANCELED', 'TRANSMITTED'], default: 'NEW'}
   }).plugin(timestamps())
 
@@ -54,7 +54,7 @@ module.exports = (osseus) => {
         from: ret.from,
         to: ret.to,
         amount: ret.amount,
-        bctx: ret.bctx,
+        transmit: ret.transmit,
         state: ret.state
       }
       return safeRet
@@ -332,6 +332,24 @@ module.exports = (osseus) => {
           })
           resolve(docs)
         })
+    })
+  }
+
+  transaction.markAsTransmitted = (ids, transmitId) => {
+    return new Promise(async (resolve, reject) => {
+      try {
+        const condition = {_id: {'$in': ids}, state: 'DONE'}
+        const update = {$set: {state: 'TRANSMITTED', transmit: transmitId}}
+        const opts = {upsert: false, multi: true}
+        Transaction.update(condition, update, opts, (err, raw) => {
+          if (err) {
+            return reject(err)
+          }
+          resolve(raw.nModified)
+        })
+      } catch (err) {
+        reject(err)
+      }
     })
   }
 

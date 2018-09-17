@@ -472,13 +472,12 @@ contract('TRANSACTION', async (accounts) => {
 
     // TODO test transfer of both CLN & CC
 
-    it('should be able to transmit transactions for specific account', async () => {
+    it.only('should be able to transmit transactions for specific account', async () => {
       const txs = makeSomeTransactions(random(100) + 1)
-      await Promise.all(txs, tx => { return tx })
-        .then(async results => {
-          const transmittedTxs = await osseus.lib.Transaction.transmit(managerAccountAddress)
-          // TODO add some checks: txs state, blockchain balances, etc...
-        })
+      const results = await Promise.all(txs, tx => { return tx })
+      console.log('!!! results !!!', results)
+      const transmittedTxs = await osseus.lib.Transaction.transmit({filters: {address: managerAccountAddress}})
+      console.log('!!! transmittedTxs !!!', transmittedTxs)
     })
 
     it('should be able to transmit transactions for specific currency', async () => {
@@ -503,8 +502,8 @@ contract('TRANSACTION', async (accounts) => {
   })
 
   after(async function () {
-    // Object.keys(osseus.db_models).forEach(model => {
-    //   osseus.db_models[model].getModel().remove({}, () => {})
-    // })
+    Object.keys(osseus.db_models).forEach(model => {
+      osseus.db_models[model].getModel().remove({}, () => {})
+    })
   })
 })

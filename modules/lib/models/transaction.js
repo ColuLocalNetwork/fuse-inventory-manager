@@ -32,11 +32,6 @@ module.exports = (osseus) => {
     })
   }
 
-  const bcTransfer = async (data) => {
-    let bctx = await osseus.lib.BlockchainTransaction.transfer(data.from, data.to, data.token, data.amount, data.opts)
-    return bctx
-  }
-
   transaction.create = (from, to, amount) => {
     return new Promise(async (resolve, reject) => {
       try {
@@ -57,14 +52,14 @@ module.exports = (osseus) => {
     })
   }
 
-  transaction.transmit = (address, currency, limit, sort) => {
+  transaction.transmit = (opts) => {
     return new Promise(async (resolve, reject) => {
       try {
         const filters = {
           state: 'DONE'
         }
-        if (address) filters.fromAddress = address
-        if (currency) filters.currency = currency
+        if (opts.filters && opts.filters.address) filters.fromAddress = opts.filters.address
+        if (opts.filters && opts.filters.currency) filters.currency = opts.filters.currency
 
         const projection = {
           'from.accountAddress': 1,
@@ -73,37 +68,78 @@ module.exports = (osseus) => {
           amount: 1
         }
 
-        osseus.logger.debug(`filters: ${JSON.stringify(filters)}, projection: ${JSON.stringify(projection)}, limit: ${limit}, sort: ${JSON.stringify(sort)}`)
-        const transactions = await osseus.db_models.tx.get(filters, projection, limit, sort, true)
+        osseus.logger.debug(`filters: ${JSON.stringify(filters)}, projection: ${JSON.stringify(projection)}, limit: ${opts.limit}, sort: ${JSON.stringify(opts.sort)}`)
+        const transactions = await osseus.db_models.tx.get(filters, projection, opts.limit, opts.sort, true)
         osseus.logger.debug(`got ${transactions.length} transactions`)
 
-        const transmitData = {}
+        const transmitDataPerToken = {}
+        let txids = []
         transactions.forEach(transaction => {
           let txid = transaction._id.toString()
+          txids.push(txid)
           let from = transaction.from.accountAddress
           let token = transaction.from.currency.ccAddress
           let to = transaction.to.accountAddress
           let amount = new BigNumber(transaction.amount)
-          osseus.logger.silly(`txid: ${txid}, from: ${from}, to: ${to}, amount: ${amount.toNumber()}`)
-          transmitData[from] = transmitData[from] || {}
-          transmitData[from][to] = transmitData[from][to] || {token: token, amount: new BigNumber(0), ids: []}
-          transmitData[from][to].amount = transmitData[from][to].amount.plus(amount)
-          transmitData[from][to].ids.push(txid)
-        })
-        osseus.logger.debug(`transmitData: ${JSON.stringify(transmitData)}`)
 
-        const transmit = []
-        Object.keys(transmitData).forEach(from => {
-          Object.keys(transmitData[from]).forEach(async to => {
-            transmit.push({from: from.toString(), to: to, token: transmitData[from][to].token, amount: transmitData[from][to].amount})
+          osseus.logger.silly(`token: ${token}, txid: ${txid}, from: ${from}, to: ${to}, amount: ${amount.toNumber()}`)
+
+          transmitDataPerToken[token] = transmitDataPerToken[token] || {}
+          transmitDataPerToken[token][from] = (transmitDataPerToken[token][from] || new BigNumber(0)).minus(amount)
+
+          transmitDataPerToken[token] = transmitDataPerToken[token] || {}
+          transmitDataPerToken[token][to] = (transmitDataPerToken[token][to] || new BigNumber(0)).plus(amount)
+        })
+
+        const bctxs = []
+        Object.keys(transmitDataPerToken).forEach(token => {
+          let sum = new BigNumber(0)
+          let negatives = []
+          let positives = []
+          Object.keys(transmitDataPerToken[token]).forEach(account => {
+            let amount = transmitDataPerToken[token][account]
+            sum = sum.plus(amount)
+            if (amount > 0) {
+              positives.push({account: account, amount: amount})
+            } else if (amount < 0) {
+              negatives.push({account: account, amount: amount})
+            }
           })
+          if (sum.toNumber() !== 0) {
+            throw new Error(`Transactions for token: ${token} are not adding up to zero !!!`)
+          }
+
+          while (negatives.length > 0 && positives.length > 0) {
+            let nObj = negatives[0]
+            let pObj = positives.splice(0, 1)[0]
+            nObj.amount += pObj.amount
+            bctxs.push({from: nObj.account, to: pObj.account, amount: pObj.amount, token: token})
+            if (nObj.amount < 0) {
+              negatives.push(nObj)
+            }
+          }
         })
-        const transmittedTxs = await Promise.mapSeries(transmit, tx => { return bcTransfer(tx) })
-        osseus.logger.debug(`transmittedTxs: ${JSON.stringify(transmittedTxs)}`)
 
-        // TODO update db as transmitted
+        const transmittedBctxs = await Promise.mapSeries(bctxs, async tx => {
+          let bctx = await osseus.lib.BlockchainTransaction.transfer(tx.from, tx.to, tx.token, tx.amount, tx.opts)
+          return bctx
+        })
 
-        resolve(transmittedTxs)
+        osseus.logger.debug(`transmittedBctxs: ${JSON.stringify(transmittedBctxs)}`)
+        osseus.logger.debug(`transaction ids to update: ${JSON.stringify(txids)}`)
+
+        const transmit = await osseus.db_models.transmit.create({offchainTransactions: txids, blockchainTransactions: transmittedBctxs.map(tbctx => tbctx.result.id)})
+        osseus.logger.debug(`transmit: ${JSON.stringify(transmit)}`)
+
+        const nUpdated = await osseus.db_models.tx.markAsTransmitted(txids, transmit.id)
+        osseus.logger.debug(`nUpdated: ${nUpdated}`)
+
+        resolve({
+          txs: txids,
+          bctxs: transmittedBctxs,
+          transmit: transmit,
+          nUpdated: nUpdated
+        })
       } catch (err) {
         reject(err)
       }

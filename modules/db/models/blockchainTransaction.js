@@ -26,7 +26,6 @@ module.exports = (osseus) => {
     to: {type: String},
     transactionIndex: {type: Number},
     value: {type: db.mongoose.Schema.Types.Decimal128, set: setDecimal128, get: getDecimal128},
-    transmittedAt: {type: Date},
     type: {type: String, enum: ['TRANSFER', 'CHANGE']},
     meta: {type: db.mongoose.Schema.Types.Mixed},
     state: {type: String, enum: ['TRANSMITTED', 'CONFIRMED', 'FINALIZED'], default: 'TRANSMITTED'}
@@ -51,7 +50,6 @@ module.exports = (osseus) => {
         to: ret.to,
         transactionIndex: ret.transactionIndex,
         value: ret.value,
-        transmittedAt: ret.transmittedAt,
         type: ret.type,
         meta: ret.meta,
         state: ret.state
@@ -119,7 +117,7 @@ module.exports = (osseus) => {
 
       projection = projection || {}
       limit = limit || 100
-      sort = sort || {transmittedAt: 1}
+      sort = sort || {created_at: 1}
 
       BlockchainTransaction.find(query, projection)
         .lean()
