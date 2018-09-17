@@ -382,7 +382,7 @@ module.exports = (osseus) => {
   transaction.markAsTransmitted = (ids, transmitId) => {
     return new Promise(async (resolve, reject) => {
       try {
-        const condition = {_id: {'$in': ids}, state: 'DONE'}
+        const condition = {_id: {'$in': ids}, state: 'DONE'} // TODO should be in {state: 'SELECTED'} and maybe add {context: 'transfer'}
         const update = {$set: {state: 'TRANSMITTED', transmit: transmitId}}
         const opts = {upsert: false, multi: true}
         Transaction.update(condition, update, opts, (err, raw) => {
