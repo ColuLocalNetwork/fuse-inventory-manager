@@ -83,6 +83,36 @@ module.exports = (osseus) => {
     })
   }
 
+  const updateBlockchainBalances = () => {
+    return new Promise(async (resolve, reject) => {
+      try {
+        const tasks = []
+        const wallets = await osseus.db_models.wallet.getAll()
+        osseus.logger.debug(`found ${wallets.length} wallets`)
+        wallets.forEach(wallet => {
+          let address = wallet.address
+          let currencies = wallet.balances.map(balance => balance.currency.ccAddress)
+          currencies.forEach(currency => {
+            tasks.push(new Promise(async (resolve, reject) => {
+              try {
+                let updated = await osseus.utils.updateBlockchainBalance(address, currency)
+                resolve({address: address, currency: currency, updated: updated})
+              } catch (err) {
+                reject(err)
+              }
+            }))
+          })
+        })
+        osseus.logger.debug(`about to perform ${tasks.length} tasks`)
+        const results = await Promise.all(tasks, task => { return task })
+        osseus.logger.debug(`task results: ${JSON.stringify(results)}`)
+        resolve()
+      } catch (err) {
+        reject(err)
+      }
+    })
+  }
+
   const selectTransactionsToTransmit = (opts) => {
     return new Promise(async (resolve, reject) => {
       try {
@@ -249,7 +279,7 @@ module.exports = (osseus) => {
         const bctxs = await prepareTransactionsToBeTransmitted(transactions)
         const result = await transmitToBlockchain(bctxs, txids)
 
-        // TODO update blockchain balances in DB
+        await updateBlockchainBalances()
         await validateBlockchainBalances()
 
         resolve(result)

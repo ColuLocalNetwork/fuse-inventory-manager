@@ -194,6 +194,17 @@ contract('UTILS', async (accounts) => {
     expect(results[0].valid).to.equal(true)
   })
 
+  it('should be able to update blockchain balance in DB according to on chain', async () => {
+    let valid1 = await osseus.utils.validateBlockchainBalance(communityManagerAddress, ccAddress)
+    expect(valid1).to.be.true
+
+    await cc.transfer(communityManagerAddress, 1 * TOKEN_DECIMALS, {from: accounts[0]})
+    await osseus.utils.updateBlockchainBalance(communityManagerAddress, ccAddress)
+
+    let valid2 = await osseus.utils.validateBlockchainBalance(communityManagerAddress, ccAddress)
+    expect(valid2).to.be.true
+  })
+
   after(async function () {
     Object.keys(osseus.db_models).forEach(model => {
       osseus.db_models[model].getModel().remove({}, () => {})
