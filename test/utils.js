@@ -1,4 +1,5 @@
 const OsseusHelper = require('./helpers/osseus')
+const BigNumber = require('bignumber.js')
 const coder = require('web3-eth-abi')
 const expect = require('chai').expect
 
@@ -102,26 +103,29 @@ contract('UTILS', async (accounts) => {
 
     // community manager should have CC
     await cc.transfer(communityManagerAddress, COMMUNITY_MANAGER_CC_BALANCE, {from: accounts[0]})
+
+    // update the wallet
+    await osseus.db_models.wallet.update({'address': communityManagerAddress, 'balances.currency': currency.id}, {'balances.$.offchainAmount': new BigNumber(COMMUNITY_MANAGER_CC_BALANCE), 'balances.$.blockchainAmount': new BigNumber(COMMUNITY_MANAGER_CC_BALANCE)})
   })
 
   it('should be able to check ETH balance for existing wallet', async () => {
-    let balance = await osseus.utils.checkBalance(communityManagerAddress, 'ETH')
+    let balance = await osseus.utils.getBlockchainBalance(communityManagerAddress, 'ETH')
     expect(balance).to.equal(COMMUNITY_MANAGER_ETH_BALANCE)
   })
 
   it('should be able to check CLN balance for existing wallet', async () => {
-    let balance = await osseus.utils.checkBalance(communityManagerAddress, cln.address)
+    let balance = await osseus.utils.getBlockchainBalance(communityManagerAddress, cln.address)
     expect(balance).to.equal(COMMUNITY_MANAGER_CLN_BALANCE)
   })
 
   it('should be able to check CC balance for existing wallet', async () => {
-    let balance = await osseus.utils.checkBalance(communityManagerAddress, ccAddress)
+    let balance = await osseus.utils.getBlockchainBalance(communityManagerAddress, ccAddress)
     expect(balance).to.equal(COMMUNITY_MANAGER_CC_BALANCE)
   })
 
   it('should get error when trying to check ETH balance for non-existing wallet', async () => {
     let fakeAddress = '0x2c8187A6d6bef6B4CFB77D2ED0d06071791b732d'
-    let balance = await osseus.utils.checkBalance(fakeAddress, 'ETH').catch(err => {
+    let balance = await osseus.utils.getBlockchainBalance(fakeAddress, 'ETH').catch(err => {
       expect(err).not.to.be.undefined
     })
     expect(balance).to.be.undefined
@@ -129,7 +133,7 @@ contract('UTILS', async (accounts) => {
 
   it('should get error when trying to check CLN balance for non-existing wallet', async () => {
     let fakeAddress = '0x2c8187A6d6bef6B4CFB77D2ED0d06071791b732d'
-    let balance = await osseus.utils.checkBalance(fakeAddress, cln.address).catch(err => {
+    let balance = await osseus.utils.getBlockchainBalance(fakeAddress, cln.address).catch(err => {
       expect(err).not.to.be.undefined
     })
     expect(balance).to.be.undefined
@@ -137,28 +141,39 @@ contract('UTILS', async (accounts) => {
 
   it('should get error when trying to check CC balance for non-existing wallet', async () => {
     let fakeAddress = '0x2c8187A6d6bef6B4CFB77D2ED0d06071791b732d'
-    let balance = await osseus.utils.checkBalance(fakeAddress, ccAddress).catch(err => {
+    let balance = await osseus.utils.getBlockchainBalance(fakeAddress, ccAddress).catch(err => {
       expect(err).not.to.be.undefined
     })
     expect(balance).to.be.undefined
   })
 
   it('should get different ETH balance for different existing wallets', async () => {
-    let balance1 = await osseus.utils.checkBalance(communityManagerAddress, 'ETH')
-    let balance2 = await osseus.utils.checkBalance(communityUsersAddress, 'ETH')
+    let balance1 = await osseus.utils.getBlockchainBalance(communityManagerAddress, 'ETH')
+    let balance2 = await osseus.utils.getBlockchainBalance(communityUsersAddress, 'ETH')
     expect(balance1).to.not.equal(balance2)
   })
 
   it('should get different CLN balance for different existing wallets', async () => {
-    let balance1 = await osseus.utils.checkBalance(communityManagerAddress, cln.address)
-    let balance2 = await osseus.utils.checkBalance(communityUsersAddress, cln.address)
+    let balance1 = await osseus.utils.getBlockchainBalance(communityManagerAddress, cln.address)
+    let balance2 = await osseus.utils.getBlockchainBalance(communityUsersAddress, cln.address)
     expect(balance1).to.not.equal(balance2)
   })
 
   it('should get different CC balance for different existing wallets', async () => {
-    let balance1 = await osseus.utils.checkBalance(communityManagerAddress, ccAddress)
-    let balance2 = await osseus.utils.checkBalance(communityUsersAddress, ccAddress)
+    let balance1 = await osseus.utils.getBlockchainBalance(communityManagerAddress, ccAddress)
+    let balance2 = await osseus.utils.getBlockchainBalance(communityUsersAddress, ccAddress)
     expect(balance1).to.not.equal(balance2)
+  })
+
+  // TODO wallets hold only CCs - will uncomment when CLN will be supported
+  // it('should have same CLN balance on chain and in the DB', async () => {
+  //   let valid = await osseus.utils.validateBlockchainBalance(communityManagerAddress, cln.address)
+  //   expect(valid).to.be.true
+  // })
+
+  it('should have same CC balance on chain and in the DB', async () => {
+    let valid = await osseus.utils.validateBlockchainBalance(communityManagerAddress, ccAddress)
+    expect(valid).to.be.true
   })
 
   after(async function () {

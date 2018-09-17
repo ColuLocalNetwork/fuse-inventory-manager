@@ -32,7 +32,7 @@ module.exports = (osseus) => {
     })
   }
 
-  transaction.create = (from, to, amount) => {
+  transaction.transfer = (from, to, amount) => {
     return new Promise(async (resolve, reject) => {
       try {
         from = await validateParticipant(from)
@@ -42,9 +42,31 @@ module.exports = (osseus) => {
         const data = {
           from: from,
           to: to,
-          amount: amount
+          amount: amount,
+          context: 'transfer'
         }
         const newTx = await osseus.db_models.tx.create(data)
+        resolve(newTx)
+      } catch (err) {
+        reject(err)
+      }
+    })
+  }
+
+  transaction.deposit = (to, amount, transmit) => {
+    return new Promise(async (resolve, reject) => {
+      try {
+        to = await validateParticipant(to)
+        amount = await validateAmount(amount)
+
+        const data = {
+          to: to,
+          amount: amount,
+          transmit: transmit,
+          context: 'deposit'
+        }
+        const newTx = await osseus.db_models.tx.createDeposit(data)
+        await osseus.db_models.transmit.update(transmit, {offchainTransactions: [newTx.id]})
         resolve(newTx)
       } catch (err) {
         reject(err)
@@ -56,6 +78,7 @@ module.exports = (osseus) => {
     return new Promise(async (resolve, reject) => {
       try {
         const filters = {
+          context: 'transfer',
           state: 'DONE'
         }
         if (opts.filters && opts.filters.address) filters.fromAddress = opts.filters.address

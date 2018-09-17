@@ -25,6 +25,7 @@ module.exports = (osseus) => {
     to: {type: ParticipantSchema},
     amount: {type: db.mongoose.Schema.Types.Decimal128, set: setDecimal128, get: getDecimal128},
     transmit: {type: Schema.Types.ObjectId, ref: 'Transmit'},
+    context: {type: String, enum: ['transfer', 'change', 'deposit', 'other'], default: 'other'},
     state: {type: String, enum: ['NEW', 'PENDING', 'DONE', 'CANCELED', 'TRANSMITTED'], default: 'NEW'}
   }).plugin(timestamps())
 
@@ -55,6 +56,7 @@ module.exports = (osseus) => {
         to: ret.to,
         amount: ret.amount,
         transmit: ret.transmit,
+        context: ret.context,
         state: ret.state
       }
       return safeRet
@@ -114,6 +116,7 @@ module.exports = (osseus) => {
           'balances': {
             'currency': participant.currency,
             'offchainAmount': 0,
+            'blockchainAmount': 0,
             'pendingTxs': []
           }
         }
@@ -283,10 +286,50 @@ module.exports = (osseus) => {
   transaction.create = (data) => {
     return new Promise(async (resolve, reject) => {
       try {
+        if (!data.context) {
+          return reject(new Error(`Cannot create a transaction - missing context`))
+        }
         let tx = await createNewTransaction(data)
         tx = await processNewTransaction(tx)
         tx = await processPendingTransaction(tx)
         resolve(tx)
+      } catch (err) {
+        reject(err)
+      }
+    })
+  }
+
+  transaction.createDeposit = (data) => {
+    return new Promise(async (resolve, reject) => {
+      try {
+        if (!data.transmit) {
+          return reject(new Error(`Cannot create a 'deposit' transaction - missing transmit id`))
+        }
+        data.state = 'TRANSMITTED'
+        let tx = await createNewTransaction(data)
+
+        const Wallet = osseus.db_models.wallet.getModel()
+        const condition = {
+          'address': tx.to.accountAddress,
+          'balances.currency': tx.to.currency
+        }
+        const amount = new BigNumber(tx.amount)
+        const update = {
+          '$inc': {
+            'balances.$.offchainAmount': amount,
+            'balances.$.blockchainAmount': amount
+          }
+        }
+        const opts = {
+          upsert: false,
+          multi: false
+        }
+        Wallet.update(condition, update, opts).exec((err, raw) => {
+          if (err) {
+            return reject(err)
+          }
+          resolve(tx)
+        })
       } catch (err) {
         reject(err)
       }
@@ -305,6 +348,7 @@ module.exports = (osseus) => {
         if (filters.fromAddress) conditions.push({'from.accountAddress': filters.fromAddress})
         if (filters.toAddress) conditions.push({'to.accountAddress': filters.toAddress})
       }
+      if (filters.context) conditions.push({context: filters.context})
       if (filters.state) conditions.push({state: filters.state})
       if (filters.currency) conditions.push({$or: [{'from.currency': filters.currency}, {'to.currency': filters.currency}]})
     }

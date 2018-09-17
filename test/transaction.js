@@ -12,11 +12,11 @@ const TOKEN_DECIMALS = 10 ** 18
 const CLN_MAX_TOKENS = 15 * 10 ** 8 * TOKEN_DECIMALS
 const CC_MAX_TOKENS = 15 * 10 ** 6 * TOKEN_DECIMALS
 
-const COMMUNITY_MANAGER_ETH_BALANCE = 1 * TOKEN_DECIMALS
-const COMMUNITY_MANAGER_CLN_BALANCE = 100 * TOKEN_DECIMALS
-const COMMUNITY_MANAGER_CC_BALANCE = 250 * TOKEN_DECIMALS
-
 const A_LOT_OF_TXS = process.env.A_LOT_OF_TXS || 0
+
+const ETH_BALANCE = 1 * TOKEN_DECIMALS
+const CLN_BALANCE = 100 * TOKEN_DECIMALS
+const CC_BALANCE = (A_LOT_OF_TXS || 250) * TOKEN_DECIMALS
 
 const random = (n) => { return Math.floor(Math.random() * n) }
 
@@ -52,16 +52,16 @@ contract('TRANSACTION', async (accounts) => {
   const ccABI = JSON.stringify(require('./helpers/abi/cc'))
   const mmABI = JSON.stringify(require('./helpers/abi/mm'))
 
-  let managerAccountAddress = accounts[0]
-  let usersAccountAddress = accounts[1]
-  let merchantsAccountAddress = accounts[2]
+  let currency
+  let community
+
+  let managerAccountAddress
+  let usersAccountAddress
+  let merchantsAccountAddress
 
   const defaultBalances = {}
-  defaultBalances[managerAccountAddress] = (A_LOT_OF_TXS || 1000) * TOKEN_DECIMALS
-  defaultBalances[usersAccountAddress] = (A_LOT_OF_TXS || 1000) * TOKEN_DECIMALS
-  defaultBalances[merchantsAccountAddress] = (A_LOT_OF_TXS || 1000) * TOKEN_DECIMALS
 
-  const validateTransaction = (tx1, tx2, from, to, amount, state) => {
+  const validateTransaction = (tx1, tx2, from, to, amount, state, context) => {
     expect(tx1).to.be.a('Object')
     expect(tx1.id).to.be.a('string')
     if (tx2) expect(tx1.id).to.equal(tx2._id.toString())
@@ -71,6 +71,7 @@ contract('TRANSACTION', async (accounts) => {
     expect(tx1.to.currency.toString()).to.equal(tx2 ? tx2.to.currency.toString() : to.currency)
     expect(tx1.amount.toNumber()).to.be.greaterThan(0)
     expect(tx1.amount.toNumber()).to.equal(tx2 ? tx2.amount.toNumber() : amount)
+    expect(tx1.context).to.equal(tx2 ? tx2.context : (context || 'other'))
     expect(tx1.state).to.equal(tx2 ? tx2.state : (state || 'DONE'))
   }
 
@@ -96,54 +97,6 @@ contract('TRANSACTION', async (accounts) => {
     })
   }
 
-  const createCommunity = async (currency) => {
-    let newCommunity = await osseus.db_models.community.create({
-      name: 'Test Community',
-      mnemonic: 'grainedness unlimned afara overfeast parsonology steeplechasing vireo metantimonous stra amygdaloncus supraspinous preceremonial',
-      defaultCurrency: currency.id
-    })
-
-    // create the wallets
-    const wallets = [
-      await osseus.db_models.wallet.create({
-        address: managerAccountAddress,
-        type: 'manager',
-        index: 0,
-        balances: [{
-          currency: currency,
-          blockchainAmount: 0,
-          offchainAmount: defaultBalances[managerAccountAddress],
-          pendingTxs: []
-        }]
-      }),
-      await osseus.db_models.wallet.create({
-        address: usersAccountAddress,
-        type: 'users',
-        index: 1,
-        balances: [{
-          currency: currency,
-          blockchainAmount: 0,
-          offchainAmount: defaultBalances[usersAccountAddress],
-          pendingTxs: []
-        }]
-      }),
-      await osseus.db_models.wallet.create({
-        address: merchantsAccountAddress,
-        type: 'merchants',
-        index: 2,
-        balances: [{
-          currency: currency,
-          blockchainAmount: 0,
-          offchainAmount: defaultBalances[merchantsAccountAddress],
-          pendingTxs: []
-        }]
-      })
-    ]
-
-    // update community wallets in db
-    await osseus.db_models.community.update(newCommunity._id, {wallets: wallets.map(wallet => wallet.id)})
-  }
-
   before(async function () {
     this.timeout(60000)
 
@@ -152,7 +105,7 @@ contract('TRANSACTION', async (accounts) => {
     cln = await ColuLocalNetwork.new(CLN_MAX_TOKENS)
     await cln.makeTokensTransferable()
 
-    const currencyFactory = await CurrencyFactory.new(mmLib.address, cln.address, {from: managerAccountAddress})
+    const currencyFactory = await CurrencyFactory.new(mmLib.address, cln.address, {from: accounts[0]})
     const result = await currencyFactory.createCurrency('TestLocalCurrency', 'TLC', 18, CC_MAX_TOKENS, 'ipfs://hash', {from: accounts[0]})
     ccAddress = result.logs[0].args.token
     cc = await ColuLocalCurrency.at(ccAddress)
@@ -174,280 +127,318 @@ contract('TRANSACTION', async (accounts) => {
     Object.keys(osseus.db_models).forEach(model => {
       osseus.db_models[model].getModel().remove({}, () => {})
     })
+
+    currency = await osseus.lib.Currency.create(ccAddress, mmAddress, ccABI, mmABI)
+    community = await osseus.lib.Community.create('Test Community', currency)
+
+    managerAccountAddress = community.wallets.filter(wallet => wallet.type === 'manager')[0].address
+    usersAccountAddress = community.wallets.filter(wallet => wallet.type === 'users')[0].address
+    merchantsAccountAddress = community.wallets.filter(wallet => wallet.type === 'merchants')[0].address
+
+    // should have ETH
+    await web3.eth.sendTransaction({from: accounts[0], to: managerAccountAddress, value: ETH_BALANCE})
+    await web3.eth.sendTransaction({from: accounts[0], to: usersAccountAddress, value: ETH_BALANCE})
+    await web3.eth.sendTransaction({from: accounts[0], to: merchantsAccountAddress, value: ETH_BALANCE})
+
+    // should have CLN
+    await cln.transfer(managerAccountAddress, CLN_BALANCE, {from: accounts[0]})
+    await cln.transfer(usersAccountAddress, CLN_BALANCE, {from: accounts[0]})
+    await cln.transfer(merchantsAccountAddress, CLN_BALANCE, {from: accounts[0]})
+
+    // should have CC
+    await cc.transfer(managerAccountAddress, CC_BALANCE, {from: accounts[0]})
+    await cc.transfer(usersAccountAddress, CC_BALANCE, {from: accounts[0]})
+    await cc.transfer(merchantsAccountAddress, CC_BALANCE, {from: accounts[0]})
+
+    // update the wallets
+    let amount = new BigNumber(CC_BALANCE)
+    await osseus.db_models.wallet.update({'address': managerAccountAddress, 'balances.currency': currency.id}, {'balances.$.offchainAmount': amount, 'balances.$.blockchainAmount': amount})
+    await osseus.db_models.wallet.update({'address': usersAccountAddress, 'balances.currency': currency.id}, {'balances.$.offchainAmount': amount, 'balances.$.blockchainAmount': amount})
+    await osseus.db_models.wallet.update({'address': merchantsAccountAddress, 'balances.currency': currency.id}, {'balances.$.offchainAmount': amount, 'balances.$.blockchainAmount': amount})
+
+    defaultBalances[managerAccountAddress] = CC_BALANCE
+    defaultBalances[usersAccountAddress] = CC_BALANCE
+    defaultBalances[merchantsAccountAddress] = CC_BALANCE
   })
 
-  it('should make a successful transaction (state should be DONE)', async () => {
-    let currency = await osseus.lib.Currency.create(ccAddress, mmAddress, ccABI, mmABI)
+  describe('GET', async () => {
+    it('should get transaction (by id)', async () => {
+      let amount = 10 * TOKEN_DECIMALS
+      let from = {accountAddress: managerAccountAddress, currency: ccAddress}
+      let to = {accountAddress: usersAccountAddress, currency: ccAddress}
 
-    await createCommunity(currency)
-
-    let amount = 10 * TOKEN_DECIMALS
-    let from = {accountAddress: managerAccountAddress, currency: ccAddress}
-    let to = {accountAddress: usersAccountAddress, currency: ccAddress}
-
-    let tx = await osseus.lib.Transaction.create(from, to, amount)
-
-    from.currency = currency.id
-    to.currency = currency.id
-    validateTransaction(tx, undefined, from, to, amount)
-    await validateBalancesAfterTransaction('from', tx)
-    await validateBalancesAfterTransaction('to', tx)
-  })
-
-  it('should not make a transaction if not enough balance (state should be CANCELED)', async () => {
-    let currency = await osseus.lib.Currency.create(ccAddress, mmAddress, ccABI, mmABI)
-
-    await createCommunity(currency)
-
-    let amount = 10001 * TOKEN_DECIMALS
-    let from = {accountAddress: managerAccountAddress, currency: ccAddress}
-    let to = {accountAddress: usersAccountAddress, currency: ccAddress}
-
-    let tx = await osseus.lib.Transaction.create(from, to, amount)
-
-    from.currency = currency.id
-    to.currency = currency.id
-    validateTransaction(tx, undefined, from, to, amount, 'CANCELED')
-    await validateBalancesAfterTransaction('from', tx)
-    await validateBalancesAfterTransaction('to', tx)
-  })
-
-  it('should get transaction (by id)', async () => {
-    let currency = await osseus.lib.Currency.create(ccAddress, mmAddress, ccABI, mmABI)
-
-    await createCommunity(currency)
-
-    let amount = 10 * TOKEN_DECIMALS
-    let from = {accountAddress: managerAccountAddress, currency: ccAddress}
-    let to = {accountAddress: usersAccountAddress, currency: ccAddress}
-
-    let tx1 = await osseus.lib.Transaction.create(from, to, amount)
-    let tx2 = await osseus.db_models.tx.get({id: tx1.id})
-    validateTransaction(tx1, tx2[0])
-  })
-
-  it('should get error if transaction not found (by id)', async () => {
-    let fakeId = '123abc'
-
-    let currency = await osseus.lib.Currency.create(ccAddress, mmAddress, ccABI, mmABI)
-
-    await createCommunity(currency)
-
-    let amount = 10 * TOKEN_DECIMALS
-    let from = {accountAddress: managerAccountAddress, currency: ccAddress}
-    let to = {accountAddress: usersAccountAddress, currency: ccAddress}
-
-    let tx1 = await osseus.lib.Transaction.create(from, to, amount)
-    from.currency = currency.id
-    to.currency = currency.id
-    validateTransaction(tx1, undefined, from, to, amount)
-
-    let tx2 = await osseus.db_models.tx.get({id: fakeId}).catch(err => {
-      expect(err).not.to.be.undefined
+      let tx1 = await osseus.lib.Transaction.transfer(from, to, amount)
+      let tx2 = await osseus.db_models.tx.get({id: tx1.id})
+      validateTransaction(tx1, tx2[0])
     })
-    expect(tx2).to.be.undefined
+
+    it('should get error if transaction not found (by id)', async () => {
+      let fakeId = '123abc'
+
+      let amount = 10 * TOKEN_DECIMALS
+      let from = {accountAddress: managerAccountAddress, currency: ccAddress}
+      let to = {accountAddress: usersAccountAddress, currency: ccAddress}
+
+      let tx1 = await osseus.lib.Transaction.transfer(from, to, amount)
+      from.currency = currency.id
+      to.currency = currency.id
+      validateTransaction(tx1, undefined, from, to, amount, 'DONE', 'transfer')
+
+      let tx2 = await osseus.db_models.tx.get({id: fakeId}).catch(err => {
+        expect(err).not.to.be.undefined
+      })
+      expect(tx2).to.be.undefined
+    })
+
+    it('should get transaction (by address)', async () => {
+      let amount = 10 * TOKEN_DECIMALS
+      let from = {accountAddress: managerAccountAddress, currency: ccAddress}
+      let to = {accountAddress: usersAccountAddress, currency: ccAddress}
+
+      let tx1 = await osseus.lib.Transaction.transfer(from, to, amount)
+
+      let txs = await osseus.db_models.tx.get({fromAddress: managerAccountAddress})
+      expect(txs).to.be.an('array')
+      expect(txs).to.have.lengthOf(1)
+      validateTransaction(tx1, txs[0])
+
+      txs = await osseus.db_models.tx.get({toAddress: usersAccountAddress})
+      expect(txs).to.be.an('array')
+      expect(txs).to.have.lengthOf(1)
+      validateTransaction(tx1, txs[0])
+    })
+
+    it('should get transaction (by state)', async () => {
+      let amount = 10 * TOKEN_DECIMALS
+      let from = {accountAddress: managerAccountAddress, currency: ccAddress}
+      let to = {accountAddress: usersAccountAddress, currency: ccAddress}
+
+      let tx1 = await osseus.lib.Transaction.transfer(from, to, amount)
+
+      let txs = await osseus.db_models.tx.get({state: 'DONE'})
+      expect(txs).to.be.an('array')
+      expect(txs).to.have.lengthOf(1)
+      validateTransaction(tx1, txs[0])
+    })
+
+    it('should get transaction (by currency)', async () => {
+      let amount = 10 * TOKEN_DECIMALS
+      let from = {accountAddress: managerAccountAddress, currency: ccAddress}
+      let to = {accountAddress: usersAccountAddress, currency: ccAddress}
+
+      let tx1 = await osseus.lib.Transaction.transfer(from, to, amount)
+
+      let txs = await osseus.db_models.tx.get({currency: currency.id})
+      expect(txs).to.be.an('array')
+      expect(txs).to.have.lengthOf(1)
+      validateTransaction(tx1, txs[0])
+    })
+
+    it('should get transaction (by multiple conditions)', async () => {
+      let amount = 10 * TOKEN_DECIMALS
+      let from = {accountAddress: managerAccountAddress, currency: ccAddress}
+      let to = {accountAddress: usersAccountAddress, currency: ccAddress}
+
+      let tx1 = await osseus.lib.Transaction.transfer(from, to, amount)
+
+      let txs = await osseus.db_models.tx.get({address: managerAccountAddress, currency: currency.id, context: 'transfer', state: 'DONE'})
+      expect(txs).to.be.an('array')
+      expect(txs).to.have.lengthOf(1)
+      validateTransaction(tx1, txs[0])
+    })
   })
 
-  it('should get transaction (by address)', async () => {
-    let currency = await osseus.lib.Currency.create(ccAddress, mmAddress, ccABI, mmABI)
+  describe('TRANSFER', async () => {
+    it('should make a successful transaction (state should be DONE)', async () => {
+      let amount = 10 * TOKEN_DECIMALS
+      let from = {accountAddress: managerAccountAddress, currency: ccAddress}
+      let to = {accountAddress: usersAccountAddress, currency: ccAddress}
 
-    await createCommunity(currency)
+      let tx = await osseus.lib.Transaction.transfer(from, to, amount)
 
-    let amount = 10 * TOKEN_DECIMALS
-    let from = {accountAddress: managerAccountAddress, currency: ccAddress}
-    let to = {accountAddress: usersAccountAddress, currency: ccAddress}
+      from.currency = currency.id
+      to.currency = currency.id
+      validateTransaction(tx, undefined, from, to, amount, 'DONE', 'transfer')
+      await validateBalancesAfterTransaction('from', tx)
+      await validateBalancesAfterTransaction('to', tx)
+    })
 
-    let tx1 = await osseus.lib.Transaction.create(from, to, amount)
+    it('should not make a transaction if not enough balance (state should be CANCELED)', async () => {
+      let amount = 10001 * TOKEN_DECIMALS
+      let from = {accountAddress: managerAccountAddress, currency: ccAddress}
+      let to = {accountAddress: usersAccountAddress, currency: ccAddress}
 
-    let txs = await osseus.db_models.tx.get({fromAddress: managerAccountAddress})
-    expect(txs).to.be.an('array')
-    expect(txs).to.have.lengthOf(1)
-    validateTransaction(tx1, txs[0])
+      let tx = await osseus.lib.Transaction.transfer(from, to, amount)
 
-    txs = await osseus.db_models.tx.get({toAddress: usersAccountAddress})
-    expect(txs).to.be.an('array')
-    expect(txs).to.have.lengthOf(1)
-    validateTransaction(tx1, txs[0])
-  })
+      from.currency = currency.id
+      to.currency = currency.id
+      validateTransaction(tx, undefined, from, to, amount, 'CANCELED', 'transfer')
+      await validateBalancesAfterTransaction('from', tx)
+      await validateBalancesAfterTransaction('to', tx)
+    })
 
-  it('should get transaction (by state)', async () => {
-    let currency = await osseus.lib.Currency.create(ccAddress, mmAddress, ccABI, mmABI)
-
-    await createCommunity(currency)
-
-    let amount = 10 * TOKEN_DECIMALS
-    let from = {accountAddress: managerAccountAddress, currency: ccAddress}
-    let to = {accountAddress: usersAccountAddress, currency: ccAddress}
-
-    let tx1 = await osseus.lib.Transaction.create(from, to, amount)
-
-    let txs = await osseus.db_models.tx.get({state: 'DONE'})
-    expect(txs).to.be.an('array')
-    expect(txs).to.have.lengthOf(1)
-    validateTransaction(tx1, txs[0])
-  })
-
-  it('should get transaction (by currency)', async () => {
-    let currency = await osseus.lib.Currency.create(ccAddress, mmAddress, ccABI, mmABI)
-
-    await createCommunity(currency)
-
-    let amount = 10 * TOKEN_DECIMALS
-    let from = {accountAddress: managerAccountAddress, currency: ccAddress}
-    let to = {accountAddress: usersAccountAddress, currency: ccAddress}
-
-    let tx1 = await osseus.lib.Transaction.create(from, to, amount)
-
-    let txs = await osseus.db_models.tx.get({currency: currency.id})
-    expect(txs).to.be.an('array')
-    expect(txs).to.have.lengthOf(1)
-    validateTransaction(tx1, txs[0])
-  })
-
-  it('should get transaction (by multiple conditions)', async () => {
-    let currency = await osseus.lib.Currency.create(ccAddress, mmAddress, ccABI, mmABI)
-
-    await createCommunity(currency)
-
-    let amount = 10 * TOKEN_DECIMALS
-    let from = {accountAddress: managerAccountAddress, currency: ccAddress}
-    let to = {accountAddress: usersAccountAddress, currency: ccAddress}
-
-    let tx1 = await osseus.lib.Transaction.create(from, to, amount)
-
-    let txs = await osseus.db_models.tx.get({address: managerAccountAddress, currency: currency.id, state: 'DONE'})
-    expect(txs).to.be.an('array')
-    expect(txs).to.have.lengthOf(1)
-    validateTransaction(tx1, txs[0])
-  })
-
-  describe(`A LOT (${A_LOT_OF_TXS})`, async () => {
-    it('should make a lot of successful tranasctions', async () => {
-      const generateTransactions = (n) => {
-        const result = {
-          txs: [],
-          checks: {}
-        }
-        for (let i = 0; i < n; i++) {
-          const fromAccount = accounts[random(3)]
-          let otherAccounts = accounts.filter(a => a !== fromAccount)
-          const toAccount = otherAccounts[random(2)]
-          let from = {accountAddress: fromAccount, currency: ccAddress}
-          let to = {accountAddress: toAccount, currency: ccAddress}
-          let amount = 1 * TOKEN_DECIMALS
-          result.txs.push(makeTransaction(from, to, amount))
-          result.checks[fromAccount] = result.checks[fromAccount] || 0
-          result.checks[fromAccount] -= amount
-          result.checks[toAccount] = result.checks[toAccount] || 0
-          result.checks[toAccount] += amount
-        }
-        return result
-      }
-
-      const makeTransaction = (from, to, amount) => {
-        return new Promise(async (resolve, reject) => {
-          try {
-            let tx = await osseus.lib.Transaction.create(from, to, amount)
-            from.currency = currency.id
-            to.currency = currency.id
-            validateTransaction(tx, undefined, from, to, amount)
-            resolve(tx)
-          } catch (err) {
-            reject(err)
+    describe(`A LOT (${A_LOT_OF_TXS})`, async () => {
+      it('should make a lot of successful tranasctions', async () => {
+        const generateTransactions = (n) => {
+          const result = {
+            txs: [],
+            checks: {}
           }
-        })
-      }
+          let accounts = [managerAccountAddress, usersAccountAddress, merchantsAccountAddress]
+          for (let i = 0; i < n; i++) {
+            const fromAccount = accounts[random(3)]
+            let otherAccounts = accounts.filter(a => a !== fromAccount)
+            const toAccount = otherAccounts[random(2)]
+            let from = {accountAddress: fromAccount, currency: ccAddress}
+            let to = {accountAddress: toAccount, currency: ccAddress}
+            let amount = 1 * TOKEN_DECIMALS
+            result.txs.push(makeTransaction(from, to, amount))
+            result.checks[fromAccount] = result.checks[fromAccount] || 0
+            result.checks[fromAccount] -= amount
+            result.checks[toAccount] = result.checks[toAccount] || 0
+            result.checks[toAccount] += amount
+          }
+          return result
+        }
 
-      let currency = await osseus.lib.Currency.create(ccAddress, mmAddress, ccABI, mmABI)
-
-      await createCommunity(currency)
-
-      const data = generateTransactions(A_LOT_OF_TXS)
-
-      await Promise.all(data.txs, tx => { return tx })
-        .then(results => {
-          expect(results).to.have.lengthOf(A_LOT_OF_TXS)
-          results.forEach(result => {
-            expect(result).not.to.be.undefined
+        const makeTransaction = (from, to, amount) => {
+          return new Promise(async (resolve, reject) => {
+            try {
+              let tx = await osseus.lib.Transaction.transfer(from, to, amount)
+              from.currency = currency.id
+              to.currency = currency.id
+              validateTransaction(tx, undefined, from, to, amount, 'DONE', 'transfer')
+              resolve(tx)
+            } catch (err) {
+              reject(err)
+            }
           })
-        })
+        }
 
-      Object.keys(data.checks).forEach(async accountAddress => {
-        const amount = data.checks[accountAddress]
-        const wallet = await osseus.db_models.wallet.getByAddress(accountAddress)
-        const startingBalance = defaultBalances[accountAddress]
-        const currencyBalance = wallet.balances.filter(balance => balance.currency.toString() === currency.id)[0]
-        const actualBalance = currencyBalance.offchainAmount.toNumber()
-        expect(actualBalance).to.equal(startingBalance + amount)
+        const data = generateTransactions(A_LOT_OF_TXS)
+
+        await Promise.all(data.txs, tx => { return tx })
+          .then(results => {
+            expect(results).to.have.lengthOf(A_LOT_OF_TXS)
+            results.forEach(result => {
+              expect(result).not.to.be.undefined
+            })
+          })
+
+        Object.keys(data.checks).forEach(async accountAddress => {
+          const amount = data.checks[accountAddress]
+          const wallet = await osseus.db_models.wallet.getByAddress(accountAddress)
+          const startingBalance = defaultBalances[accountAddress]
+          const currencyBalance = wallet.balances.filter(balance => balance.currency.toString() === currency.id)[0]
+          const actualBalance = currencyBalance.offchainAmount.toNumber()
+          expect(actualBalance).to.equal(startingBalance + amount)
+        })
       })
     })
   })
 
-  describe('TRANSMIT', async () => {
-    beforeEach(async function () {
-      let currency = await osseus.lib.Currency.create(ccAddress, mmAddress, ccABI, mmABI)
-      let community = await osseus.lib.Community.create('Test Community', currency)
+  describe('DEPOSIT', async () => {
+    it('should make a successful transaction (state should be TRANSMITTED)', async () => {
+      let bctx = await osseus.db_models.bctx.create()
+      let transmit = await osseus.db_models.transmit.create({offchainTransactions: [], blockchainTransactions: [bctx.id]})
 
-      managerAccountAddress = community.wallets.filter(wallet => wallet.type === 'manager')[0].address
-      usersAccountAddress = community.wallets.filter(wallet => wallet.type === 'users')[0].address
-      merchantsAccountAddress = community.wallets.filter(wallet => wallet.type === 'merchants')[0].address
+      let amount = 10 * TOKEN_DECIMALS
+      let to = {accountAddress: managerAccountAddress, currency: ccAddress}
 
-      // should have ETH
-      await web3.eth.sendTransaction({from: accounts[0], to: managerAccountAddress, value: COMMUNITY_MANAGER_ETH_BALANCE})
-      await web3.eth.sendTransaction({from: accounts[0], to: usersAccountAddress, value: COMMUNITY_MANAGER_ETH_BALANCE})
-      await web3.eth.sendTransaction({from: accounts[0], to: merchantsAccountAddress, value: COMMUNITY_MANAGER_ETH_BALANCE})
+      let tx = await osseus.lib.Transaction.deposit(to, amount, transmit.id)
 
-      // should have CLN
-      await cln.transfer(managerAccountAddress, COMMUNITY_MANAGER_CLN_BALANCE, {from: accounts[0]})
-      await cln.transfer(usersAccountAddress, COMMUNITY_MANAGER_CLN_BALANCE, {from: accounts[0]})
-      await cln.transfer(merchantsAccountAddress, COMMUNITY_MANAGER_CLN_BALANCE, {from: accounts[0]})
+      expect(tx).to.be.a('Object')
+      expect(tx.id).to.be.a('string')
+      expect(tx.to.accountAddress).to.equal(to.accountAddress)
+      expect(tx.to.currency.toString()).to.equal(currency.id)
+      expect(tx.amount.toNumber()).to.be.greaterThan(0)
+      expect(tx.amount.toNumber()).to.equal(amount)
+      expect(tx.context).to.equal('deposit')
+      expect(tx.state).to.equal('TRANSMITTED')
 
-      // should have CC
-      await cc.transfer(managerAccountAddress, COMMUNITY_MANAGER_CC_BALANCE, {from: accounts[0]})
-      await cc.transfer(usersAccountAddress, COMMUNITY_MANAGER_CC_BALANCE, {from: accounts[0]})
-      await cc.transfer(merchantsAccountAddress, COMMUNITY_MANAGER_CC_BALANCE, {from: accounts[0]})
+      let updatedTransmit = await osseus.db_models.transmit.getById(transmit.id)
+      expect(updatedTransmit.offchainTransactions).to.have.lengthOf(1)
+      expect(updatedTransmit.offchainTransactions[0].toString()).to.equal(tx.id)
+      expect(updatedTransmit.blockchainTransactions).to.have.lengthOf(1)
+      expect(updatedTransmit.blockchainTransactions[0].toString()).to.equal(bctx.id)
 
-      // should have offchain balance
-      let initialOffchainBalance = new BigNumber(1000 * TOKEN_DECIMALS)
-      await updateOffchainAmount(managerAccountAddress, currency.id, initialOffchainBalance)
-      await updateOffchainAmount(usersAccountAddress, currency.id, initialOffchainBalance)
-      await updateOffchainAmount(merchantsAccountAddress, currency.id, initialOffchainBalance)
+      let startingBalance = defaultBalances[tx.to.accountAddress]
+      let balance = await osseus.db_models.wallet.getBlockchainBalance(to.accountAddress, currency.id)
+      expect(balance).to.equal(startingBalance + amount)
     })
 
-    const updateOffchainAmount = (address, currency, amount) => {
-      return new Promise(async (resolve, reject) => {
-        const Wallet = osseus.db_models.wallet.getModel()
+    describe(`A LOT (${A_LOT_OF_TXS})`, async () => {
+      it('should make a lot of successful tranasctions', async () => {
+        const generateTransactions = async (accounts, n) => {
+          let txs = []
+          let amounts = {}
+          let bctx = await osseus.db_models.bctx.create()
+          let transmit = await osseus.db_models.transmit.create({offchainTransactions: [], blockchainTransactions: [bctx.id]})
 
-        const condition = {
-          'address': address,
-          'balances.currency': currency
-        }
-        const update = {
-          '$inc': {
-            'balances.$.offchainAmount': amount
+          for (let i = 0; i < n; i++) {
+            let toAccount = accounts[random(3)]
+            let to = {accountAddress: toAccount, currency: ccAddress}
+            let amount = 1 * TOKEN_DECIMALS
+            amounts[to.accountAddress] = amounts[to.accountAddress] || 0
+            amounts[to.accountAddress] += amount
+            txs.push(makeTransactionAndValidate(to, amount, transmit.id))
+          }
+
+          return {
+            txs: txs,
+            bctx: bctx.id,
+            transmit: transmit.id,
+            amounts: amounts
           }
         }
-        const opts = {
-          upsert: false,
-          multi: false
+
+        const makeTransactionAndValidate = (to, amount, transmit) => {
+          return new Promise(async (resolve, reject) => {
+            try {
+              let tx = await osseus.lib.Transaction.deposit(to, amount, transmit)
+              expect(tx).to.be.a('Object')
+              expect(tx.id).to.be.a('string')
+              expect(tx.to.accountAddress).to.equal(to.accountAddress)
+              expect(tx.to.currency.toString()).to.equal(currency.id)
+              expect(tx.amount.toNumber()).to.be.greaterThan(0)
+              expect(tx.amount.toNumber()).to.equal(amount)
+              expect(tx.context).to.equal('deposit')
+              expect(tx.state).to.equal('TRANSMITTED')
+              resolve(tx)
+            } catch (err) {
+              reject(err)
+            }
+          })
         }
 
-        Wallet.update(condition, update, opts).exec((err, raw) => {
-          if (err) {
-            return reject(err)
-          }
-          resolve(!!raw.nModified)
+        const testAccounts = [managerAccountAddress, usersAccountAddress, merchantsAccountAddress]
+        const data = await generateTransactions(testAccounts, A_LOT_OF_TXS)
+
+        await Promise.all(data.txs, tx => { return tx })
+          .then(async results => {
+            expect(results).to.have.lengthOf(A_LOT_OF_TXS)
+            results.forEach(result => {
+              expect(result).not.to.be.undefined
+            })
+          })
+
+        testAccounts.forEach(async account => {
+          let startingBalance = defaultBalances[account]
+          let balance = await osseus.db_models.wallet.getBlockchainBalance(account, currency.id)
+          expect(balance).to.equal(startingBalance + data.amounts[account])
         })
       })
-    }
+    })
+  })
 
+  describe.skip('TRANSMIT', async () => {
     const makeSomeTransactions = (n) => {
       let txs = []
 
       const makeTransaction = (from, to, amount) => {
         return new Promise(async (resolve, reject) => {
           try {
-            let tx = await osseus.lib.Transaction.create(from, to, amount)
+            let tx = await osseus.lib.Transaction.transfer(from, to, amount)
             resolve(tx)
           } catch (err) {
             reject(err)
@@ -472,7 +463,7 @@ contract('TRANSACTION', async (accounts) => {
 
     // TODO test transfer of both CLN & CC
 
-    it.only('should be able to transmit transactions for specific account', async () => {
+    it('should be able to transmit transactions for specific account', async () => {
       const txs = makeSomeTransactions(random(100) + 1)
       const results = await Promise.all(txs, tx => { return tx })
       console.log('!!! results !!!', results)

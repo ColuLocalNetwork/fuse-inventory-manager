@@ -122,6 +122,24 @@ module.exports = (osseus) => {
     })
   }
 
+  wallet.getBlockchainBalance = (address, currencyId) => {
+    return new Promise((resolve, reject) => {
+      Wallet.findOne({address: address}, (err, doc) => {
+        if (err) {
+          return reject(err)
+        }
+        if (!doc) {
+          return reject(new Error(`Wallet not found for address: ${address}`))
+        }
+        const balance = doc.balances && doc.balances.filter(balance => balance.currency.toString() === currencyId)[0]
+        if (!balance || !balance.blockchainAmount) {
+          return reject(new Error(`Wallet could not get balance - address: ${address}, currencyId: ${currencyId}`))
+        }
+        resolve(balance.blockchainAmount.toNumber())
+      })
+    })
+  }
+
   wallet.getModel = () => {
     return Wallet
   }
