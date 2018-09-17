@@ -69,13 +69,33 @@ const validateBlockchainBalance = (address, token) => {
   })
 }
 
+const validateAggregatedBalances = (token) => {
+  return new Promise(async (resolve, reject) => {
+    try {
+      const currency = token ? await this.osseus.db_models.currency.getByCurrencyAddress(token) : {}
+      const aggregatedBalances = await this.osseus.db_models.wallet.aggregateBalancesPerCurrency(currency.id)
+      const results = aggregatedBalances.map(balance => {
+        balance.totalBlockchainAmount = balance.totalBlockchainAmount.toNumber()
+        balance.totalOffchainAmount = balance.totalOffchainAmount.toNumber()
+        balance.valid = balance.totalBlockchainAmount >= balance.totalOffchainAmount
+        return balance
+      })
+      this.osseus.logger.debug(`validateAggregatedBalances --> token: ${token}, results: ${JSON.stringify(results)}`)
+      resolve(results)
+    } catch (err) {
+      reject(err)
+    }
+  })
+}
+
 const init = (osseus) => {
   this.osseus = osseus
   return new Promise((resolve, reject) => {
     osseus.utils = {
       getCurrencyFromToken: getCurrencyFromToken,
       getBlockchainBalance: getBlockchainBalance,
-      validateBlockchainBalance: validateBlockchainBalance
+      validateBlockchainBalance: validateBlockchainBalance,
+      validateAggregatedBalances: validateAggregatedBalances
     }
     osseus.logger.info(`Utils ready`)
     return resolve()

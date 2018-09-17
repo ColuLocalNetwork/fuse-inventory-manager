@@ -67,6 +67,22 @@ module.exports = (osseus) => {
     })
   }
 
+  const validateAggregatedBalancesBeforeTransmit = () => {
+    return new Promise(async (resolve, reject) => {
+      try {
+        const results = await osseus.utils.validateAggregatedBalances()
+        const invalid = results.filter(res => !res.valid)
+        if (invalid.length > 0) {
+          // TODO here probably need to notify someone/somehow
+          return reject(new Error(`Invalid aggregated balances - ${JSON.stringify(invalid)}`))
+        }
+        resolve()
+      } catch (err) {
+        reject(err)
+      }
+    })
+  }
+
   transaction.transfer = (from, to, amount) => {
     return new Promise(async (resolve, reject) => {
       try {
@@ -113,6 +129,7 @@ module.exports = (osseus) => {
     return new Promise(async (resolve, reject) => {
       try {
         await validateBlockchainBalancesBeforeTransmit()
+        await validateAggregatedBalancesBeforeTransmit()
 
         const filters = {
           context: 'transfer',

@@ -176,6 +176,24 @@ contract('UTILS', async (accounts) => {
     expect(valid).to.be.true
   })
 
+  it('aggregated balances should be valid (for specific currency)', async () => {
+    let results = await osseus.utils.validateAggregatedBalances(ccAddress)
+    expect(results).to.have.lengthOf(1)
+    expect(results[0].currency).to.equal(currency.id)
+    expect(results[0].totalBlockchainAmount).to.equal(COMMUNITY_MANAGER_CC_BALANCE)
+    expect(results[0].totalOffchainAmount).to.equal(COMMUNITY_MANAGER_CC_BALANCE)
+    expect(results[0].valid).to.equal(true)
+  })
+
+  it('aggregated balances should be valid (for all currencies)', async () => {
+    let results = await osseus.utils.validateAggregatedBalances()
+    expect(results).to.have.lengthOf(1)
+    expect(results[0].currency).to.equal(currency.id)
+    expect(results[0].totalBlockchainAmount).to.equal(COMMUNITY_MANAGER_CC_BALANCE)
+    expect(results[0].totalOffchainAmount).to.equal(COMMUNITY_MANAGER_CC_BALANCE)
+    expect(results[0].valid).to.equal(true)
+  })
+
   after(async function () {
     Object.keys(osseus.db_models).forEach(model => {
       osseus.db_models[model].getModel().remove({}, () => {})

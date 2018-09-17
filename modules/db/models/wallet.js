@@ -157,6 +157,51 @@ module.exports = (osseus) => {
     })
   }
 
+  wallet.aggregateBalancesPerCurrency = (currency) => {
+    return new Promise((resolve, reject) => {
+      const condition = currency ? {'balances.currency': db.mongoose.Types.ObjectId(currency)} : {}
+      Wallet.aggregate([
+        {
+          $unwind: '$balances'
+        },
+        {
+          $match: condition
+        },
+        {
+          $project: {
+            currency: '$balances.currency',
+            blockchainAmount: '$balances.blockchainAmount',
+            offchainAmount: '$balances.offchainAmount'
+          }
+        },
+        {
+          $group: {
+            _id: {
+              currency: '$currency'
+            },
+            totalBlockchainAmount: {$sum: '$blockchainAmount'},
+            totalOffchainAmount: {$sum: '$offchainAmount'}
+          }
+        }
+      ], (err, results) => {
+        if (err) {
+          return reject(err)
+        }
+        if (!results || results.length === 0) {
+          return reject(new Error(`No aggregation found`))
+        }
+        results = results.map(result => {
+          return {
+            currency: result._id.currency.toString(),
+            totalBlockchainAmount: getDecimal128(result.totalBlockchainAmount),
+            totalOffchainAmount: getDecimal128(result.totalOffchainAmount)
+          }
+        })
+        resolve(results)
+      })
+    })
+  }
+
   wallet.getModel = () => {
     return Wallet
   }
