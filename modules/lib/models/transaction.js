@@ -32,6 +32,41 @@ module.exports = (osseus) => {
     })
   }
 
+  const validateBlockchainBalancesBeforeTransmit = () => {
+    return new Promise(async (resolve, reject) => {
+      try {
+        const tasks = []
+        const wallets = await osseus.db_models.wallet.getAll()
+        osseus.logger.debug(`found ${wallets.length} wallets`)
+        wallets.forEach(wallet => {
+          let address = wallet.address
+          let currencies = wallet.balances.map(balance => balance.currency.ccAddress)
+          currencies.forEach(currency => {
+            tasks.push(new Promise(async (resolve, reject) => {
+              try {
+                let valid = await osseus.utils.validateBlockchainBalance(address, currency)
+                resolve({address: address, currency: currency, valid: valid})
+              } catch (err) {
+                reject(err)
+              }
+            }))
+          })
+        })
+        osseus.logger.debug(`about to perform ${tasks.length} tasks`)
+        const results = await Promise.all(tasks, task => { return task })
+        osseus.logger.debug(`task results: ${JSON.stringify(results)}`)
+        const invalid = results.filter(res => !res.valid)
+        if (invalid.length > 0) {
+          // TODO here probably need to notify someone/somehow
+          return reject(new Error(`Invalid blockchain balance - ${JSON.stringify(invalid)}`))
+        }
+        resolve()
+      } catch (err) {
+        reject(err)
+      }
+    })
+  }
+
   transaction.transfer = (from, to, amount) => {
     return new Promise(async (resolve, reject) => {
       try {
@@ -77,6 +112,8 @@ module.exports = (osseus) => {
   transaction.transmit = (opts) => {
     return new Promise(async (resolve, reject) => {
       try {
+        await validateBlockchainBalancesBeforeTransmit()
+
         const filters = {
           context: 'transfer',
           state: 'DONE'

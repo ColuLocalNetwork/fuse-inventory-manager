@@ -140,6 +140,23 @@ module.exports = (osseus) => {
     })
   }
 
+  wallet.getAll = (query, projection) => {
+    return new Promise((resolve, reject) => {
+      Wallet.find(query, projection)
+        .lean()
+        .populate('balances.currency')
+        .exec((err, docs) => {
+          if (err) {
+            return reject(err)
+          }
+          if (!docs || docs.length === 0) {
+            return reject(new Error(`No wallets found`))
+          }
+          resolve(docs)
+        })
+    })
+  }
+
   wallet.getModel = () => {
     return Wallet
   }
