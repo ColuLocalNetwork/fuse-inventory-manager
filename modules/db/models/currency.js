@@ -5,10 +5,10 @@ module.exports = (osseus) => {
   const Schema = db.mongoose.Schema
 
   const CurrencySchema = new Schema({
-    ccAddress: {type: String},
-    mmAddress: {type: String},
-    ccABI: {type: String},
-    mmABI: {type: String}
+    ccAddress: {type: String, required: true},
+    mmAddress: {type: String, required: true},
+    ccABI: {type: String, required: true},
+    mmABI: {type: String, required: true}
   }).plugin(timestamps())
 
   CurrencySchema.index({ccAddress: 1}, {unique: true})

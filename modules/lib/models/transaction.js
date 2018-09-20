@@ -113,15 +113,39 @@ module.exports = (osseus) => {
     })
   }
 
-  const selectTransactionsToTransmit = (opts) => {
+  const startWorkingOnTransmits = (filters) => {
+    return new Promise(async (resolve, reject) => {
+      try {
+        let transmits = []
+        if (filters && filters.currency) {
+          let transmit = await osseus.db_models.transmit.workOn(filters.currency)
+          transmits = [transmit]
+        } else {
+          const currencies = await osseus.db_models.currency.getAll()
+          const tasks = []
+          currencies.forEach(currency => {
+            tasks.push(new Promise(async (resolve, reject) => {
+              let transmit = await osseus.db_models.transmit.workOn(currency.id)
+              resolve(transmit)
+            }))
+          })
+          transmits = await Promise.all(tasks, task => { return task })
+        }
+        resolve(transmits)
+      } catch (err) {
+        reject(err)
+      }
+    })
+  }
+
+  const getTransactionsToTransmit = (txids) => {
     return new Promise(async (resolve, reject) => {
       try {
         const filters = {
+          _id: {$in: txids},
           context: 'transfer',
           state: 'DONE'
         }
-        if (opts.filters && opts.filters.address) filters.fromAddress = opts.filters.address
-        if (opts.filters && opts.filters.currency) filters.currency = opts.filters.currency
 
         const projection = {
           'from.accountAddress': 1,
@@ -130,12 +154,13 @@ module.exports = (osseus) => {
           amount: 1
         }
 
-        osseus.logger.debug(`filters: ${JSON.stringify(filters)}, projection: ${JSON.stringify(projection)}, limit: ${opts.limit}, sort: ${JSON.stringify(opts.sort)}`)
+        osseus.logger.debug(`filters: ${JSON.stringify(filters)}, projection: ${JSON.stringify(projection)}`)
+
         const nSelected = await osseus.db_models.tx.markAsSelected(filters)
-        osseus.logger.debug(`selected: ${nSelected} transactions`)
+        osseus.logger.debug(`marked as selected: ${nSelected} transactions`)
 
         filters.state = 'SELECTED'
-        const transactions = await osseus.db_models.tx.get(filters, projection, opts.limit, opts.sort, true)
+        const transactions = await osseus.db_models.tx.getPopulated(filters, projection)
         osseus.logger.debug(`got ${transactions.length} transactions`)
 
         resolve(transactions)
@@ -201,22 +226,22 @@ module.exports = (osseus) => {
     })
   }
 
-  const transmitToBlockchain = (bctxs, txids) => {
+  const transmitToBlockchain = (transmit, bctxs, txids) => {
     return new Promise(async (resolve, reject) => {
       try {
         const transmittedBctxs = await Promise.mapSeries(bctxs, async tx => {
           let bctx = await osseus.lib.BlockchainTransaction.transfer(tx.from, tx.to, tx.token, tx.amount, tx.opts)
+          await osseus.db_models.transmit.addBlockchainTransaction(transmit.id, bctx.id)
           return bctx
         })
 
         osseus.logger.debug(`transmittedBctxs: ${JSON.stringify(transmittedBctxs)}`)
         osseus.logger.debug(`transaction ids to update: ${JSON.stringify(txids)}`)
 
-        const transmit = await osseus.db_models.transmit.create({offchainTransactions: txids, blockchainTransactions: transmittedBctxs.map(tbctx => tbctx.result.id)})
-        osseus.logger.debug(`transmit: ${JSON.stringify(transmit)}`)
-
         const nUpdated = await osseus.db_models.tx.markAsTransmitted(txids, transmit.id)
         osseus.logger.debug(`nUpdated: ${nUpdated}`)
+
+        await osseus.db_models.transmit.update(transmit.id, {state: 'DONE'})
 
         resolve({
           txs: txids,
@@ -237,13 +262,19 @@ module.exports = (osseus) => {
         to = await validateParticipant(to)
         amount = await validateAmount(amount)
 
+        const transmit = await osseus.db_models.transmit.getActive(from.currency)
+
         const data = {
           from: from,
           to: to,
           amount: amount,
-          context: 'transfer'
+          context: 'transfer',
+          transmit: transmit.id
         }
         const newTx = await osseus.db_models.tx.create(data)
+
+        await osseus.db_models.transmit.addOffchainTransaction(transmit.id, newTx.id)
+
         resolve(newTx)
       } catch (err) {
         reject(err)
@@ -254,10 +285,10 @@ module.exports = (osseus) => {
   transaction.deposit = (to, amount, bctx) => {
     return new Promise(async (resolve, reject) => {
       try {
-        const transmit = await osseus.db_models.transmit.create({offchainTransactions: [], blockchainTransactions: [bctx.id]})
-
         to = await validateParticipant(to)
         amount = await validateAmount(amount)
+
+        const transmit = await osseus.db_models.transmit.create({currency: to.currency, offchainTransactions: [], blockchainTransactions: [bctx.id]})
 
         const data = {
           to: to,
@@ -282,15 +313,26 @@ module.exports = (osseus) => {
         await validateBlockchainBalances()
         await validateAggregatedBalances()
 
-        const transactions = await selectTransactionsToTransmit(opts)
-        const txids = transactions.map(transaction => transaction._id.toString())
-        const bctxs = await prepareTransactionsToBeTransmitted(transactions, opts.bc)
-        const result = await transmitToBlockchain(bctxs, txids, opts)
+        const transmits = await startWorkingOnTransmits(opts.filters)
+        osseus.logger.debug(`found ${transmits.length} transmits to work on`)
+        const tasks = []
+        transmits.forEach(transmit => {
+          osseus.logger.debug(`transmit: ${JSON.stringify(transmit)}`)
+          tasks.push(new Promise(async (resolve, reject) => {
+            const transactions = await getTransactionsToTransmit(transmit.offchainTransactions)
+            const txids = transactions.map(transaction => transaction._id.toString())
+            const bctxs = await prepareTransactionsToBeTransmitted(transactions, opts.bc)
+            const result = await transmitToBlockchain(transmit, bctxs, txids)
+            resolve(result)
+          }))
+        })
+
+        const results = await Promise.all(tasks, task => { return task })
 
         await updateBlockchainBalances()
         await validateBlockchainBalances()
 
-        resolve(result)
+        resolve(results)
       } catch (err) {
         reject(err)
       }

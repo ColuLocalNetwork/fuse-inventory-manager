@@ -5,9 +5,13 @@ module.exports = (osseus) => {
   const Schema = db.mongoose.Schema
 
   const TransmitSchema = new Schema({
+    currency: {type: Schema.Types.ObjectId, ref: 'Currency', required: true},
+    state: {type: String, enum: ['ACTIVE', 'WORKING_ON', 'DONE'], default: 'ACTIVE'},
     offchainTransactions: [{type: Schema.Types.ObjectId, ref: 'Transaction'}],
     blockchainTransactions: [{type: Schema.Types.ObjectId, ref: 'Blockchain_Transaction'}]
   }).plugin(timestamps())
+
+  TransmitSchema.index({currency: 1, state: 1}, {unique: true})
 
   TransmitSchema.set('toJSON', {
     getters: true,
@@ -17,6 +21,8 @@ module.exports = (osseus) => {
         id: ret._id.toString(),
         createdAt: ret.created_at,
         updatedAt: ret.updated_at,
+        currency: ret.currency,
+        state: ret.state,
         offchainTransactions: ret.offchainTransactions,
         blockchainTransactions: ret.blockchainTransactions
       }
@@ -86,6 +92,31 @@ module.exports = (osseus) => {
           return reject(new Error(`Transmit not found for id ${id}`))
         }
         resolve(doc)
+      })
+    })
+  }
+
+  transmit.getActive = (currency) => {
+    return new Promise((resolve, reject) => {
+      Transmit.findOne({currency: currency, state: 'ACTIVE'}, async (err, doc) => {
+        if (err) {
+          return reject(err)
+        }
+        if (!doc) {
+          doc = await transmit.create({currency: currency})
+        }
+        resolve(doc)
+      })
+    })
+  }
+
+  transmit.workOn = (currency) => {
+    return new Promise((resolve, reject) => {
+      Transmit.findOneAndUpdate({currency: currency, state: 'ACTIVE'}, {$set: {state: 'WORKING_ON'}}, {new: true}, (err, updatedObj) => {
+        if (err) {
+          return reject(err)
+        }
+        resolve(updatedObj)
       })
     })
   }

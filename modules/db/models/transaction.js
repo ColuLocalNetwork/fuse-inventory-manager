@@ -371,7 +371,7 @@ module.exports = (osseus) => {
     return query
   }
 
-  transaction.get = (filters, projection, limit, sort, populate) => {
+  transaction.get = (filters, projection, limit, sort) => {
     return new Promise((resolve, reject) => {
       const query = buildQueryFromFilters(filters)
       projection = projection || {}
@@ -381,7 +381,30 @@ module.exports = (osseus) => {
         .lean()
         .limit(limit)
         .sort(sort)
-        .populate(populate ? 'from.currency to.currency' : '')
+        .exec((err, docs) => {
+          if (err) {
+            return reject(err)
+          }
+          if (!docs || docs.length === 0) {
+            return reject(new Error(`No transactions found`))
+          }
+          docs = docs.map(doc => {
+            doc.amount = getDecimal128(doc.amount)
+            return doc
+          })
+          resolve(docs)
+        })
+    })
+  }
+
+  transaction.getPopulated = (filters, projection) => {
+    return new Promise((resolve, reject) => {
+      const query = buildQueryFromFilters(filters)
+      projection = projection || {}
+
+      Transaction.find(query, projection)
+        .lean()
+        .populate('from.currency to.currency')
         .exec((err, docs) => {
           if (err) {
             return reject(err)

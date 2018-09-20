@@ -481,45 +481,39 @@ contract('TRANSACTION', async (accounts) => {
       expect(failedStateChecks).to.have.lengthOf(0)
     }
 
-    it('should be able to transmit transactions for specific account', async () => {
-      let txs = makeSomeTransactions(random(100) + 1)
-      let offchainResults = await Promise.all(txs, tx => { return tx })
-      let transmitResults = await osseus.lib.Transaction.transmit({filters: {address: managerAccountAddress}, bc: {gas: 1000000}})
-      let offchainResultsFiltered = offchainResults.filter(obj => obj.from.accountAddress === managerAccountAddress)
-      await validate(offchainResultsFiltered, transmitResults)
-    })
-
     it('should be able to transmit transactions for specific currency', async () => {
       let txs = makeSomeTransactions(random(100) + 1)
       let offchainResults = await Promise.all(txs, tx => { return tx })
       let transmitResults = await osseus.lib.Transaction.transmit({filters: {currency: currency.id}, bc: {gas: 1000000}})
+      expect(transmitResults).to.be.an('array')
+      expect(transmitResults).to.have.lengthOf(1)
       let offchainResultsFiltered = offchainResults.filter(obj => obj.from.currency.toString() === currency.id)
-      await validate(offchainResultsFiltered, transmitResults)
+      await validate(offchainResultsFiltered, transmitResults[0])
     })
 
     it('should be able to transmit all transactions', async () => {
       let txs = makeSomeTransactions(random(100) + 1)
       let offchainResults = await Promise.all(txs, tx => { return tx })
       let transmitResults = await osseus.lib.Transaction.transmit({filters: {}, bc: {gas: 1000000}})
-      await validate(offchainResults, transmitResults)
+      expect(transmitResults).to.be.an('array')
+      expect(transmitResults).to.have.lengthOf(1)
+      await validate(offchainResults, transmitResults[0])
     })
 
     it('should be able to transmit relevant transacions, create some more and transmit only the ones not transmitted', async () => {
       let txs1 = makeSomeTransactions(random(100) + 1)
       let offchainResults1 = await Promise.all(txs1, tx => { return tx })
       let transmitResults1 = await osseus.lib.Transaction.transmit({filters: {}, bc: {gas: 1000000}})
-      await validate(offchainResults1, transmitResults1)
+      expect(transmitResults1).to.be.an('array')
+      expect(transmitResults1).to.have.lengthOf(1)
+      await validate(offchainResults1, transmitResults1[0])
 
       let txs2 = makeSomeTransactions(random(100) + 1)
       let offchainResults2 = await Promise.all(txs2, tx => { return tx })
       let transmitResults2 = await osseus.lib.Transaction.transmit({filters: {}, bc: {gas: 1000000}})
-      await validate(offchainResults2, transmitResults2)
-    })
-  })
-
-  after(async function () {
-    Object.keys(osseus.db_models).forEach(model => {
-      osseus.db_models[model].getModel().remove({}, () => {})
+      expect(transmitResults2).to.be.an('array')
+      expect(transmitResults2).to.have.lengthOf(1)
+      await validate(offchainResults2, transmitResults2[0])
     })
   })
 })

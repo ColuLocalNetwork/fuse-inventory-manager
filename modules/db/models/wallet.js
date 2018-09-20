@@ -22,8 +22,8 @@ module.exports = (osseus) => {
   }).plugin(timestamps())
 
   const WalletSchema = new Schema({
-    type: {type: String, enum: ['manager', 'users', 'merchants']},
-    address: {type: String},
+    type: {type: String, enum: ['manager', 'users', 'merchants'], required: true},
+    address: {type: String, required: true},
     index: {type: Number},
     balances: [{type: BalanceSchema}]
   }).plugin(timestamps())
