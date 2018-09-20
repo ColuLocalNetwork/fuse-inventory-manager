@@ -339,23 +339,35 @@ module.exports = (osseus) => {
   }
 
   const buildQueryFromFilters = (filters) => {
-    const query = {}
     const conditions = []
 
     if (filters) {
-      if (filters.id) conditions.push({_id: filters.id})
+      if (filters.id) {
+        conditions.push({_id: db.mongoose.Types.ObjectId(filters.id)})
+      }
       if (filters.address) {
         conditions.push({$or: [{'from.accountAddress': filters.address}, {'to.accountAddress': filters.address}]})
       } else {
-        if (filters.fromAddress) conditions.push({'from.accountAddress': filters.fromAddress})
-        if (filters.toAddress) conditions.push({'to.accountAddress': filters.toAddress})
+        if (filters.fromAddress) {
+          conditions.push({'from.accountAddress': filters.fromAddress})
+        }
+        if (filters.toAddress) {
+          conditions.push({'to.accountAddress': filters.toAddress})
+        }
       }
-      if (filters.context) conditions.push({context: filters.context})
-      if (filters.state) conditions.push({state: filters.state})
-      if (filters.currency) conditions.push({$or: [{'from.currency': filters.currency}, {'to.currency': filters.currency}]})
+      if (filters.context) {
+        conditions.push({context: filters.context})
+      }
+      if (filters.state) {
+        conditions.push({state: filters.state})
+      }
+      if (filters.currency) {
+        filters.currency = db.mongoose.Types.ObjectId(filters.currency)
+        conditions.push({$or: [{'from.currency': filters.currency}, {'to.currency': filters.currency}]})
+      }
     }
-    if (conditions.length > 0) query.$and = conditions
 
+    const query = conditions.length > 0 ? {$and: conditions} : {}
     return query
   }
 
@@ -408,7 +420,7 @@ module.exports = (osseus) => {
   transaction.markAsTransmitted = (ids, transmitId) => {
     return new Promise(async (resolve, reject) => {
       try {
-        ids = ids.map(id =>  db.mongoose.Types.ObjectId(id))
+        ids = ids.map(id => db.mongoose.Types.ObjectId(id))
         const query = {_id: {'$in': ids}, state: 'SELECTED'}
 
         const bulk = Transaction.collection.initializeOrderedBulkOp()
