@@ -112,10 +112,11 @@ module.exports = (osseus) => {
 
   transmit.workOn = (currency) => {
     return new Promise((resolve, reject) => {
-      Transmit.findOneAndUpdate({currency: currency, state: 'ACTIVE'}, {$set: {state: 'WORKING_ON'}}, {new: true}, (err, updatedObj) => {
+      Transmit.findOneAndUpdate({currency: currency, state: 'ACTIVE'}, {$set: {state: 'WORKING_ON'}}, {new: true}, async (err, updatedObj) => {
         if (err) {
           return reject(err)
         }
+        await transmit.getActive(currency)
         resolve(updatedObj)
       })
     })

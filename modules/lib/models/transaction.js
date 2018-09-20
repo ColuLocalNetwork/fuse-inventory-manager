@@ -328,6 +328,7 @@ module.exports = (osseus) => {
         })
 
         const results = await Promise.all(tasks, task => { return task })
+        osseus.logger.debug(`results: ${JSON.stringify(results)}`)
 
         await updateBlockchainBalances()
         await validateBlockchainBalances()
