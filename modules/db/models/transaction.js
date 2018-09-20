@@ -26,8 +26,10 @@ module.exports = (osseus) => {
     amount: {type: db.mongoose.Schema.Types.Decimal128, set: setDecimal128, get: getDecimal128},
     transmit: {type: Schema.Types.ObjectId, ref: 'Transmit'},
     context: {type: String, enum: ['transfer', 'change', 'deposit', 'other'], default: 'other'},
-    state: {type: String, enum: ['NEW', 'PENDING', 'DONE', 'CANCELED', 'TRANSMITTED'], default: 'NEW'}
+    state: {type: String, enum: ['NEW', 'PENDING', 'DONE', 'CANCELED', 'SELECTED', 'TRANSMITTED'], default: 'NEW'}
   }).plugin(timestamps())
+
+  TransactionSchema.index({context: 1, state: 1})
 
   ParticipantSchema.set('toJSON', {
     getters: true,
@@ -336,7 +338,7 @@ module.exports = (osseus) => {
     })
   }
 
-  transaction.get = (filters, projection, limit, sort, populate) => {
+  const buildQueryFromFilters = (filters) => {
     const query = {}
     const conditions = []
 
@@ -354,10 +356,15 @@ module.exports = (osseus) => {
     }
     if (conditions.length > 0) query.$and = conditions
 
-    projection = projection || {}
-    sort = sort || {created_at: 1}
+    return query
+  }
 
+  transaction.get = (filters, projection, limit, sort, populate) => {
     return new Promise((resolve, reject) => {
+      const query = buildQueryFromFilters(filters)
+      projection = projection || {}
+      sort = sort || {created_at: 1}
+
       Transaction.find(query, projection)
         .lean()
         .limit(limit)
@@ -379,13 +386,34 @@ module.exports = (osseus) => {
     })
   }
 
+  transaction.markAsSelected = (filters) => {
+    return new Promise(async (resolve, reject) => {
+      const query = buildQueryFromFilters(filters)
+
+      try {
+        const bulk = Transaction.collection.initializeOrderedBulkOp()
+        bulk.find(query).update({$set: {state: 'SELECTED'}})
+        bulk.execute((err, raw) => {
+          if (err) {
+            return reject(err)
+          }
+          resolve(raw.nModified)
+        })
+      } catch (err) {
+        reject(err)
+      }
+    })
+  }
+
   transaction.markAsTransmitted = (ids, transmitId) => {
     return new Promise(async (resolve, reject) => {
       try {
-        const condition = {_id: {'$in': ids}, state: 'DONE'} // TODO should be in {state: 'SELECTED'}
-        const update = {$set: {state: 'TRANSMITTED', transmit: transmitId}}
-        const opts = {upsert: false, multi: true}
-        Transaction.update(condition, update, opts, (err, raw) => {
+        ids = ids.map(id =>  db.mongoose.Types.ObjectId(id))
+        const query = {_id: {'$in': ids}, state: 'SELECTED'}
+
+        const bulk = Transaction.collection.initializeOrderedBulkOp()
+        bulk.find(query).update({$set: {state: 'TRANSMITTED', transmit: transmitId}})
+        bulk.execute((err, raw) => {
           if (err) {
             return reject(err)
           }

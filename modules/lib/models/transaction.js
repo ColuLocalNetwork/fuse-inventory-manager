@@ -131,9 +131,13 @@ module.exports = (osseus) => {
         }
 
         osseus.logger.debug(`filters: ${JSON.stringify(filters)}, projection: ${JSON.stringify(projection)}, limit: ${opts.limit}, sort: ${JSON.stringify(opts.sort)}`)
+        const nSelected = await osseus.db_models.tx.markAsSelected(filters)
+        osseus.logger.debug(`selected: ${nSelected} transactions`)
+
+        filters.state = 'SELECTED'
         const transactions = await osseus.db_models.tx.get(filters, projection, opts.limit, opts.sort, true)
-        // TODO need to mark the transactions as SELECTED and get the back in one atomic query
         osseus.logger.debug(`got ${transactions.length} transactions`)
+
         resolve(transactions)
       } catch (err) {
         reject(err)
