@@ -288,7 +288,7 @@ module.exports = (osseus) => {
         to = await validateParticipant(to)
         amount = await validateAmount(amount)
 
-        const transmit = await osseus.db_models.transmit.create({currency: to.currency, offchainTransactions: [], blockchainTransactions: [bctx.id]})
+        const transmit = await osseus.db_models.transmit.create({currency: to.currency, state: 'DONE', offchainTransactions: [], blockchainTransactions: [bctx.id]})
 
         const data = {
           to: to,
