@@ -516,4 +516,10 @@ contract('TRANSACTION', async (accounts) => {
       await validate(offchainResults2, transmitResults2[0])
     })
   })
+
+  after(async function () {
+    Object.keys(osseus.db_models).forEach(model => {
+      osseus.db_models[model].getModel().remove({}, () => {})
+    })
+  })
 })
