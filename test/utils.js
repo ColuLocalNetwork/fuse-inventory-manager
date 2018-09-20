@@ -165,12 +165,6 @@ contract('UTILS', async (accounts) => {
     expect(balance1).to.not.equal(balance2)
   })
 
-  // TODO wallets hold only CCs - will uncomment when CLN will be supported
-  // it('should have same CLN balance on chain and in the DB', async () => {
-  //   let valid = await osseus.utils.validateBlockchainBalance(communityManagerAddress, cln.address)
-  //   expect(valid).to.be.true
-  // })
-
   it('should have same CC balance on chain and in the DB', async () => {
     let valid = await osseus.utils.validateBlockchainBalance(communityManagerAddress, ccAddress)
     expect(valid).to.be.true
