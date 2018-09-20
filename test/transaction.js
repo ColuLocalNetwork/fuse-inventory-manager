@@ -340,12 +340,11 @@ contract('TRANSACTION', async (accounts) => {
   describe('DEPOSIT', async () => {
     it('should make a successful transaction (state should be TRANSMITTED)', async () => {
       let bctx = await osseus.db_models.bctx.create()
-      let transmit = await osseus.db_models.transmit.create({offchainTransactions: [], blockchainTransactions: [bctx.id]})
 
       let amount = 10 * TOKEN_DECIMALS
       let to = {accountAddress: managerAccountAddress, currency: ccAddress}
 
-      let tx = await osseus.lib.Transaction.deposit(to, amount, transmit.id)
+      let tx = await osseus.lib.Transaction.deposit(to, amount, bctx)
 
       expect(tx).to.be.a('Object')
       expect(tx.id).to.be.a('string')
@@ -356,7 +355,7 @@ contract('TRANSACTION', async (accounts) => {
       expect(tx.context).to.equal('deposit')
       expect(tx.state).to.equal('TRANSMITTED')
 
-      let updatedTransmit = await osseus.db_models.transmit.getById(transmit.id)
+      let updatedTransmit = await osseus.db_models.transmit.getById(tx.transmit)
       expect(updatedTransmit.offchainTransactions).to.have.lengthOf(1)
       expect(updatedTransmit.offchainTransactions[0].toString()).to.equal(tx.id)
       expect(updatedTransmit.blockchainTransactions).to.have.lengthOf(1)
@@ -373,7 +372,6 @@ contract('TRANSACTION', async (accounts) => {
           let txs = []
           let amounts = {}
           let bctx = await osseus.db_models.bctx.create()
-          let transmit = await osseus.db_models.transmit.create({offchainTransactions: [], blockchainTransactions: [bctx.id]})
 
           for (let i = 0; i < n; i++) {
             let toAccount = accounts[random(3)]
@@ -381,21 +379,20 @@ contract('TRANSACTION', async (accounts) => {
             let amount = 1 * TOKEN_DECIMALS
             amounts[to.accountAddress] = amounts[to.accountAddress] || 0
             amounts[to.accountAddress] += amount
-            txs.push(makeTransactionAndValidate(to, amount, transmit.id))
+            txs.push(makeTransactionAndValidate(to, amount, bctx))
           }
 
           return {
             txs: txs,
             bctx: bctx.id,
-            transmit: transmit.id,
             amounts: amounts
           }
         }
 
-        const makeTransactionAndValidate = (to, amount, transmit) => {
+        const makeTransactionAndValidate = (to, amount, bctx) => {
           return new Promise(async (resolve, reject) => {
             try {
-              let tx = await osseus.lib.Transaction.deposit(to, amount, transmit)
+              let tx = await osseus.lib.Transaction.deposit(to, amount, bctx)
               expect(tx).to.be.a('Object')
               expect(tx.id).to.be.a('string')
               expect(tx.to.accountAddress).to.equal(to.accountAddress)

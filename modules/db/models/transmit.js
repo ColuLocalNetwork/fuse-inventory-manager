@@ -54,6 +54,28 @@ module.exports = (osseus) => {
     })
   }
 
+  transmit.addOffchainTransaction = (id, tx) => {
+    return new Promise((resolve, reject) => {
+      Transmit.findOneAndUpdate({_id: id}, {$push: {offchainTransactions: tx}}, {new: true}, (err, updatedObj) => {
+        if (err) {
+          return reject(err)
+        }
+        resolve(updatedObj)
+      })
+    })
+  }
+
+  transmit.addBlockchainTransaction = (id, tx) => {
+    return new Promise((resolve, reject) => {
+      Transmit.findOneAndUpdate({_id: id}, {$push: {blockchainTransactions: tx}}, {new: true}, (err, updatedObj) => {
+        if (err) {
+          return reject(err)
+        }
+        resolve(updatedObj)
+      })
+    })
+  }
+
   transmit.getById = (id) => {
     return new Promise((resolve, reject) => {
       Transmit.findById(id, (err, doc) => {
