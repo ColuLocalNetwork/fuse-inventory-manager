@@ -15,6 +15,7 @@ module.exports = {
   OSSEUS_MONGO_DEPENDENCIES: ['logger'],
   OSSEUS_MONGO_URI: 'mongodb://localhost/inventory-manager',
   WEB3_PROVIDER: 'https://ropsten.infura.io',
+  WEB3_PROVIDER_WS: 'wss://ropsten.infura.io/ws/',
   SECRET: 'thisissomekindofsecret',
   CLN_ADDRESS: '0x41C9d91E96b933b74ae21bCBb617369CBE022530',
   CLN_ABI: require('./abi/ColuLocalNetwork'),
