@@ -122,6 +122,20 @@ module.exports = (osseus) => {
     })
   }
 
+  wallet.checkAddressExists = (address) => {
+    return new Promise((resolve, reject) => {
+      Wallet.findOne({address: address}, (err, doc) => {
+        if (err) {
+          return reject(err)
+        }
+        if (!doc) {
+          return resolve(false)
+        }
+        resolve(true)
+      })
+    })
+  }
+
   wallet.getModel = () => {
     return Wallet
   }

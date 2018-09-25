@@ -1,19 +1,28 @@
 const async = require('async')
+const BigNumber = require('bignumber.js')
 
 module.exports = (osseus) => {
   const onEvent = (err, data) => {
     return new Promise(async (resolve, reject) => {
       if (err) {
-        osseus.logger.debug(`Transfer events listener - onEvent error`, err)
+        osseus.logger.warn(`Transfer events listener - onEvent error`, err)
         return reject(err)
       }
       osseus.logger.debug(`Transfer events listener - onEvent data`, data)
       await osseus.db_models.bcevent.create(data)
 
-      // TODO check if from/to are suspicious - meaning they're not wallets in the DB
-      // const from = data.returnValues.from
-      // const to = data.returnValues.to
+      const from = data.returnValues.from
+      const to = data.returnValues.to
+      const amount = new BigNumber(data.returnValues.value)
 
+      const knownFrom = await osseus.db_models.wallet.checkAddressExists(from)
+      const knownTo = await osseus.db_models.wallet.checkAddressExists(to)
+      osseus.logger.silly(`Transfer events listener - onEvent known addresses - from: ${from}, knownFrom: ${knownFrom}, to: ${from}, knownTo: ${knownTo}`)
+
+      if (!knownFrom || !knownTo) {
+        osseus.logger.warn(`Transfer event from/to unknown addresses - from: ${from}, to: ${to}, amount: ${amount.toNumber()}`)
+        // TODO here probably need to notify someone/somehow
+      }
       resolve()
     })
   }
@@ -38,13 +47,13 @@ module.exports = (osseus) => {
       async.each(currencies, async (currency) => {
         const address = currency.ccAddress
         const abi = JSON.parse(currency.ccABI)
-        osseus.logger.debug(`Transfer events listener - init - currency address: ${address}`)
+        osseus.logger.silly(`Transfer events listener - init - currency address: ${address}`)
         const CurrencyContract = new osseus.web3WS.eth.Contract(abi, address)
         CurrencyContract.events.Transfer(onEvent)
       }, (err) => {
         return err
-          ? osseus.logger.error(`Transfer events listener - init - error`, err)
-          : osseus.logger.debug(`Transfer events listener - init - done`)
+          ? osseus.logger.warn(`Transfer events listener - init - error`, err)
+          : osseus.logger.silly(`Transfer events listener - init - done`)
       })
     },
 
@@ -67,7 +76,7 @@ module.exports = (osseus) => {
       }, (err) => {
         return err
           ? osseus.logger.error(`Transfer events listener - getPastEvents - error`, err)
-          : osseus.logger.debug(`Transfer events listener - getPastEvents - done`)
+          : osseus.logger.silly(`Transfer events listener - getPastEvents - done`)
       })
     }
   }
