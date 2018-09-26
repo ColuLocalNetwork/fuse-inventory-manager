@@ -13,26 +13,26 @@
   "author": "LiorRabin",
   "license": "MIT",
   "dependencies": {
-    "async": "^2.6.1",
-    "bignumber.js": "^7.2.1",
-    "bip39": "^2.5.0",
-    "cln-solidity": "^1.0.0",
-    "mongoose-time": "^0.1.0",
-    "osseus": "^2.0.1",
-    "osseus-logger": "^0.4.1",
+    "async": "~2.6.1",
+    "bignumber.js": "~7.2.1",
+    "bip39": "~2.5.0",
+    "cln-solidity": "~1.0.0",
+    "mongoose-time": "~0.1.0",
+    "osseus": "~2.0.2",
+    "osseus-logger": "^0.4.3",
     "osseus-mongo": "~0.2.1",
-    "osseus-router": "~0.3.0",
-    "osseus-server": "^0.1.4",
-    "truffle-contract": "^3.0.6",
+    "osseus-router": "~0.3.1",
+    "osseus-server": "~0.1.4",
+    "truffle-contract": "~3.0.6",
     "truffle-hdwallet-provider": "github:ColuLocalNetwork/truffle-hdwallet-provider",
-    "web3": "^1.0.0-beta.36"
+    "web3": "~1.0.0-beta.36",
+    "web3-eth-abi": "~1.0.0-beta.36"
   },
   "devDependencies": {
-    "bluebird": "^3.5.2",
-    "ganache-cli": "^6.1.8",
-    "standard": "^11.0.1",
-    "truffle": "^4.1.14",
-    "web3-eth-abi": "^1.0.0-beta.36"
+    "bluebird": "~3.5.2",
+    "ganache-cli": "~6.1.8",
+    "standard": "~11.0.1",
+    "truffle": "~4.1.14"
   },
   "standard": {
     "ignore": [
