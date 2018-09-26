@@ -17,6 +17,8 @@ contract('WALLET', async (accounts) => {
   let ccAddress
   let mmAddress
 
+  let ccMeta
+
   const ccABI = JSON.stringify(require('./helpers/abi/cc'))
   const mmABI = JSON.stringify(require('./helpers/abi/mm'))
 
@@ -46,6 +48,11 @@ contract('WALLET', async (accounts) => {
     const currencyFactory = await CurrencyFactory.new(mmLib.address, cln.address, {from: accounts[0]})
     const result = await currencyFactory.createCurrency('TestLocalCurrency', 'TLC', 18, CC_MAX_TOKENS, 'ipfs://hash', {from: accounts[0]})
     ccAddress = result.logs[0].args.token
+    ccMeta = {
+      blockHash: result.logs[0].blockHash,
+      blockNumber: result.logs[0].blockNumber,
+      transactionHash: result.logs[0].transactionHash
+    }
 
     mmAddress = await currencyFactory.getMarketMakerAddressFromToken(ccAddress)
 
@@ -61,7 +68,7 @@ contract('WALLET', async (accounts) => {
   })
 
   it('should create a wallet', async () => {
-    let currency = await osseus.lib.Currency.create(ccAddress, mmAddress, ccABI, mmABI)
+    let currency = await osseus.lib.Currency.create(ccAddress, mmAddress, ccABI, mmABI, ccMeta)
     let wallet = await osseus.db_models.wallet.create({
       address: accounts[0],
       type: 'manager',
@@ -77,7 +84,7 @@ contract('WALLET', async (accounts) => {
   })
 
   it('should not create a wallet with same address', async () => {
-    let currency = await osseus.lib.Currency.create(ccAddress, mmAddress, ccABI, mmABI)
+    let currency = await osseus.lib.Currency.create(ccAddress, mmAddress, ccABI, mmABI, ccMeta)
     await osseus.db_models.wallet.create({
       address: accounts[0],
       type: 'manager',
@@ -106,7 +113,7 @@ contract('WALLET', async (accounts) => {
   })
 
   it('should get wallet (by id)', async () => {
-    let currency = await osseus.lib.Currency.create(ccAddress, mmAddress, ccABI, mmABI)
+    let currency = await osseus.lib.Currency.create(ccAddress, mmAddress, ccABI, mmABI, ccMeta)
     let wallet1 = await osseus.db_models.wallet.create({
       address: accounts[0],
       type: 'manager',
@@ -123,7 +130,7 @@ contract('WALLET', async (accounts) => {
   })
 
   it('should get wallet (by address)', async () => {
-    let currency = await osseus.lib.Currency.create(ccAddress, mmAddress, ccABI, mmABI)
+    let currency = await osseus.lib.Currency.create(ccAddress, mmAddress, ccABI, mmABI, ccMeta)
     let wallet1 = await osseus.db_models.wallet.create({
       address: accounts[0],
       type: 'manager',
@@ -141,7 +148,7 @@ contract('WALLET', async (accounts) => {
 
   it('should get error if wallet not found (by id)', async () => {
     let fakeId = '123abc'
-    let currency = await osseus.lib.Currency.create(ccAddress, mmAddress, ccABI, mmABI)
+    let currency = await osseus.lib.Currency.create(ccAddress, mmAddress, ccABI, mmABI, ccMeta)
     let wallet1 = await osseus.db_models.wallet.create({
       address: accounts[0],
       type: 'manager',

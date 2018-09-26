@@ -19,10 +19,16 @@ module.exports = (osseus) => {
       const knownTo = await osseus.db_models.wallet.checkAddressExists(to)
       osseus.logger.silly(`Transfer events listener - onEvent known addresses - from: ${from}, knownFrom: ${knownFrom}, to: ${from}, knownTo: ${knownTo}`)
 
-      if (!knownFrom || !knownTo) {
-        osseus.logger.warn(`Transfer event from/to unknown addresses - from: ${from}, to: ${to}, amount: ${amount.toNumber()}`)
+      if (!knownTo) {
+        osseus.logger.warn(`Transfer event to unknown address - from: ${from}, to: ${to}, amount: ${amount.toNumber()}`)
         // TODO here probably need to notify someone/somehow
       }
+
+      if (!knownFrom) {
+        osseus.logger.info(`Transfer event from unknown address (deposit) - from: ${from}, to: ${to}, amount: ${amount.toNumber()}`)
+        // TODO here probably need to notify someone/somehow
+      }
+
       resolve()
     })
   }
@@ -63,16 +69,24 @@ module.exports = (osseus) => {
         osseus.logger.warn(`Transfer events listener - getPastEvents - no currencies`)
         return
       }
+      const pastEventsBlockLimit = osseus.config.past_events_block_limit || 1000
       async.each(currencies, async (currency) => {
         const address = currency.ccAddress
         const abi = JSON.parse(currency.ccABI)
+        const creationBlock = currency.ccMeta.blockNumber
+        const currentBlock = await osseus.web3WS.eth.getBlockNumber()
         const CurrencyContract = new osseus.web3WS.eth.Contract(abi, address)
         const lastBlock = await osseus.db_models.bcevent.getLastBlock(address)
-        const fromBlock = lastBlock + 1
-        osseus.logger.debug(`Transfer events listener - getPastEvents - currency address: ${address}, fromBlock: ${fromBlock}`)
-        CurrencyContract.getPastEvents('Transfer', {fromBlock: fromBlock, toBlock: 'latest'})
-          .then(handlePastEvents)
-          .catch(err => osseus.logger.error(`Transfer events listener - getPastEvents - error`, err))
+        let fromBlock = Math.max(lastBlock, creationBlock) + 1
+        let toBlock = fromBlock + pastEventsBlockLimit
+        while (toBlock < currentBlock) {
+          osseus.logger.debug(`Transfer events listener - getPastEvents - currency address: ${address}, fromBlock: ${fromBlock} toBlock: ${toBlock}`)
+          CurrencyContract.getPastEvents('Transfer', {fromBlock: fromBlock, toBlock: toBlock})
+            .then(handlePastEvents)
+            .catch(err => osseus.logger.error(`Transfer events listener - getPastEvents - error`, err))
+          fromBlock = toBlock + 1
+          toBlock += pastEventsBlockLimit
+        }
       }, (err) => {
         return err
           ? osseus.logger.error(`Transfer events listener - getPastEvents - error`, err)
