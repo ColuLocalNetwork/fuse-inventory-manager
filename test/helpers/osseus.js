@@ -11,6 +11,7 @@ module.exports = async () => {
     bctx: require(path.join(cwd, 'modules/db/models/blockchainTransaction'))(osseus),
     currency: require(path.join(cwd, 'modules/db/models/currency'))(osseus),
     community: require(path.join(cwd, 'modules/db/models/community'))(osseus),
+    transmit: require(path.join(cwd, 'modules/db/models/transmit'))(osseus),
     tx: require(path.join(cwd, 'modules/db/models/transaction'))(osseus),
     wallet: require(path.join(cwd, 'modules/db/models/wallet'))(osseus)
   }

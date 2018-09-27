@@ -22,8 +22,8 @@ module.exports = (osseus) => {
   }).plugin(timestamps())
 
   const WalletSchema = new Schema({
-    type: {type: String, enum: ['manager', 'users', 'merchants']},
-    address: {type: String},
+    type: {type: String, enum: ['manager', 'users', 'merchants'], required: true},
+    address: {type: String, required: true},
     index: {type: Number},
     balances: [{type: BalanceSchema}]
   }).plugin(timestamps())
@@ -118,6 +118,86 @@ module.exports = (osseus) => {
           return reject(new Error(`Wallet not found for address: ${address}`))
         }
         resolve(doc)
+      })
+    })
+  }
+
+  wallet.getBlockchainBalance = (address, currencyId) => {
+    return new Promise((resolve, reject) => {
+      Wallet.findOne({address: address}, (err, doc) => {
+        if (err) {
+          return reject(err)
+        }
+        if (!doc) {
+          return reject(new Error(`Wallet not found for address: ${address}`))
+        }
+        const balance = doc.balances && doc.balances.filter(balance => balance.currency.toString() === currencyId)[0]
+        if (!balance || !balance.blockchainAmount) {
+          return reject(new Error(`Wallet could not get balance - address: ${address}, currencyId: ${currencyId}`))
+        }
+        resolve(balance.blockchainAmount.toNumber())
+      })
+    })
+  }
+
+  wallet.getAll = (query, projection) => {
+    return new Promise((resolve, reject) => {
+      Wallet.find(query, projection)
+        .lean()
+        .populate('balances.currency')
+        .exec((err, docs) => {
+          if (err) {
+            return reject(err)
+          }
+          if (!docs || docs.length === 0) {
+            return reject(new Error(`No wallets found`))
+          }
+          resolve(docs)
+        })
+    })
+  }
+
+  wallet.aggregateBalancesPerCurrency = (currency) => {
+    return new Promise((resolve, reject) => {
+      const condition = currency ? {'balances.currency': db.mongoose.Types.ObjectId(currency)} : {}
+      Wallet.aggregate([
+        {
+          $unwind: '$balances'
+        },
+        {
+          $match: condition
+        },
+        {
+          $project: {
+            currency: '$balances.currency',
+            blockchainAmount: '$balances.blockchainAmount',
+            offchainAmount: '$balances.offchainAmount'
+          }
+        },
+        {
+          $group: {
+            _id: {
+              currency: '$currency'
+            },
+            totalBlockchainAmount: {$sum: '$blockchainAmount'},
+            totalOffchainAmount: {$sum: '$offchainAmount'}
+          }
+        }
+      ], (err, results) => {
+        if (err) {
+          return reject(err)
+        }
+        if (!results || results.length === 0) {
+          return reject(new Error(`No aggregation found`))
+        }
+        results = results.map(result => {
+          return {
+            currency: result._id.currency.toString(),
+            totalBlockchainAmount: getDecimal128(result.totalBlockchainAmount),
+            totalOffchainAmount: getDecimal128(result.totalOffchainAmount)
+          }
+        })
+        resolve(results)
       })
     })
   }

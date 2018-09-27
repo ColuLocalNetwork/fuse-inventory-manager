@@ -5,19 +5,19 @@ module.exports = (osseus) => {
 
   currency.create = (ccAddress, mmAddress, ccABI, mmABI) => {
     return new Promise(async (resolve, reject) => {
-      const data = {
-        ccAddress: ccAddress,
-        mmAddress: mmAddress,
-        ccABI: ccABI,
-        mmABI: mmABI
+      try {
+        const data = {
+          ccAddress: ccAddress,
+          mmAddress: mmAddress,
+          ccABI: ccABI,
+          mmABI: mmABI
+        }
+        const newCurrency = await osseus.db_models.currency.create(data)
+        await osseus.db_models.transmit.create({currency: newCurrency.id})
+        resolve(newCurrency)
+      } catch (err) {
+        reject(err)
       }
-      await osseus.db_models.currency.create(data)
-        .then(newCurrency => {
-          resolve(newCurrency)
-        })
-        .catch(err => {
-          reject(err)
-        })
     })
   }
 

@@ -1,4 +1,5 @@
 const contract = require('truffle-contract')
+const BigNumber = require('bignumber.js')
 
 const getCurrencyFromToken = (token, community) => {
   return new Promise(async (resolve, reject) => {
@@ -27,7 +28,7 @@ const getCurrencyFromToken = (token, community) => {
   })
 }
 
-const checkBalance = (address, token) => {
+const getBlockchainBalance = (address, token, bignum) => {
   return new Promise(async (resolve, reject) => {
     try {
       let balance = 0
@@ -35,12 +36,70 @@ const checkBalance = (address, token) => {
       if (token === 'ETH') {
         balance = this.osseus.web3.eth.getBalance(address)
         balance = this.osseus.web3.toDecimal(balance)
+        balance = bignum ? new BigNumber(balance) : balance
       } else {
         const currency = await getCurrencyFromToken(token, community)
         balance = await currency.contract.balanceOf(address)
-        balance = balance.toNumber()
+        balance = bignum ? balance : balance.toNumber()
       }
       resolve(balance)
+    } catch (err) {
+      reject(err)
+    }
+  })
+}
+
+const validateBlockchainBalance = (address, token) => {
+  return new Promise(async (resolve, reject) => {
+    try {
+      const bcBalance = await getBlockchainBalance(address, token)
+      const currency = await this.osseus.db_models.currency.getByCurrencyAddress(token)
+      const bcBalanceInDB = await this.osseus.db_models.wallet.getBlockchainBalance(address, currency.id)
+
+      if (typeof bcBalance === 'undefined') {
+        return reject(new Error(`Could not get blockchain balance - address: ${address}, token: ${token}`))
+      }
+      if (typeof bcBalanceInDB === 'undefined') {
+        return reject(new Error(`Could not get blockchain balance (DB) - address: ${address}, token: ${token}`))
+      }
+      const result = bcBalance === bcBalanceInDB
+      this.osseus.logger.debug(`validateBlockchainBalance --> address: ${address}, token: ${token}, bcBalance: ${bcBalance}, bcBalanceInDB: ${bcBalanceInDB}, result: ${result}`)
+      resolve(result)
+    } catch (err) {
+      reject(err)
+    }
+  })
+}
+
+const validateAggregatedBalances = (token) => {
+  return new Promise(async (resolve, reject) => {
+    try {
+      const currency = token ? await this.osseus.db_models.currency.getByCurrencyAddress(token) : {}
+      const aggregatedBalances = await this.osseus.db_models.wallet.aggregateBalancesPerCurrency(currency.id)
+      const results = aggregatedBalances.map(balance => {
+        balance.totalBlockchainAmount = balance.totalBlockchainAmount.toNumber()
+        balance.totalOffchainAmount = balance.totalOffchainAmount.toNumber()
+        balance.valid = balance.totalBlockchainAmount >= balance.totalOffchainAmount
+        return balance
+      })
+      this.osseus.logger.debug(`validateAggregatedBalances --> token: ${token}, results: ${JSON.stringify(results)}`)
+      resolve(results)
+    } catch (err) {
+      reject(err)
+    }
+  })
+}
+
+const updateBlockchainBalance = (address, token) => {
+  return new Promise(async (resolve, reject) => {
+    try {
+      const bcBalance = await getBlockchainBalance(address, token, true)
+      const currency = await this.osseus.db_models.currency.getByCurrencyAddress(token)
+      if (typeof bcBalance === 'undefined') {
+        return reject(new Error(`Could not get blockchain balance - address: ${address}, token: ${token}`))
+      }
+      const result = await this.osseus.db_models.wallet.update({'address': address, 'balances.currency': currency.id}, {'balances.$.blockchainAmount': bcBalance})
+      resolve(result)
     } catch (err) {
       reject(err)
     }
@@ -52,7 +111,10 @@ const init = (osseus) => {
   return new Promise((resolve, reject) => {
     osseus.utils = {
       getCurrencyFromToken: getCurrencyFromToken,
-      checkBalance: checkBalance
+      getBlockchainBalance: getBlockchainBalance,
+      validateBlockchainBalance: validateBlockchainBalance,
+      validateAggregatedBalances: validateAggregatedBalances,
+      updateBlockchainBalance: updateBlockchainBalance
     }
     osseus.logger.info(`Utils ready`)
     return resolve()

@@ -24,9 +24,12 @@ module.exports = (osseus) => {
     from: {type: ParticipantSchema},
     to: {type: ParticipantSchema},
     amount: {type: db.mongoose.Schema.Types.Decimal128, set: setDecimal128, get: getDecimal128},
-    bctx: {type: Schema.Types.ObjectId, ref: 'Blockchain_Transaction'},
-    state: {type: String, enum: ['NEW', 'PENDING', 'DONE', 'CANCELED', 'TRANSMITTED'], default: 'NEW'}
+    transmit: {type: Schema.Types.ObjectId, ref: 'Transmit'},
+    context: {type: String, enum: ['transfer', 'change', 'deposit', 'other'], default: 'other'},
+    state: {type: String, enum: ['NEW', 'PENDING', 'DONE', 'CANCELED', 'SELECTED', 'TRANSMITTED'], default: 'NEW'}
   }).plugin(timestamps())
+
+  TransactionSchema.index({context: 1, state: 1})
 
   ParticipantSchema.set('toJSON', {
     getters: true,
@@ -54,7 +57,8 @@ module.exports = (osseus) => {
         from: ret.from,
         to: ret.to,
         amount: ret.amount,
-        bctx: ret.bctx,
+        transmit: ret.transmit,
+        context: ret.context,
         state: ret.state
       }
       return safeRet
@@ -114,6 +118,7 @@ module.exports = (osseus) => {
           'balances': {
             'currency': participant.currency,
             'offchainAmount': 0,
+            'blockchainAmount': 0,
             'pendingTxs': []
           }
         }
@@ -146,6 +151,9 @@ module.exports = (osseus) => {
 
     return new Promise((resolve, reject) => {
       // console.log(`processNewTransaction: ${JSON.stringify(tx)}`)
+      if (!tx) {
+        return reject(new Error(`transaction undefined in processNewTransaction`))
+      }
       if (tx.state !== 'NEW') {
         return reject(new Error(`Illegal state for processNewTransaction - should be NEW`))
       }
@@ -206,6 +214,9 @@ module.exports = (osseus) => {
 
     return new Promise(async (resolve, reject) => {
       // console.log(`processPendingTransaction: ${JSON.stringify(tx)}`)
+      if (!tx) {
+        return reject(new Error(`transaction undefined in processPendingTransaction`))
+      }
       if (tx.state !== 'PENDING') {
         return reject(new Error(`Illegal state for processPendingTransaction - should be PENDING`))
       }
@@ -257,6 +268,9 @@ module.exports = (osseus) => {
 
     return new Promise(async (resolve, reject) => {
       // console.log(`cancelTransaction: ${JSON.stringify(tx)}`)
+      if (!tx) {
+        return reject(new Error(`transaction undefined in cancelTransaction`))
+      }
       if (tx.state !== 'PENDING') {
         return reject(new Error(`Illegal state for cancelTransaction - should be PENDING`))
       }
@@ -274,6 +288,9 @@ module.exports = (osseus) => {
   transaction.create = (data) => {
     return new Promise(async (resolve, reject) => {
       try {
+        if (!data.context) {
+          return reject(new Error(`Cannot create a transaction - missing context`))
+        }
         let tx = await createNewTransaction(data)
         tx = await processNewTransaction(tx)
         tx = await processPendingTransaction(tx)
@@ -284,47 +301,162 @@ module.exports = (osseus) => {
     })
   }
 
-  transaction.getById = (id) => {
-    return new Promise((resolve, reject) => {
-      Transaction.findById(id, (err, doc) => {
-        if (err) {
-          return reject(err)
+  transaction.createDeposit = (data) => {
+    return new Promise(async (resolve, reject) => {
+      try {
+        if (!data.transmit) {
+          return reject(new Error(`Cannot create a 'deposit' transaction - missing transmit id`))
         }
-        if (!doc) {
-          return reject(new Error(`Transaction not found for id ${id}`))
+        data.state = 'TRANSMITTED'
+        let tx = await createNewTransaction(data)
+
+        const Wallet = osseus.db_models.wallet.getModel()
+        const condition = {
+          'address': tx.to.accountAddress,
+          'balances.currency': tx.to.currency
         }
-        resolve(doc)
-      })
+        const amount = new BigNumber(tx.amount)
+        const update = {
+          '$inc': {
+            'balances.$.offchainAmount': amount,
+            'balances.$.blockchainAmount': amount
+          }
+        }
+        const opts = {
+          upsert: false,
+          multi: false
+        }
+        Wallet.update(condition, update, opts).exec((err, raw) => {
+          if (err) {
+            return reject(err)
+          }
+          resolve(tx)
+        })
+      } catch (err) {
+        reject(err)
+      }
     })
   }
 
-  transaction.get = (cond) => {
-    const query = {}
+  const buildQueryFromFilters = (filters) => {
     const conditions = []
 
-    if (cond.address) {
-      conditions.push({$or: [{'from.accountAddress': cond.address}, {'to.accountAddress': cond.address}]})
-    }
-    if (cond.state) {
-      conditions.push({state: cond.state})
-    }
-    if (cond.currency) {
-      conditions.push({$or: [{'from.currency': cond.currency}, {'to.currency': cond.currency}]})
-    }
-    if (conditions.length > 0) {
-      query.$and = conditions
+    if (filters) {
+      if (filters.id) {
+        conditions.push({_id: db.mongoose.Types.ObjectId(filters.id)})
+      }
+      if (filters.address) {
+        conditions.push({$or: [{'from.accountAddress': filters.address}, {'to.accountAddress': filters.address}]})
+      } else {
+        if (filters.fromAddress) {
+          conditions.push({'from.accountAddress': filters.fromAddress})
+        }
+        if (filters.toAddress) {
+          conditions.push({'to.accountAddress': filters.toAddress})
+        }
+      }
+      if (filters.context) {
+        conditions.push({context: filters.context})
+      }
+      if (filters.state) {
+        conditions.push({state: filters.state})
+      }
+      if (filters.currency) {
+        filters.currency = db.mongoose.Types.ObjectId(filters.currency)
+        conditions.push({$or: [{'from.currency': filters.currency}, {'to.currency': filters.currency}]})
+      }
     }
 
+    const query = conditions.length > 0 ? {$and: conditions} : {}
+    return query
+  }
+
+  transaction.get = (filters, projection, limit, sort) => {
     return new Promise((resolve, reject) => {
-      Transaction.find(query, (err, docs) => {
-        if (err) {
-          return reject(err)
-        }
-        if (!docs || docs.length === 0) {
-          return reject(new Error(`No transactions found`))
-        }
-        resolve(docs)
-      })
+      const query = buildQueryFromFilters(filters)
+      projection = projection || {}
+      sort = sort || {created_at: 1}
+
+      Transaction.find(query, projection)
+        .lean()
+        .limit(limit)
+        .sort(sort)
+        .exec((err, docs) => {
+          if (err) {
+            return reject(err)
+          }
+          if (!docs || docs.length === 0) {
+            return reject(new Error(`No transactions found`))
+          }
+          docs = docs.map(doc => {
+            doc.amount = getDecimal128(doc.amount)
+            return doc
+          })
+          resolve(docs)
+        })
+    })
+  }
+
+  transaction.getPopulated = (filters, projection) => {
+    return new Promise((resolve, reject) => {
+      const query = buildQueryFromFilters(filters)
+      projection = projection || {}
+
+      Transaction.find(query, projection)
+        .lean()
+        .populate('from.currency to.currency')
+        .exec((err, docs) => {
+          if (err) {
+            return reject(err)
+          }
+          if (!docs || docs.length === 0) {
+            return reject(new Error(`No transactions found`))
+          }
+          docs = docs.map(doc => {
+            doc.amount = getDecimal128(doc.amount)
+            return doc
+          })
+          resolve(docs)
+        })
+    })
+  }
+
+  transaction.markAsSelected = (filters) => {
+    return new Promise(async (resolve, reject) => {
+      const query = buildQueryFromFilters(filters)
+
+      try {
+        const bulk = Transaction.collection.initializeOrderedBulkOp()
+        bulk.find(query).update({$set: {state: 'SELECTED'}})
+        bulk.execute((err, raw) => {
+          if (err) {
+            return reject(err)
+          }
+          resolve(raw.nModified)
+        })
+      } catch (err) {
+        reject(err)
+      }
+    })
+  }
+
+  transaction.markAsTransmitted = (ids, transmitId) => {
+    return new Promise(async (resolve, reject) => {
+      try {
+        ids = ids.map(id => db.mongoose.Types.ObjectId(id))
+        const query = {_id: {'$in': ids}, state: 'SELECTED'}
+
+        const bulk = Transaction.collection.initializeOrderedBulkOp()
+        bulk.find(query).update({$set: {state: 'TRANSMITTED', transmit: transmitId}})
+        bulk.execute((err, raw) => {
+          if (err) {
+            return reject(err)
+          }
+          resolve(raw.nModified)
+        })
+      } catch (err) {
+        reject(err)
+      }
     })
   }
 

@@ -8,7 +8,7 @@ module.exports = (osseus) => {
   const validateAmount = (amount) => {
     return new Promise(async (resolve, reject) => {
       amount = new BigNumber(amount)
-      if (amount.eq(0) || amount.lt(0)) {
+      if (amount.lte(0)) {
         reject(new Error(`amount must be positive`))
       }
       if (amount.isNaN()) {
