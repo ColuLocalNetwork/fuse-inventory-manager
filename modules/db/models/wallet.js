@@ -112,7 +112,7 @@ module.exports = (osseus) => {
 
   wallet.getByAddress = (address) => {
     return new Promise((resolve, reject) => {
-      Wallet.findOne({address: address}, (err, doc) => {
+      Wallet.findOne({address: {$regex: new RegExp(address, 'i')}}, (err, doc) => {
         if (err) {
           return reject(err)
         }
@@ -126,9 +126,9 @@ module.exports = (osseus) => {
 
   wallet.checkAddressExists = (address) => {
     return new Promise((resolve, reject) => {
-      Wallet.findOne({address: address}, (err, doc) => {
+      Wallet.findOne({address: {$regex: new RegExp(address, 'i')}}, (err, doc) => {
         if (err) {
-          return reject(err)
+          return resolve(false)
         }
         if (!doc) {
           return resolve(false)
@@ -140,7 +140,7 @@ module.exports = (osseus) => {
 
   wallet.getBlockchainBalance = (address, currencyId) => {
     return new Promise((resolve, reject) => {
-      Wallet.findOne({address: address}, (err, doc) => {
+      Wallet.findOne({address: {$regex: new RegExp(address, 'i')}}, (err, doc) => {
         if (err) {
           return reject(err)
         }

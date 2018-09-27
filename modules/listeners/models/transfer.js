@@ -11,6 +11,7 @@ module.exports = (osseus) => {
       osseus.logger.debug(`Transfer events listener - onEvent data`, data)
       await osseus.db_models.bcevent.create(data)
 
+      const token = data.address
       const from = data.returnValues.from
       const to = data.returnValues.to
       const amount = new BigNumber(data.returnValues.value)
@@ -26,6 +27,8 @@ module.exports = (osseus) => {
 
       if (!knownFrom) {
         osseus.logger.info(`Transfer event from unknown address (deposit) - from: ${from}, to: ${to}, amount: ${amount.toNumber()}`)
+        const updated = await osseus.utils.updateBlockchainBalance(to, token)
+        osseus.logger.info(`Updated balance after deposit: ${JSON.stringify(updated)}`)
         // TODO here probably need to notify someone/somehow
       }
 
