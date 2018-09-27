@@ -11,10 +11,10 @@ module.exports = (osseus) => {
   })
 
   const CurrencySchema = new Schema({
-    ccAddress: {type: String},
-    mmAddress: {type: String},
-    ccABI: {type: String},
-    mmABI: {type: String},
+    ccAddress: {type: String, required: true},
+    mmAddress: {type: String, required: true},
+    ccABI: {type: String, required: true},
+    mmABI: {type: String, required: true},
     ccBlockchainInfo: {type: CurrencyBlockchainInfoSchema}
   }).plugin(timestamps())
 

@@ -121,7 +121,7 @@ module.exports = (osseus) => {
       })
     })
   }
-  
+
   wallet.checkAddressExists = (address) => {
     return new Promise((resolve, reject) => {
       Wallet.findOne({address: address}, (err, doc) => {
@@ -135,7 +135,7 @@ module.exports = (osseus) => {
       })
     })
   }
-  
+
   wallet.getBlockchainBalance = (address, currencyId) => {
     return new Promise((resolve, reject) => {
       Wallet.findOne({address: address}, (err, doc) => {

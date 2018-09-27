@@ -11,7 +11,7 @@ module.exports = (osseus) => {
           mmAddress: mmAddress,
           ccABI: ccABI,
           mmABI: mmABI,
-        ccBlockchainInfo: ccBlockchainInfo
+          ccBlockchainInfo: ccBlockchainInfo
         }
         const newCurrency = await osseus.db_models.currency.create(data)
         await osseus.db_models.transmit.create({currency: newCurrency.id})
