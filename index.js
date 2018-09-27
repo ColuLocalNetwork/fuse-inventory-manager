@@ -7,15 +7,19 @@ const main = async () => {
     const osseus = await Osseus.init()
     osseus.cwd = cwd
 
-    console.time('INVENTORY MANAGER')
+    if (osseus.config.debug) console.time('INVENTORY MANAGER')
 
-    osseus.web3 = new Web3(new Web3.providers.HttpProvider(osseus.config.web3_provider))
+    osseus.web3 = new Web3(new Web3.providers.WebsocketProvider(osseus.config.web3_provider))
+    osseus.web3WS = new Web3(new Web3.providers.WebsocketProvider(osseus.config.web3_provider_ws))
+
     await require('./modules/utils').init(osseus)
     await require('./modules/db').init(osseus)
     await require('./modules/lib').init(osseus)
+    await require('./modules/listeners').init(osseus)
     await require('./modules/errors').init(osseus)
 
-    console.timeEnd('INVENTORY MANAGER')
+    if (osseus.config.debug) console.timeEnd('INVENTORY MANAGER')
+
     osseus.logger.info('INVENTORY MANAGER IS RUNNING :)')
   } catch (err) {
     console.error('BOOTSTRAP ERROR!', err.stack || err)

@@ -2,6 +2,7 @@ const init = (osseus) => {
   this.osseus = osseus
   return new Promise((resolve, reject) => {
     this.osseus.db_models = {
+      bcevent: require('./models/blockchainEvent')(this.osseus),
       bctx: require('./models/blockchainTransaction')(this.osseus),
       community: require('./models/community')(this.osseus),
       currency: require('./models/currency')(this.osseus),

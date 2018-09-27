@@ -83,6 +83,8 @@ contract('BLOCKCHAIN_TRANSACTION', async (accounts) => {
   let ccAddress
   let mmAddress
 
+  let ccBlockchainInfo
+
   const ccABI = JSON.stringify(require('./helpers/abi/cc'))
   const mmABI = JSON.stringify(require('./helpers/abi/mm'))
 
@@ -105,6 +107,11 @@ contract('BLOCKCHAIN_TRANSACTION', async (accounts) => {
     currencyFactory = await CurrencyFactory.new(mmLib.address, cln.address, {from: accounts[0]})
     const result = await currencyFactory.createCurrency('TestLocalCurrency', 'TLC', 18, CC_MAX_TOKENS, 'ipfs://hash', {from: accounts[0]})
     ccAddress = result.logs[0].args.token
+    ccBlockchainInfo = {
+      blockHash: result.logs[0].blockHash,
+      blockNumber: result.logs[0].blockNumber,
+      transactionHash: result.logs[0].transactionHash
+    }
     cc = await ColuLocalCurrency.at(ccAddress)
 
     let insertCLNtoMarketMakerData = encodeInsertData(ccAddress)
@@ -124,7 +131,7 @@ contract('BLOCKCHAIN_TRANSACTION', async (accounts) => {
       osseus.db_models[model].getModel().remove({}, () => {})
     })
 
-    currency = await osseus.lib.Currency.create(ccAddress, mmAddress, ccABI, mmABI)
+    currency = await osseus.lib.Currency.create(ccAddress, mmAddress, ccABI, mmABI, ccBlockchainInfo)
     community = await osseus.lib.Community.create('Test Community', currency)
 
     communityManagerAddress = community.wallets.filter(wallet => wallet.type === 'manager')[0].address
