@@ -200,7 +200,7 @@ contract('UTILS', async (accounts) => {
     expect(valid1).to.be.true
 
     await cc.transfer(communityManagerAddress, 1 * TOKEN_DECIMALS, {from: accounts[0]})
-    await osseus.utils.updateBlockchainBalance(communityManagerAddress, ccAddress)
+    await osseus.utils.updateBalances(communityManagerAddress, ccAddress)
 
     let valid2 = await osseus.utils.validateBlockchainBalance(communityManagerAddress, ccAddress)
     expect(valid2).to.be.true

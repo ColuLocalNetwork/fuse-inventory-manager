@@ -96,6 +96,20 @@ module.exports = (osseus) => {
     })
   }
 
+  wallet.updateBalances = (condition, blockchainAmount, offchainAmount) => {
+    return new Promise((resolve, reject) => {
+      const update = {}
+      if (blockchainAmount) update['balances.$.blockchainAmount'] = blockchainAmount
+      if (offchainAmount) update['balances.$.offchainAmount'] = offchainAmount
+      Wallet.findOneAndUpdate(condition, {$set: update}, {new: true}, (err, updatedObj) => {
+        if (err) {
+          return reject(err)
+        }
+        resolve(updatedObj)
+      })
+    })
+  }
+
   wallet.getById = (id) => {
     return new Promise((resolve, reject) => {
       Wallet.findById(id, (err, doc) => {

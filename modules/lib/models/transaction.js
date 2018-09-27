@@ -95,7 +95,7 @@ module.exports = (osseus) => {
           currencies.forEach(currency => {
             tasks.push(new Promise(async (resolve, reject) => {
               try {
-                let updated = await osseus.utils.updateBlockchainBalance(address, currency)
+                let updated = await osseus.utils.updateBalances(address, currency)
                 resolve({address: address, currency: currency, updated: updated})
               } catch (err) {
                 reject(err)
