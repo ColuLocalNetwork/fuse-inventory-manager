@@ -167,6 +167,23 @@ contract('WALLET', async (accounts) => {
     expect(wallet2).to.be.undefined
   })
 
+  it('should get blockchain balance', async () => {
+    let currency = await osseus.lib.Currency.create(ccAddress, mmAddress, ccABI, mmABI)
+    let wallet1 = await osseus.db_models.wallet.create({
+      address: accounts[0],
+      type: 'manager',
+      index: 0,
+      balances: [{
+        currency: currency,
+        blockchainAmount: 10 * TOKEN_DECIMALS,
+        offchainAmount: 10 * TOKEN_DECIMALS,
+        pendingTxs: []
+      }]
+    })
+    let bcBalance = await osseus.db_models.wallet.getBlockchainBalance(wallet1.address, currency.id)
+    expect(bcBalance).to.equal(10 * TOKEN_DECIMALS)
+  })
+
   after(async function () {
     Object.keys(osseus.db_models).forEach(model => {
       osseus.db_models[model].getModel().remove({}, () => {})

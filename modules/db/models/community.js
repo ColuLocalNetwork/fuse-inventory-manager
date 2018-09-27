@@ -5,10 +5,10 @@ module.exports = (osseus) => {
   const Schema = db.mongoose.Schema
 
   const CommunitySchema = new Schema({
-    name: {type: String},
+    name: {type: String, required: true},
     wallets: [{type: Schema.Types.ObjectId, ref: 'Wallet'}],
-    mnemonic: {type: String},
-    defaultCurrency: {type: Schema.Types.ObjectId, ref: 'Currency'}
+    mnemonic: {type: String, required: true},
+    defaultCurrency: {type: Schema.Types.ObjectId, ref: 'Currency', required: true}
   }).plugin(timestamps())
 
   CommunitySchema.set('toJSON', {

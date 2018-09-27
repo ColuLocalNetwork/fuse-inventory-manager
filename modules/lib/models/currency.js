@@ -5,20 +5,20 @@ module.exports = (osseus) => {
 
   currency.create = (ccAddress, mmAddress, ccABI, mmABI, ccBlockchainInfo) => {
     return new Promise(async (resolve, reject) => {
-      const data = {
-        ccAddress: ccAddress,
-        mmAddress: mmAddress,
-        ccABI: ccABI,
-        mmABI: mmABI,
+      try {
+        const data = {
+          ccAddress: ccAddress,
+          mmAddress: mmAddress,
+          ccABI: ccABI,
+          mmABI: mmABI,
         ccBlockchainInfo: ccBlockchainInfo
+        }
+        const newCurrency = await osseus.db_models.currency.create(data)
+        await osseus.db_models.transmit.create({currency: newCurrency.id})
+        resolve(newCurrency)
+      } catch (err) {
+        reject(err)
       }
-      await osseus.db_models.currency.create(data)
-        .then(newCurrency => {
-          resolve(newCurrency)
-        })
-        .catch(err => {
-          reject(err)
-        })
     })
   }
 
