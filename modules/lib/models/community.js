@@ -8,7 +8,7 @@ module.exports = (osseus) => {
   const getProvider = (community) => {
     const provider = new HDWalletProvider([{
       mnemonic: community.mnemonic,
-      password: crypto.createHash('sha256').update(`${community.id}_${osseus.config.secret}`).digest('base64')
+      password: crypto.createHash('sha256').update(`${community.uuid}_${osseus.config.secret}`).digest('base64')
     }], osseus.config.web3_provider, 0, 3)
     return provider
   }
