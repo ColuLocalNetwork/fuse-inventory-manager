@@ -1,4 +1,4 @@
-const Osseus = require('osseus')
+const Osseus = require('@colucom/osseus')
 const Web3 = require('web3')
 const cwd = process.cwd()
 
