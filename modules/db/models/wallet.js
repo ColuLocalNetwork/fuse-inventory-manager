@@ -25,6 +25,7 @@ module.exports = (osseus) => {
     type: {type: String, enum: ['manager', 'users', 'merchants'], required: true},
     address: {type: String, required: true},
     index: {type: Number},
+    exid: {type: String},
     balances: [{type: BalanceSchema}]
   }).plugin(timestamps())
 
@@ -58,6 +59,7 @@ module.exports = (osseus) => {
         type: ret.type,
         address: ret.address,
         index: ret.index,
+        exid: ret.exid,
         balances: ret.balances
       }
       return safeRet

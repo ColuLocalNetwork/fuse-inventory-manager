@@ -15,6 +15,7 @@ module.exports = (osseus) => {
     mmAddress: {type: String, required: true},
     ccABI: {type: String, required: true},
     mmABI: {type: String, required: true},
+    exid: {type: String},
     ccBlockchainInfo: {type: CurrencyBlockchainInfoSchema}
   }).plugin(timestamps())
 
@@ -47,6 +48,7 @@ module.exports = (osseus) => {
         mmAddress: ret.mmAddress,
         ccABI: ret.ccABI,
         mmABI: ret.mmABI,
+        exid: ret.exid,
         ccBlockchainInfo: ret.ccBlockchainInfo
       }
       return safeRet

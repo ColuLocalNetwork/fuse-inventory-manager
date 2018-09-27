@@ -17,7 +17,7 @@ module.exports = (osseus) => {
     return getProvider(community)
   }
 
-  community.create = (name, defaultCurrency) => {
+  community.create = (name, defaultCurrency, externalId) => {
     return new Promise(async (resolve, reject) => {
       try {
         // create a new community - generate a mnemonic, create default balances for all wallets using default currency
@@ -26,7 +26,8 @@ module.exports = (osseus) => {
         const data = {
           name: name,
           mnemonic: mnemonic,
-          defaultCurrency: defaultCurrency
+          defaultCurrency: defaultCurrency,
+          exid: externalId
         }
         const newCommunity = await osseus.db_models.community.create(data)
 
