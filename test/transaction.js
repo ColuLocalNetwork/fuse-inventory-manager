@@ -19,7 +19,7 @@ contract('TRANSACTION', async (accounts) => {
   let ccAddress
   let mmAddress
 
-  let ccMeta
+  let ccBlockchainInfo
 
   const ccABI = JSON.stringify(require('./helpers/abi/cc'))
   const mmABI = JSON.stringify(require('./helpers/abi/mm'))
@@ -127,7 +127,7 @@ contract('TRANSACTION', async (accounts) => {
     const currencyFactory = await CurrencyFactory.new(mmLib.address, cln.address, {from: managerAccountAddress})
     const result = await currencyFactory.createCurrency('TestLocalCurrency', 'TLC', 18, CC_MAX_TOKENS, 'ipfs://hash', {from: managerAccountAddress})
     ccAddress = result.logs[0].args.token
-    ccMeta = {
+    ccBlockchainInfo = {
       blockHash: result.logs[0].blockHash,
       blockNumber: result.logs[0].blockNumber,
       transactionHash: result.logs[0].transactionHash
@@ -147,7 +147,7 @@ contract('TRANSACTION', async (accounts) => {
   })
 
   it('should make a successful transaction (state should be DONE)', async () => {
-    let currency = await osseus.lib.Currency.create(ccAddress, mmAddress, ccABI, mmABI, ccMeta)
+    let currency = await osseus.lib.Currency.create(ccAddress, mmAddress, ccABI, mmABI, ccBlockchainInfo)
 
     await createCommunity(currency)
 
@@ -165,7 +165,7 @@ contract('TRANSACTION', async (accounts) => {
   })
 
   it('should not make a transaction if not enough balance (state should be CANCELED)', async () => {
-    let currency = await osseus.lib.Currency.create(ccAddress, mmAddress, ccABI, mmABI, ccMeta)
+    let currency = await osseus.lib.Currency.create(ccAddress, mmAddress, ccABI, mmABI, ccBlockchainInfo)
 
     await createCommunity(currency)
 
@@ -183,7 +183,7 @@ contract('TRANSACTION', async (accounts) => {
   })
 
   it('should get transaction (by id)', async () => {
-    let currency = await osseus.lib.Currency.create(ccAddress, mmAddress, ccABI, mmABI, ccMeta)
+    let currency = await osseus.lib.Currency.create(ccAddress, mmAddress, ccABI, mmABI, ccBlockchainInfo)
 
     await createCommunity(currency)
 
@@ -199,7 +199,7 @@ contract('TRANSACTION', async (accounts) => {
   it('should get error if transaction not found (by id)', async () => {
     let fakeId = '123abc'
 
-    let currency = await osseus.lib.Currency.create(ccAddress, mmAddress, ccABI, mmABI, ccMeta)
+    let currency = await osseus.lib.Currency.create(ccAddress, mmAddress, ccABI, mmABI, ccBlockchainInfo)
 
     await createCommunity(currency)
 
@@ -219,7 +219,7 @@ contract('TRANSACTION', async (accounts) => {
   })
 
   it('should get transaction (by address)', async () => {
-    let currency = await osseus.lib.Currency.create(ccAddress, mmAddress, ccABI, mmABI, ccMeta)
+    let currency = await osseus.lib.Currency.create(ccAddress, mmAddress, ccABI, mmABI, ccBlockchainInfo)
 
     await createCommunity(currency)
 
@@ -241,7 +241,7 @@ contract('TRANSACTION', async (accounts) => {
   })
 
   it('should get transaction (by state)', async () => {
-    let currency = await osseus.lib.Currency.create(ccAddress, mmAddress, ccABI, mmABI, ccMeta)
+    let currency = await osseus.lib.Currency.create(ccAddress, mmAddress, ccABI, mmABI, ccBlockchainInfo)
 
     await createCommunity(currency)
 
@@ -258,7 +258,7 @@ contract('TRANSACTION', async (accounts) => {
   })
 
   it('should get transaction (by currency)', async () => {
-    let currency = await osseus.lib.Currency.create(ccAddress, mmAddress, ccABI, mmABI, ccMeta)
+    let currency = await osseus.lib.Currency.create(ccAddress, mmAddress, ccABI, mmABI, ccBlockchainInfo)
 
     await createCommunity(currency)
 
@@ -275,7 +275,7 @@ contract('TRANSACTION', async (accounts) => {
   })
 
   it('should get transaction (by multiple conditions)', async () => {
-    let currency = await osseus.lib.Currency.create(ccAddress, mmAddress, ccABI, mmABI, ccMeta)
+    let currency = await osseus.lib.Currency.create(ccAddress, mmAddress, ccABI, mmABI, ccBlockchainInfo)
 
     await createCommunity(currency)
 
@@ -328,7 +328,7 @@ contract('TRANSACTION', async (accounts) => {
         })
       }
 
-      let currency = await osseus.lib.Currency.create(ccAddress, mmAddress, ccABI, mmABI, ccMeta)
+      let currency = await osseus.lib.Currency.create(ccAddress, mmAddress, ccABI, mmABI, ccBlockchainInfo)
 
       await createCommunity(currency)
 

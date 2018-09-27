@@ -73,7 +73,7 @@ module.exports = (osseus) => {
       async.each(currencies, async (currency) => {
         const address = currency.ccAddress
         const abi = JSON.parse(currency.ccABI)
-        const creationBlock = currency.ccMeta.blockNumber
+        const creationBlock = currency.ccBlockchainInfo.blockNumber
         const currentBlock = await osseus.web3WS.eth.getBlockNumber()
         const CurrencyContract = new osseus.web3WS.eth.Contract(abi, address)
         const lastBlock = await osseus.db_models.bcevent.getLastBlock(address)

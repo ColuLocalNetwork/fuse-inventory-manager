@@ -4,7 +4,7 @@ module.exports = (osseus) => {
   const db = osseus.mongo
   const Schema = db.mongoose.Schema
 
-  const CurrencyMetaSchema = new Schema({
+  const CurrencyBlockchainInfoSchema = new Schema({
     blockHash: {type: String},
     blockNumber: {type: Number},
     transactionHash: {type: String}
@@ -15,13 +15,13 @@ module.exports = (osseus) => {
     mmAddress: {type: String},
     ccABI: {type: String},
     mmABI: {type: String},
-    ccMeta: {type: CurrencyMetaSchema}
+    ccBlockchainInfo: {type: CurrencyBlockchainInfoSchema}
   }).plugin(timestamps())
 
   CurrencySchema.index({ccAddress: 1}, {unique: true})
   CurrencySchema.index({mmAddress: 1}, {unique: true})
 
-  CurrencyMetaSchema.set('toJSON', {
+  CurrencyBlockchainInfoSchema.set('toJSON', {
     getters: true,
     virtuals: true,
     transform: (doc, ret, options) => {
@@ -47,7 +47,7 @@ module.exports = (osseus) => {
         mmAddress: ret.mmAddress,
         ccABI: ret.ccABI,
         mmABI: ret.mmABI,
-        ccMeta: ret.ccMeta
+        ccBlockchainInfo: ret.ccBlockchainInfo
       }
       return safeRet
     }
