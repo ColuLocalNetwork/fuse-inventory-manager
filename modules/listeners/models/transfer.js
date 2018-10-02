@@ -44,7 +44,8 @@ module.exports = (osseus) => {
         const tx = await osseus.db_models.bctx.update({hash: data.transactionHash}, update)
         osseus.logger.debug(`Updated blockchain transaction: ${JSON.stringify(tx)}`)
 
-        // TODO need to update balances - blockchain and offchain ?!?!?
+        await osseus.utils.updateBlockchainBalance(from, token)
+        await osseus.utils.updateBlockchainBalance(to, token)
       }
 
       resolve()
