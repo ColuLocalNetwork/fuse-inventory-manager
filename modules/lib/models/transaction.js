@@ -48,36 +48,6 @@ module.exports = (osseus) => {
     })
   }
 
-  const updateBlockchainBalances = () => {
-    return new Promise(async (resolve, reject) => {
-      try {
-        const tasks = []
-        const wallets = await osseus.db_models.wallet.getAll()
-        osseus.logger.debug(`updateBlockchainBalances - found ${wallets.length} wallets`)
-        wallets.forEach(wallet => {
-          let address = wallet.address
-          let currencies = wallet.balances.map(balance => balance.currency.ccAddress)
-          currencies.forEach(currency => {
-            tasks.push(new Promise(async (resolve, reject) => {
-              try {
-                let updated = await osseus.utils.updateBlockchainBalance(address, currency)
-                resolve({address: address, currency: currency, updated: updated})
-              } catch (err) {
-                reject(err)
-              }
-            }))
-          })
-        })
-        osseus.logger.debug(`updateBlockchainBalances - about to perform ${tasks.length} tasks`)
-        const results = await Promise.all(tasks, task => { return task })
-        osseus.logger.debug(`updateBlockchainBalances - task results: ${JSON.stringify(results)}`)
-        resolve()
-      } catch (err) {
-        reject(err)
-      }
-    })
-  }
-
   const startWorkingOnTransmits = (filters) => {
     return new Promise(async (resolve, reject) => {
       try {
@@ -293,8 +263,6 @@ module.exports = (osseus) => {
 
         const results = await Promise.all(tasks, task => { return task })
         osseus.logger.debug(`results: ${JSON.stringify(results)}`)
-
-        await updateBlockchainBalances()
 
         resolve(results)
       } catch (err) {
