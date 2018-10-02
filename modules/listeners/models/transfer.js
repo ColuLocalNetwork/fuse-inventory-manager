@@ -31,9 +31,6 @@ module.exports = (osseus) => {
         const tx = await osseus.lib.Transaction.deposit({accountAddress: to, currency: token}, amount, bctx.id)
         osseus.logger.info(`Created offchain deposit transaction: ${JSON.stringify(tx)}`)
 
-        const updated = await osseus.utils.updateBlockchainBalance(to, token)
-        osseus.logger.info(`Updated blockchain balance after deposit: ${JSON.stringify(updated)}`)
-
         // TODO here probably need to notify someone/somehow
       }
 
