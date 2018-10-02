@@ -1,4 +1,5 @@
 const timestamps = require('mongoose-time')
+const uuidv4 = require('uuid/v4')
 
 module.exports = (osseus) => {
   const db = osseus.mongo
@@ -8,7 +9,9 @@ module.exports = (osseus) => {
     name: {type: String, required: true},
     wallets: [{type: Schema.Types.ObjectId, ref: 'Wallet'}],
     mnemonic: {type: String, required: true},
-    defaultCurrency: {type: Schema.Types.ObjectId, ref: 'Currency', required: true}
+    uuid: {type: String},
+    defaultCurrency: {type: Schema.Types.ObjectId, ref: 'Currency', required: true},
+    exid: {type: String}
   }).plugin(timestamps())
 
   CommunitySchema.set('toJSON', {
@@ -22,7 +25,9 @@ module.exports = (osseus) => {
         name: ret.name,
         wallets: ret.wallets,
         // mnemonic: ret.mnemonic,
-        defaultCurrency: ret.defaultCurrency
+        // uuid: ret.uuid,
+        defaultCurrency: ret.defaultCurrency,
+        exid: ret.exit
       }
       return safeRet
     }
@@ -34,6 +39,7 @@ module.exports = (osseus) => {
 
   community.create = (data) => {
     return new Promise((resolve, reject) => {
+      data.uuid = uuidv4()
       const community = new Community(data)
       community.save((err, newObj) => {
         if (err) {

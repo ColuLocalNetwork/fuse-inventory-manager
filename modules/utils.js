@@ -93,12 +93,12 @@ const validateAggregatedBalances = (token) => {
 const updateBlockchainBalance = (address, token) => {
   return new Promise(async (resolve, reject) => {
     try {
-      const bcBalance = await getBlockchainBalance(address, token, true)
+      const balance = await getBlockchainBalance(address, token, true)
       const currency = await this.osseus.db_models.currency.getByCurrencyAddress(token)
-      if (typeof bcBalance === 'undefined') {
+      if (typeof balance === 'undefined') {
         return reject(new Error(`Could not get blockchain balance - address: ${address}, token: ${token}`))
       }
-      const result = await this.osseus.db_models.wallet.update({'address': address, 'balances.currency': currency.id}, {'balances.$.blockchainAmount': bcBalance})
+      const result = await this.osseus.db_models.wallet.updateBlockchainBalance({'address': address, 'balances.currency': currency.id}, balance)
       resolve(result)
     } catch (err) {
       reject(err)

@@ -282,13 +282,13 @@ module.exports = (osseus) => {
     })
   }
 
-  transaction.deposit = (to, amount, bctx) => {
+  transaction.deposit = (to, amount, bctxid) => {
     return new Promise(async (resolve, reject) => {
       try {
         to = await validateParticipant(to)
         amount = await validateAmount(amount)
 
-        const transmit = await osseus.db_models.transmit.create({currency: to.currency, state: 'DONE', offchainTransactions: [], blockchainTransactions: [bctx.id]})
+        const transmit = await osseus.db_models.transmit.create({currency: to.currency, state: 'DONE', offchainTransactions: [], blockchainTransactions: [bctxid]})
 
         const data = {
           to: to,

@@ -3,7 +3,7 @@ const contract = require('truffle-contract')
 module.exports = (osseus) => {
   function currency () {}
 
-  currency.create = (ccAddress, mmAddress, ccABI, mmABI, ccBlockchainInfo) => {
+  currency.create = (ccAddress, mmAddress, ccABI, mmABI, ccBlockchainInfo, externalId) => {
     return new Promise(async (resolve, reject) => {
       try {
         const data = {
@@ -11,6 +11,7 @@ module.exports = (osseus) => {
           mmAddress: mmAddress,
           ccABI: ccABI,
           mmABI: mmABI,
+          exid: externalId,
           ccBlockchainInfo: ccBlockchainInfo
         }
         const newCurrency = await osseus.db_models.currency.create(data)

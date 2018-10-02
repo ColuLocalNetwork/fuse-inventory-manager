@@ -30,6 +30,8 @@ contract('WALLET', async (accounts) => {
     if (wallet2) expect(wallet1.type).to.equal(wallet2.type)
     expect(wallet1.address).to.be.a('string')
     expect(wallet1.index).to.be.a('number')
+    expect(wallet1.exid).to.be.a('string')
+    if (wallet2) expect(wallet1.exid).to.equal(wallet2.exid)
     expect(wallet1.balances).to.be.an('array')
     expect(wallet1.balances).to.have.lengthOf(1)
     expect(wallet1.balances[0].currency.id.toString()).to.equal(wallet2 ? wallet2.balances[0].currency.toString() : currency.id)
@@ -68,11 +70,12 @@ contract('WALLET', async (accounts) => {
   })
 
   it('should create a wallet', async () => {
-    let currency = await osseus.lib.Currency.create(ccAddress, mmAddress, ccABI, mmABI, ccBlockchainInfo)
+    let currency = await osseus.lib.Currency.create(ccAddress, mmAddress, ccABI, mmABI, ccBlockchainInfo, osseus.helpers.randomStr(10))
     let wallet = await osseus.db_models.wallet.create({
       address: accounts[0],
       type: 'manager',
       index: 0,
+      exid: osseus.helpers.randomNum(10),
       balances: [{
         currency: currency,
         blockchainAmount: 0,
@@ -84,11 +87,12 @@ contract('WALLET', async (accounts) => {
   })
 
   it('should not create a wallet with same address', async () => {
-    let currency = await osseus.lib.Currency.create(ccAddress, mmAddress, ccABI, mmABI, ccBlockchainInfo)
+    let currency = await osseus.lib.Currency.create(ccAddress, mmAddress, ccABI, mmABI, ccBlockchainInfo, osseus.helpers.randomStr(10))
     await osseus.db_models.wallet.create({
       address: accounts[0],
       type: 'manager',
       index: 0,
+      exid: osseus.helpers.randomNum(10),
       balances: [{
         currency: currency,
         blockchainAmount: 0,
@@ -100,6 +104,7 @@ contract('WALLET', async (accounts) => {
       address: accounts[0],
       type: 'users',
       index: 0,
+      exid: osseus.helpers.randomNum(10),
       balances: [{
         currency: currency,
         blockchainAmount: 0,
@@ -113,11 +118,12 @@ contract('WALLET', async (accounts) => {
   })
 
   it('should get wallet (by id)', async () => {
-    let currency = await osseus.lib.Currency.create(ccAddress, mmAddress, ccABI, mmABI, ccBlockchainInfo)
+    let currency = await osseus.lib.Currency.create(ccAddress, mmAddress, ccABI, mmABI, ccBlockchainInfo, osseus.helpers.randomStr(10))
     let wallet1 = await osseus.db_models.wallet.create({
       address: accounts[0],
       type: 'manager',
       index: 0,
+      exid: osseus.helpers.randomNum(10),
       balances: [{
         currency: currency,
         blockchainAmount: 0,
@@ -130,11 +136,12 @@ contract('WALLET', async (accounts) => {
   })
 
   it('should get wallet (by address)', async () => {
-    let currency = await osseus.lib.Currency.create(ccAddress, mmAddress, ccABI, mmABI, ccBlockchainInfo)
+    let currency = await osseus.lib.Currency.create(ccAddress, mmAddress, ccABI, mmABI, ccBlockchainInfo, osseus.helpers.randomStr(10))
     let wallet1 = await osseus.db_models.wallet.create({
       address: accounts[0],
       type: 'manager',
       index: 0,
+      exid: osseus.helpers.randomNum(10),
       balances: [{
         currency: currency,
         blockchainAmount: 0,
@@ -148,11 +155,12 @@ contract('WALLET', async (accounts) => {
 
   it('should get error if wallet not found (by id)', async () => {
     let fakeId = '123abc'
-    let currency = await osseus.lib.Currency.create(ccAddress, mmAddress, ccABI, mmABI, ccBlockchainInfo)
+    let currency = await osseus.lib.Currency.create(ccAddress, mmAddress, ccABI, mmABI, ccBlockchainInfo, osseus.helpers.randomStr(10))
     let wallet1 = await osseus.db_models.wallet.create({
       address: accounts[0],
       type: 'manager',
       index: 0,
+      exid: osseus.helpers.randomNum(10),
       balances: [{
         currency: currency,
         blockchainAmount: 0,
@@ -173,6 +181,7 @@ contract('WALLET', async (accounts) => {
       address: accounts[0],
       type: 'manager',
       index: 0,
+      exid: osseus.helpers.randomNum(10),
       balances: [{
         currency: currency,
         blockchainAmount: 10 * TOKEN_DECIMALS,

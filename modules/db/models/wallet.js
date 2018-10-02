@@ -22,9 +22,10 @@ module.exports = (osseus) => {
   }).plugin(timestamps())
 
   const WalletSchema = new Schema({
-    type: {type: String, enum: ['manager', 'users', 'merchants'], required: true},
+    type: {type: String, required: true},
     address: {type: String, required: true},
     index: {type: Number},
+    exid: {type: String},
     balances: [{type: BalanceSchema}]
   }).plugin(timestamps())
 
@@ -58,6 +59,7 @@ module.exports = (osseus) => {
         type: ret.type,
         address: ret.address,
         index: ret.index,
+        exid: ret.exid,
         balances: ret.balances
       }
       return safeRet
@@ -70,6 +72,7 @@ module.exports = (osseus) => {
 
   wallet.create = (data) => {
     return new Promise((resolve, reject) => {
+      data.address = data.address.toLowerCase()
       const wallet = new Wallet(data)
       wallet.save((err, newObj) => {
         if (err) {
@@ -85,7 +88,19 @@ module.exports = (osseus) => {
 
   wallet.update = (condition, update) => {
     return new Promise((resolve, reject) => {
+      if (update.address) update.address = update.address.toLowerCase()
       Wallet.findOneAndUpdate(condition, {$set: update}, {new: true}, (err, updatedObj) => {
+        if (err) {
+          return reject(err)
+        }
+        resolve(updatedObj)
+      })
+    })
+  }
+
+  wallet.updateBlockchainBalance = (condition, amount) => {
+    return new Promise((resolve, reject) => {
+      Wallet.findOneAndUpdate(condition, {$set: {'balances.$.blockchainAmount': amount}}, {new: true}, (err, updatedObj) => {
         if (err) {
           return reject(err)
         }
@@ -110,7 +125,7 @@ module.exports = (osseus) => {
 
   wallet.getByAddress = (address) => {
     return new Promise((resolve, reject) => {
-      Wallet.findOne({address: address}, (err, doc) => {
+      Wallet.findOne({address: address.toLowerCase()}, (err, doc) => {
         if (err) {
           return reject(err)
         }
@@ -124,9 +139,9 @@ module.exports = (osseus) => {
 
   wallet.checkAddressExists = (address) => {
     return new Promise((resolve, reject) => {
-      Wallet.findOne({address: address}, (err, doc) => {
+      Wallet.findOne({address: address.toLowerCase()}, (err, doc) => {
         if (err) {
-          return reject(err)
+          return resolve(false)
         }
         if (!doc) {
           return resolve(false)
@@ -138,7 +153,7 @@ module.exports = (osseus) => {
 
   wallet.getBlockchainBalance = (address, currencyId) => {
     return new Promise((resolve, reject) => {
-      Wallet.findOne({address: address}, (err, doc) => {
+      Wallet.findOne({address: address.toLowerCase()}, (err, doc) => {
         if (err) {
           return reject(err)
         }

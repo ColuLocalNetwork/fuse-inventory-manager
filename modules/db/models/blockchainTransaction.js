@@ -26,7 +26,7 @@ module.exports = (osseus) => {
     to: {type: String},
     transactionIndex: {type: Number},
     value: {type: db.mongoose.Schema.Types.Decimal128, set: setDecimal128, get: getDecimal128},
-    type: {type: String, enum: ['TRANSFER', 'CHANGE']},
+    type: {type: String, enum: ['TRANSFER', 'CHANGE', 'DEPOSIT']},
     meta: {type: db.mongoose.Schema.Types.Mixed},
     state: {type: String, enum: ['TRANSMITTED', 'CONFIRMED', 'FINALIZED'], default: 'TRANSMITTED'}
   }).plugin(timestamps())
@@ -64,6 +64,7 @@ module.exports = (osseus) => {
 
   blockchainTransaction.create = (data) => {
     return new Promise((resolve, reject) => {
+      if (data.address) data.address = data.address.toLowerCase()
       const blockchainTransaction = new BlockchainTransaction(data)
       blockchainTransaction.save((err, newObj) => {
         if (err) {
@@ -108,7 +109,7 @@ module.exports = (osseus) => {
       const conditions = []
 
       if (filters) {
-        if (filters.address) conditions.push({$or: [{from: filters.address}, {to: filters.address}]})
+        if (filters.address) conditions.push({$or: [{from: filters.address.toLowerCase()}, {to: filters.address.toLowerCase()}]})
         if (filters.hash) conditions.push({hash: filters.hash})
         if (filters.type) conditions.push({type: filters.type})
         if (filters.state) conditions.push({state: filters.state})
@@ -137,7 +138,7 @@ module.exports = (osseus) => {
 
   blockchainTransaction.getLastNonceForAddress = (address) => {
     return new Promise((resolve, reject) => {
-      const cond = {from: address}
+      const cond = {from: address.toLowerCase()}
       const projection = {nonce: 1}
       const limit = 1
       const sort = {blockNumber: -1}

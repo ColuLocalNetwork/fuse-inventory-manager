@@ -18,8 +18,6 @@ const ETH_BALANCE = 1 * TOKEN_DECIMALS
 const CLN_BALANCE = 100 * TOKEN_DECIMALS
 const CC_BALANCE = (A_LOT_OF_TXS || 250) * TOKEN_DECIMALS
 
-const random = (n) => { return Math.floor(Math.random() * n) }
-
 const encodeInsertData = (toToken) => {
   const abi = {
     name: 'insertCLNtoMarketMaker',
@@ -137,8 +135,8 @@ contract('TRANSACTION', async (accounts) => {
       osseus.db_models[model].getModel().remove({}, () => {})
     })
 
-    currency = await osseus.lib.Currency.create(ccAddress, mmAddress, ccABI, mmABI, ccBlockchainInfo)
-    community = await osseus.lib.Community.create('Test Community', currency)
+    currency = await osseus.lib.Currency.create(ccAddress, mmAddress, ccABI, mmABI, ccBlockchainInfo, osseus.helpers.randomStr(10))
+    community = await osseus.lib.Community.create('Test Community', currency, osseus.helpers.randomStr(10))
 
     managerAccountAddress = community.wallets.filter(wallet => wallet.type === 'manager')[0].address
     usersAccountAddress = community.wallets.filter(wallet => wallet.type === 'users')[0].address
@@ -295,9 +293,9 @@ contract('TRANSACTION', async (accounts) => {
           }
           let accounts = [managerAccountAddress, usersAccountAddress, merchantsAccountAddress]
           for (let i = 0; i < n; i++) {
-            const fromAccount = accounts[random(3)]
+            const fromAccount = accounts[osseus.helpers.randomNum(3)]
             let otherAccounts = accounts.filter(a => a !== fromAccount)
-            const toAccount = otherAccounts[random(2)]
+            const toAccount = otherAccounts[osseus.helpers.randomNum(2)]
             let from = {accountAddress: fromAccount, currency: ccAddress}
             let to = {accountAddress: toAccount, currency: ccAddress}
             let amount = 1 * TOKEN_DECIMALS
@@ -348,12 +346,12 @@ contract('TRANSACTION', async (accounts) => {
 
   describe('DEPOSIT', async () => {
     it('should make a successful transaction (state should be TRANSMITTED)', async () => {
-      let bctx = await osseus.db_models.bctx.create()
+      let bctx = await osseus.db_models.bctx.create({})
 
       let amount = 10 * TOKEN_DECIMALS
       let to = {accountAddress: managerAccountAddress, currency: ccAddress}
 
-      let tx = await osseus.lib.Transaction.deposit(to, amount, bctx)
+      let tx = await osseus.lib.Transaction.deposit(to, amount, bctx.id)
 
       expect(tx).to.be.a('Object')
       expect(tx.id).to.be.a('string')
@@ -380,10 +378,10 @@ contract('TRANSACTION', async (accounts) => {
         const generateTransactions = async (accounts, n) => {
           let txs = []
           let amounts = {}
-          let bctx = await osseus.db_models.bctx.create()
+          let bctx = await osseus.db_models.bctx.create({})
 
           for (let i = 0; i < n; i++) {
-            let toAccount = accounts[random(3)]
+            let toAccount = accounts[osseus.helpers.randomNum(3)]
             let to = {accountAddress: toAccount, currency: ccAddress}
             let amount = 1 * TOKEN_DECIMALS
             amounts[to.accountAddress] = amounts[to.accountAddress] || 0
@@ -401,7 +399,7 @@ contract('TRANSACTION', async (accounts) => {
         const makeTransactionAndValidate = (to, amount, bctx) => {
           return new Promise(async (resolve, reject) => {
             try {
-              let tx = await osseus.lib.Transaction.deposit(to, amount, bctx)
+              let tx = await osseus.lib.Transaction.deposit(to, amount, bctx.id)
               expect(tx).to.be.a('Object')
               expect(tx.id).to.be.a('string')
               expect(tx.to.accountAddress).to.equal(to.accountAddress)
@@ -455,12 +453,12 @@ contract('TRANSACTION', async (accounts) => {
       let localAccounts = [managerAccountAddress, usersAccountAddress, merchantsAccountAddress]
 
       for (let i = 0; i < n; i++) {
-        let fromAccount = localAccounts[random(3)]
+        let fromAccount = localAccounts[osseus.helpers.randomNum(3)]
         let otherAccounts = localAccounts.filter(a => a !== fromAccount)
-        let toAccount = otherAccounts[random(2)]
+        let toAccount = otherAccounts[osseus.helpers.randomNum(2)]
         let from = {accountAddress: fromAccount, currency: ccAddress}
         let to = {accountAddress: toAccount, currency: ccAddress}
-        let amount = (random(5) + 1) * TOKEN_DECIMALS
+        let amount = (osseus.helpers.randomNum(5) + 1) * TOKEN_DECIMALS
         txs.push(makeTransaction(from, to, amount))
       }
 
@@ -491,7 +489,7 @@ contract('TRANSACTION', async (accounts) => {
     }
 
     it('should be able to transmit transactions for specific currency', async () => {
-      let txs = makeSomeTransactions(random(100) + 1)
+      let txs = makeSomeTransactions(osseus.helpers.randomNum(100) + 1)
       let offchainResults = await Promise.all(txs, tx => { return tx })
       let transmitResults = await osseus.lib.Transaction.transmit({filters: {currency: currency.id}, bc: {gas: 1000000}})
       expect(transmitResults).to.be.an('array')
@@ -501,7 +499,7 @@ contract('TRANSACTION', async (accounts) => {
     })
 
     it('should be able to transmit all transactions', async () => {
-      let txs = makeSomeTransactions(random(100) + 1)
+      let txs = makeSomeTransactions(osseus.helpers.randomNum(100) + 1)
       let offchainResults = await Promise.all(txs, tx => { return tx })
       let transmitResults = await osseus.lib.Transaction.transmit({filters: {}, bc: {gas: 1000000}})
       expect(transmitResults).to.be.an('array')
@@ -510,14 +508,14 @@ contract('TRANSACTION', async (accounts) => {
     })
 
     it('should be able to transmit relevant transacions, create some more and transmit only the ones not transmitted', async () => {
-      let txs1 = makeSomeTransactions(random(100) + 1)
+      let txs1 = makeSomeTransactions(osseus.helpers.randomNum(100) + 1)
       let offchainResults1 = await Promise.all(txs1, tx => { return tx })
       let transmitResults1 = await osseus.lib.Transaction.transmit({filters: {}, bc: {gas: 1000000}})
       expect(transmitResults1).to.be.an('array')
       expect(transmitResults1).to.have.lengthOf(1)
       await validate(offchainResults1, transmitResults1[0])
 
-      let txs2 = makeSomeTransactions(random(100) + 1)
+      let txs2 = makeSomeTransactions(osseus.helpers.randomNum(100) + 1)
       let offchainResults2 = await Promise.all(txs2, tx => { return tx })
       let transmitResults2 = await osseus.lib.Transaction.transmit({filters: {}, bc: {gas: 1000000}})
       expect(transmitResults2).to.be.an('array')

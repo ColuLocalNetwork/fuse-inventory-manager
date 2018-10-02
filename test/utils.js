@@ -96,8 +96,8 @@ contract('UTILS', async (accounts) => {
       osseus.db_models[model].getModel().remove({}, () => {})
     })
 
-    currency = await osseus.lib.Currency.create(ccAddress, mmAddress, ccABI, mmABI, ccBlockchainInfo)
-    community = await osseus.lib.Community.create('Test Community', currency)
+    currency = await osseus.lib.Currency.create(ccAddress, mmAddress, ccABI, mmABI, ccBlockchainInfo, osseus.helpers.randomStr(10))
+    community = await osseus.lib.Community.create('Test Community', currency, osseus.helpers.randomStr(10))
 
     communityManagerAddress = community.wallets.filter(wallet => wallet.type === 'manager')[0].address
     communityUsersAddress = community.wallets.filter(wallet => wallet.type === 'users')[0].address

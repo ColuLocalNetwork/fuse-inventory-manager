@@ -48,6 +48,7 @@ module.exports = (osseus) => {
 
   blockchainEvent.create = (data) => {
     return new Promise((resolve, reject) => {
+      if (data.address) data.address = data.address.toLowerCase()
       const blockchainEvent = new BlockchainEvent(data)
       blockchainEvent.save((err, newObj) => {
         if (err) {
@@ -63,7 +64,7 @@ module.exports = (osseus) => {
 
   blockchainEvent.getLastBlock = (address) => {
     return new Promise((resolve, reject) => {
-      const cond = {address: address}
+      const cond = {address: address.toLowerCase()}
       const projection = {blockNumber: 1}
       const limit = 1
       const sort = {blockNumber: -1}

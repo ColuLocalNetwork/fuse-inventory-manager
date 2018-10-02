@@ -11,7 +11,7 @@ module.exports = (osseus) => {
     blockchainTransactions: [{type: Schema.Types.ObjectId, ref: 'Blockchain_Transaction'}]
   }).plugin(timestamps())
 
-  TransmitSchema.index({currency: 1, state: 1}, {unique: true})
+  TransmitSchema.index({currency: 1, state: 1})
 
   TransmitSchema.set('toJSON', {
     getters: true,

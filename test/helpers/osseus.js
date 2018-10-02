@@ -21,5 +21,9 @@ module.exports = async () => {
     Transaction: require(path.join(cwd, 'modules/lib/models/transaction'))(osseus),
     BlockchainTransaction: require(path.join(cwd, 'modules/lib/models/blockchainTransaction'))(osseus)
   }
+  osseus.helpers = {
+    randomNum: (n) => { return Math.floor(Math.random() * n) },
+    randomStr: (n) => { return Math.random().toString(36).substr(2, n) }
+  }
   return osseus
 }

@@ -15,6 +15,7 @@ module.exports = (osseus) => {
     mmAddress: {type: String, required: true},
     ccABI: {type: String, required: true},
     mmABI: {type: String, required: true},
+    exid: {type: String},
     ccBlockchainInfo: {type: CurrencyBlockchainInfoSchema}
   }).plugin(timestamps())
 
@@ -47,6 +48,7 @@ module.exports = (osseus) => {
         mmAddress: ret.mmAddress,
         ccABI: ret.ccABI,
         mmABI: ret.mmABI,
+        exid: ret.exid,
         ccBlockchainInfo: ret.ccBlockchainInfo
       }
       return safeRet
@@ -59,6 +61,8 @@ module.exports = (osseus) => {
 
   currency.create = (data) => {
     return new Promise((resolve, reject) => {
+      data.ccAddress = data.ccAddress.toLowerCase()
+      data.mmAddress = data.mmAddress.toLowerCase()
       const currency = new Currency(data)
       currency.save((err, newObj) => {
         if (err) {
@@ -88,7 +92,7 @@ module.exports = (osseus) => {
 
   currency.getByCurrencyAddress = (address) => {
     return new Promise((resolve, reject) => {
-      Currency.findOne({ccAddress: address}, (err, doc) => {
+      Currency.findOne({ccAddress: address.toLowerCase()}, (err, doc) => {
         if (err) {
           return reject(err)
         }
@@ -102,7 +106,7 @@ module.exports = (osseus) => {
 
   currency.getByMarketMakerAddress = (address) => {
     return new Promise((resolve, reject) => {
-      Currency.findOne({mmAddress: address}, (err, doc) => {
+      Currency.findOne({mmAddress: address.toLowerCase()}, (err, doc) => {
         if (err) {
           return reject(err)
         }
