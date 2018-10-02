@@ -104,7 +104,7 @@ module.exports = (osseus) => {
 
     const addNewBalance = (participant) => {
       const condition = {
-        'address': participant.accountAddress,
+        'address': participant.accountAddress.toLowerCase(),
         'balances': {
           '$not': {
             '$elemMatch': {
@@ -130,7 +130,7 @@ module.exports = (osseus) => {
     const addPendingTxs = (participant) => {
       addNewBalance(participant)
       const condition = {
-        'address': participant.accountAddress,
+        'address': participant.accountAddress.toLowerCase(),
         'balances': {
           '$elemMatch': {
             'currency': participant.currency,
@@ -182,7 +182,7 @@ module.exports = (osseus) => {
       return new Promise(async (resolve, reject) => {
         const participant = tx[participantEnd]
         const condition = {
-          'address': participant.accountAddress,
+          'address': participant.accountAddress.toLowerCase(),
           'balances.currency': participant.currency,
           'balances.pendingTxs': tx._id.toString()
         }
@@ -243,7 +243,7 @@ module.exports = (osseus) => {
       return new Promise(async (resolve, reject) => {
         const participant = tx[participantEnd]
         const condition = {
-          'address': participant.accountAddress,
+          'address': participant.accountAddress.toLowerCase(),
           'balances.currency': participant.currency,
           'balances.pendingTxs': tx._id.toString()
         }
@@ -312,7 +312,7 @@ module.exports = (osseus) => {
 
         const Wallet = osseus.db_models.wallet.getModel()
         const condition = {
-          'address': tx.to.accountAddress,
+          'address': tx.to.accountAddress.toLowerCase(),
           'balances.currency': tx.to.currency
         }
         const amount = new BigNumber(tx.amount)
@@ -346,13 +346,13 @@ module.exports = (osseus) => {
         conditions.push({_id: db.mongoose.Types.ObjectId(filters.id)})
       }
       if (filters.address) {
-        conditions.push({$or: [{'from.accountAddress': filters.address}, {'to.accountAddress': filters.address}]})
+        conditions.push({$or: [{'from.accountAddress': filters.address.toLowerCase()}, {'to.accountAddress': filters.address.toLowerCase()}]})
       } else {
         if (filters.fromAddress) {
-          conditions.push({'from.accountAddress': filters.fromAddress})
+          conditions.push({'from.accountAddress': filters.fromAddress.toLowerCase()})
         }
         if (filters.toAddress) {
-          conditions.push({'to.accountAddress': filters.toAddress})
+          conditions.push({'to.accountAddress': filters.toAddress.toLowerCase()})
         }
       }
       if (filters.context) {

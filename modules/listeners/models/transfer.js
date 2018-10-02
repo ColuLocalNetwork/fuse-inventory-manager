@@ -18,17 +18,22 @@ module.exports = (osseus) => {
 
       const knownFrom = await osseus.db_models.wallet.checkAddressExists(from)
       const knownTo = await osseus.db_models.wallet.checkAddressExists(to)
-      osseus.logger.silly(`Transfer events listener - onEvent known addresses - from: ${from}, knownFrom: ${knownFrom}, to: ${from}, knownTo: ${knownTo}`)
+      osseus.logger.silly(`Transfer events listener - onEvent addresses - from: ${from}, knownFrom: ${knownFrom}, to: ${to}, knownTo: ${knownTo}`)
 
       if (!knownTo) {
         osseus.logger.warn(`Transfer event to unknown address - from: ${from}, to: ${to}, amount: ${amount.toNumber()}`)
         // TODO here probably need to notify someone/somehow
-      }
-
-      if (!knownFrom) {
+      } else if (!knownFrom) {
         osseus.logger.info(`Transfer event from unknown address (deposit) - from: ${from}, to: ${to}, amount: ${amount.toNumber()}`)
-        const updated = await osseus.utils.updateBalances(to, token)
-        osseus.logger.info(`Updated balance after deposit: ${JSON.stringify(updated)}`)
+
+        const bctx = await osseus.lib.BlockchainTransaction.deposit(data.transactionHash, from, to, token, amount)
+        osseus.logger.info(`Created blockchain deposit transaction: ${JSON.stringify(bctx)}`)
+        const tx = await osseus.lib.Transaction.deposit({accountAddress: to, currency: token}, amount, bctx.id)
+        osseus.logger.info(`Created offchain deposit transaction: ${JSON.stringify(tx)}`)
+
+        const updated = await osseus.utils.updateBlockchainBalance(to, token)
+        osseus.logger.info(`Updated blockchain balance after deposit: ${JSON.stringify(updated)}`)
+
         // TODO here probably need to notify someone/somehow
       }
 
@@ -37,10 +42,10 @@ module.exports = (osseus) => {
   }
 
   const handlePastEvents = (pastEvents) => {
-    osseus.logger.debug(`Transfer events listener - handlePastEvents ${JSON.stringify(pastEvents)}`)
     if (!pastEvents || pastEvents.length === 0) {
       return
     }
+    osseus.logger.debug(`Transfer events listener - handlePastEvents ${JSON.stringify(pastEvents)}`)
     pastEvents.forEach(event => {
       onEvent(null, event)
     })
@@ -83,7 +88,7 @@ module.exports = (osseus) => {
         let fromBlock = Math.max(lastBlock, creationBlock) + 1
         let toBlock = fromBlock + pastEventsBlockLimit
         while (toBlock < currentBlock) {
-          osseus.logger.debug(`Transfer events listener - getPastEvents - currency address: ${address}, fromBlock: ${fromBlock} toBlock: ${toBlock}`)
+          osseus.logger.silly(`Transfer events listener - getPastEvents - currency address: ${address}, fromBlock: ${fromBlock} toBlock: ${toBlock}`)
           CurrencyContract.getPastEvents('Transfer', {fromBlock: fromBlock, toBlock: toBlock})
             .then(handlePastEvents)
             .catch(err => osseus.logger.error(`Transfer events listener - getPastEvents - error`, err))

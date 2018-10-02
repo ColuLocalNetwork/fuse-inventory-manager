@@ -61,6 +61,8 @@ module.exports = (osseus) => {
 
   currency.create = (data) => {
     return new Promise((resolve, reject) => {
+      data.ccAddress = data.ccAddress.toLowerCase()
+      data.mmAddress = data.mmAddress.toLowerCase()
       const currency = new Currency(data)
       currency.save((err, newObj) => {
         if (err) {
@@ -90,7 +92,7 @@ module.exports = (osseus) => {
 
   currency.getByCurrencyAddress = (address) => {
     return new Promise((resolve, reject) => {
-      Currency.findOne({ccAddress: address}, (err, doc) => {
+      Currency.findOne({ccAddress: address.toLowerCase()}, (err, doc) => {
         if (err) {
           return reject(err)
         }
@@ -104,7 +106,7 @@ module.exports = (osseus) => {
 
   currency.getByMarketMakerAddress = (address) => {
     return new Promise((resolve, reject) => {
-      Currency.findOne({mmAddress: address}, (err, doc) => {
+      Currency.findOne({mmAddress: address.toLowerCase()}, (err, doc) => {
         if (err) {
           return reject(err)
         }

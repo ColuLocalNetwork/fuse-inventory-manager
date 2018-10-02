@@ -90,7 +90,7 @@ const validateAggregatedBalances = (token) => {
   })
 }
 
-const updateBalances = (address, token) => {
+const updateBlockchainBalance = (address, token) => {
   return new Promise(async (resolve, reject) => {
     try {
       const balance = await getBlockchainBalance(address, token, true)
@@ -98,7 +98,7 @@ const updateBalances = (address, token) => {
       if (typeof balance === 'undefined') {
         return reject(new Error(`Could not get blockchain balance - address: ${address}, token: ${token}`))
       }
-      const result = await this.osseus.db_models.wallet.updateBalances({'address': address, 'balances.currency': currency.id}, balance, balance)
+      const result = await this.osseus.db_models.wallet.updateBlockchainBalance({'address': address, 'balances.currency': currency.id}, balance)
       resolve(result)
     } catch (err) {
       reject(err)
@@ -114,7 +114,7 @@ const init = (osseus) => {
       getBlockchainBalance: getBlockchainBalance,
       validateBlockchainBalance: validateBlockchainBalance,
       validateAggregatedBalances: validateAggregatedBalances,
-      updateBalances: updateBalances
+      updateBlockchainBalance: updateBlockchainBalance
     }
     osseus.logger.info(`Utils ready`)
     return resolve()

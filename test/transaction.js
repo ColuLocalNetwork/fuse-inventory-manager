@@ -346,12 +346,12 @@ contract('TRANSACTION', async (accounts) => {
 
   describe('DEPOSIT', async () => {
     it('should make a successful transaction (state should be TRANSMITTED)', async () => {
-      let bctx = await osseus.db_models.bctx.create()
+      let bctx = await osseus.db_models.bctx.create({})
 
       let amount = 10 * TOKEN_DECIMALS
       let to = {accountAddress: managerAccountAddress, currency: ccAddress}
 
-      let tx = await osseus.lib.Transaction.deposit(to, amount, bctx)
+      let tx = await osseus.lib.Transaction.deposit(to, amount, bctx.id)
 
       expect(tx).to.be.a('Object')
       expect(tx.id).to.be.a('string')
@@ -378,7 +378,7 @@ contract('TRANSACTION', async (accounts) => {
         const generateTransactions = async (accounts, n) => {
           let txs = []
           let amounts = {}
-          let bctx = await osseus.db_models.bctx.create()
+          let bctx = await osseus.db_models.bctx.create({})
 
           for (let i = 0; i < n; i++) {
             let toAccount = accounts[osseus.helpers.randomNum(3)]
@@ -399,7 +399,7 @@ contract('TRANSACTION', async (accounts) => {
         const makeTransactionAndValidate = (to, amount, bctx) => {
           return new Promise(async (resolve, reject) => {
             try {
-              let tx = await osseus.lib.Transaction.deposit(to, amount, bctx)
+              let tx = await osseus.lib.Transaction.deposit(to, amount, bctx.id)
               expect(tx).to.be.a('Object')
               expect(tx.id).to.be.a('string')
               expect(tx.to.accountAddress).to.equal(to.accountAddress)

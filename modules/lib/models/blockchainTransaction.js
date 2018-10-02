@@ -117,6 +117,28 @@ module.exports = (osseus) => {
     })
   }
 
+  blockchainTransaction.deposit = (txHash, from, to, token, amount) => {
+    osseus.logger.debug(`blockchainTransaction.deposit --> txHash: ${txHash} from: ${from}, to: ${to}, token: ${token}, amount: ${amount}`)
+    return new Promise(async (resolve, reject) => {
+      try {
+        const community = await osseus.db_models.community.getByWalletAddress(to)
+        const currency = await osseus.utils.getCurrencyFromToken(token, community)
+        currency.web3.eth.getTransaction(txHash, async (err, tx) => {
+          if (err) {
+            return reject(err)
+          }
+          tx.type = 'DEPOSIT'
+          tx.meta = {from: from, to: to, token: token, amount: amount.toString()}
+          const result = await osseus.db_models.bctx.create(tx)
+          osseus.logger.debug(`blockchainTransaction.deposit --> result: ${JSON.stringify(result)}`)
+          resolve(result)
+        })
+      } catch (err) {
+        reject(err)
+      }
+    })
+  }
+
   blockchainTransaction.syncState = (address, type, limit, sort) => {
     osseus.logger.debug(`blockchainTransaction.syncState --> address: ${address}, type: ${type}, limit: ${limit}, sort: ${sort}`)
     return new Promise(async (resolve, reject) => {

@@ -95,7 +95,7 @@ module.exports = (osseus) => {
           currencies.forEach(currency => {
             tasks.push(new Promise(async (resolve, reject) => {
               try {
-                let updated = await osseus.utils.updateBalances(address, currency)
+                let updated = await osseus.utils.updateBlockchainBalance(address, currency)
                 resolve({address: address, currency: currency, updated: updated})
               } catch (err) {
                 reject(err)
@@ -282,13 +282,13 @@ module.exports = (osseus) => {
     })
   }
 
-  transaction.deposit = (to, amount, bctx) => {
+  transaction.deposit = (to, amount, bctxid) => {
     return new Promise(async (resolve, reject) => {
       try {
         to = await validateParticipant(to)
         amount = await validateAmount(amount)
 
-        const transmit = await osseus.db_models.transmit.create({currency: to.currency, state: 'DONE', offchainTransactions: [], blockchainTransactions: [bctx.id]})
+        const transmit = await osseus.db_models.transmit.create({currency: to.currency, state: 'DONE', offchainTransactions: [], blockchainTransactions: [bctxid]})
 
         const data = {
           to: to,
