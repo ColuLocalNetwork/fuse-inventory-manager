@@ -73,7 +73,14 @@ module.exports = (osseus) => {
           }
           tx.type = 'TRANSFER'
           tx.meta = {from: from, to: to, token: token, amount: amount.toString()}
-          const result = await osseus.db_models.bctx.create(tx)
+          tx.known = true
+          const update = {
+            $set: tx,
+            $setOnInsert: {
+              state: 'TRANSMITTED'
+            }
+          }
+          const result = await osseus.db_models.bctx.update({hash: receipt.tx}, update)
           osseus.logger.debug(`blockchainTransaction.transfer --> result: ${JSON.stringify(result)}`)
           resolve({
             receipt: receipt,
@@ -128,6 +135,7 @@ module.exports = (osseus) => {
             return reject(err)
           }
           tx.type = 'DEPOSIT'
+          tx.state = 'CONFIRMED'
           tx.meta = {from: from, to: to, token: token, amount: amount.toString()}
           const result = await osseus.db_models.bctx.create(tx)
           osseus.logger.debug(`blockchainTransaction.deposit --> result: ${JSON.stringify(result)}`)
@@ -179,7 +187,7 @@ module.exports = (osseus) => {
                 newState = 'FINALIZED'
               }
             }
-            let updatedTransaction = await osseus.db_models.bctx.update(transaction._id, {state: newState, blockHash: tx.blockHash, blockNumber: tx.blockNumber})
+            let updatedTransaction = await osseus.db_models.bctx.update({_id: transaction._id}, {$set: {state: newState, blockHash: tx.blockHash, blockNumber: tx.blockNumber}})
             done(null, updatedTransaction)
           })
         }, (err, updatedTransactions) => {
