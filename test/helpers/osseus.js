@@ -1,6 +1,8 @@
 const Osseus = require('@colucom/osseus')
 const path = require('path')
 const cwd = process.cwd()
+const bip39 = require('bip39')
+const HDWalletProvider = require('truffle-hdwallet-provider')
 
 module.exports = async () => {
   let osseus = await Osseus.get()
@@ -25,5 +27,7 @@ module.exports = async () => {
     randomNum: (n) => { return Math.floor(Math.random() * n) },
     randomStr: (n) => { return Math.random().toString(36).substr(2, n) }
   }
+  osseus.helpers.provider = new HDWalletProvider([{mnemonic: bip39.generateMnemonic(), password: osseus.helpers.randomStr(10)}], osseus.config.web3_provider)
+
   return osseus
 }

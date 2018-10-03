@@ -44,13 +44,13 @@ contract('TRANSACTION', async (accounts) => {
 
   let cc
 
-  let ccAddress
-  let mmAddress
+  let currencyAddress
+  let marketMakerAddress
 
-  let ccBlockchainInfo
+  let currencyBlockchainInfo
 
-  const ccABI = JSON.stringify(require('./helpers/abi/cc'))
-  const mmABI = JSON.stringify(require('./helpers/abi/mm'))
+  const currencyABI = JSON.stringify(require('./helpers/abi/cc'))
+  const marketMakerABI = JSON.stringify(require('./helpers/abi/mm'))
 
   let currency
   let community
@@ -107,24 +107,24 @@ contract('TRANSACTION', async (accounts) => {
 
     const currencyFactory = await CurrencyFactory.new(mmLib.address, cln.address, {from: accounts[0]})
     const result = await currencyFactory.createCurrency('TestLocalCurrency', 'TLC', 18, CC_MAX_TOKENS, 'ipfs://hash', {from: accounts[0]})
-    ccAddress = result.logs[0].args.token
+    currencyAddress = result.logs[0].args.token
 
-    ccBlockchainInfo = {
+    currencyBlockchainInfo = {
       blockHash: result.logs[0].blockHash,
       blockNumber: result.logs[0].blockNumber,
       transactionHash: result.logs[0].transactionHash
     }
 
-    cc = await ColuLocalCurrency.at(ccAddress)
+    cc = await ColuLocalCurrency.at(currencyAddress)
 
-    let insertCLNtoMarketMakerData = encodeInsertData(ccAddress)
+    let insertCLNtoMarketMakerData = encodeInsertData(currencyAddress)
     await cln.transferAndCall(currencyFactory.address, 100000 * TOKEN_DECIMALS, insertCLNtoMarketMakerData)
 
-    await currencyFactory.openMarket(ccAddress)
+    await currencyFactory.openMarket(currencyAddress)
 
-    mmAddress = await currencyFactory.getMarketMakerAddressFromToken(ccAddress)
+    marketMakerAddress = await currencyFactory.getMarketMakerAddressFromToken(currencyAddress)
 
-    await currencyFactory.openMarket(ccAddress)
+    await currencyFactory.openMarket(currencyAddress)
 
     osseus = await OsseusHelper()
     osseus.config.cln_address = cln.address
@@ -135,7 +135,7 @@ contract('TRANSACTION', async (accounts) => {
       osseus.db_models[model].getModel().remove({}, () => {})
     })
 
-    currency = await osseus.lib.Currency.create(ccAddress, mmAddress, ccABI, mmABI, ccBlockchainInfo, osseus.helpers.randomStr(10))
+    currency = await osseus.lib.Currency.create(currencyAddress, marketMakerAddress, currencyABI, marketMakerABI, currencyBlockchainInfo, osseus.helpers.randomStr(10))
     community = await osseus.lib.Community.create('Test Community', currency, osseus.helpers.randomStr(10))
 
     managerAccountAddress = community.wallets.filter(wallet => wallet.type === 'manager')[0].address
@@ -171,8 +171,8 @@ contract('TRANSACTION', async (accounts) => {
   describe('GET', async () => {
     it('should get transaction (by id)', async () => {
       let amount = 10 * TOKEN_DECIMALS
-      let from = {accountAddress: managerAccountAddress, currency: ccAddress}
-      let to = {accountAddress: usersAccountAddress, currency: ccAddress}
+      let from = {accountAddress: managerAccountAddress, currency: currencyAddress}
+      let to = {accountAddress: usersAccountAddress, currency: currencyAddress}
 
       let tx1 = await osseus.lib.Transaction.transfer(from, to, amount)
       let tx2 = await osseus.db_models.tx.get({id: tx1.id})
@@ -183,8 +183,8 @@ contract('TRANSACTION', async (accounts) => {
       let fakeId = '123abc'
 
       let amount = 10 * TOKEN_DECIMALS
-      let from = {accountAddress: managerAccountAddress, currency: ccAddress}
-      let to = {accountAddress: usersAccountAddress, currency: ccAddress}
+      let from = {accountAddress: managerAccountAddress, currency: currencyAddress}
+      let to = {accountAddress: usersAccountAddress, currency: currencyAddress}
       
       let tx1 = await osseus.lib.Transaction.transfer(from, to, amount)
       from.currency = currency.id
@@ -199,8 +199,8 @@ contract('TRANSACTION', async (accounts) => {
 
     it('should get transaction (by address)', async () => {
       let amount = 10 * TOKEN_DECIMALS
-      let from = {accountAddress: managerAccountAddress, currency: ccAddress}
-      let to = {accountAddress: usersAccountAddress, currency: ccAddress}
+      let from = {accountAddress: managerAccountAddress, currency: currencyAddress}
+      let to = {accountAddress: usersAccountAddress, currency: currencyAddress}
 
       let tx1 = await osseus.lib.Transaction.transfer(from, to, amount)
 
@@ -217,8 +217,8 @@ contract('TRANSACTION', async (accounts) => {
 
     it('should get transaction (by state)', async () => {
       let amount = 10 * TOKEN_DECIMALS
-      let from = {accountAddress: managerAccountAddress, currency: ccAddress}
-      let to = {accountAddress: usersAccountAddress, currency: ccAddress}
+      let from = {accountAddress: managerAccountAddress, currency: currencyAddress}
+      let to = {accountAddress: usersAccountAddress, currency: currencyAddress}
 
       let tx1 = await osseus.lib.Transaction.transfer(from, to, amount)
 
@@ -230,8 +230,8 @@ contract('TRANSACTION', async (accounts) => {
 
     it('should get transaction (by currency)', async () => {
       let amount = 10 * TOKEN_DECIMALS
-      let from = {accountAddress: managerAccountAddress, currency: ccAddress}
-      let to = {accountAddress: usersAccountAddress, currency: ccAddress}
+      let from = {accountAddress: managerAccountAddress, currency: currencyAddress}
+      let to = {accountAddress: usersAccountAddress, currency: currencyAddress}
 
       let tx1 = await osseus.lib.Transaction.transfer(from, to, amount)
 
@@ -243,8 +243,8 @@ contract('TRANSACTION', async (accounts) => {
 
     it('should get transaction (by multiple conditions)', async () => {
       let amount = 10 * TOKEN_DECIMALS
-      let from = {accountAddress: managerAccountAddress, currency: ccAddress}
-      let to = {accountAddress: usersAccountAddress, currency: ccAddress}
+      let from = {accountAddress: managerAccountAddress, currency: currencyAddress}
+      let to = {accountAddress: usersAccountAddress, currency: currencyAddress}
 
       let tx1 = await osseus.lib.Transaction.transfer(from, to, amount)
 
@@ -258,8 +258,8 @@ contract('TRANSACTION', async (accounts) => {
   describe('TRANSFER', async () => {
     it('should make a successful transaction (state should be DONE)', async () => {
       let amount = 10 * TOKEN_DECIMALS
-      let from = {accountAddress: managerAccountAddress, currency: ccAddress}
-      let to = {accountAddress: usersAccountAddress, currency: ccAddress}
+      let from = {accountAddress: managerAccountAddress, currency: currencyAddress}
+      let to = {accountAddress: usersAccountAddress, currency: currencyAddress}
 
       let tx = await osseus.lib.Transaction.transfer(from, to, amount)
 
@@ -272,8 +272,8 @@ contract('TRANSACTION', async (accounts) => {
 
     it('should not make a transaction if not enough balance (state should be CANCELED)', async () => {
       let amount = 10001 * TOKEN_DECIMALS
-      let from = {accountAddress: managerAccountAddress, currency: ccAddress}
-      let to = {accountAddress: usersAccountAddress, currency: ccAddress}
+      let from = {accountAddress: managerAccountAddress, currency: currencyAddress}
+      let to = {accountAddress: usersAccountAddress, currency: currencyAddress}
 
       let tx = await osseus.lib.Transaction.transfer(from, to, amount)
 
@@ -296,8 +296,8 @@ contract('TRANSACTION', async (accounts) => {
             const fromAccount = accounts[osseus.helpers.randomNum(3)]
             let otherAccounts = accounts.filter(a => a !== fromAccount)
             const toAccount = otherAccounts[osseus.helpers.randomNum(2)]
-            let from = {accountAddress: fromAccount, currency: ccAddress}
-            let to = {accountAddress: toAccount, currency: ccAddress}
+            let from = {accountAddress: fromAccount, currency: currencyAddress}
+            let to = {accountAddress: toAccount, currency: currencyAddress}
             let amount = 1 * TOKEN_DECIMALS
             result.txs.push(makeTransaction(from, to, amount))
             result.checks[fromAccount] = result.checks[fromAccount] || 0
@@ -349,7 +349,7 @@ contract('TRANSACTION', async (accounts) => {
       let bctx = await osseus.db_models.bctx.create({})
 
       let amount = 10 * TOKEN_DECIMALS
-      let to = {accountAddress: managerAccountAddress, currency: ccAddress}
+      let to = {accountAddress: managerAccountAddress, currency: currencyAddress}
 
       let tx = await osseus.lib.Transaction.deposit(to, amount, bctx.id)
 
@@ -382,7 +382,7 @@ contract('TRANSACTION', async (accounts) => {
 
           for (let i = 0; i < n; i++) {
             let toAccount = accounts[osseus.helpers.randomNum(3)]
-            let to = {accountAddress: toAccount, currency: ccAddress}
+            let to = {accountAddress: toAccount, currency: currencyAddress}
             let amount = 1 * TOKEN_DECIMALS
             amounts[to.accountAddress] = amounts[to.accountAddress] || 0
             amounts[to.accountAddress] += amount
@@ -456,8 +456,8 @@ contract('TRANSACTION', async (accounts) => {
         let fromAccount = localAccounts[osseus.helpers.randomNum(3)]
         let otherAccounts = localAccounts.filter(a => a !== fromAccount)
         let toAccount = otherAccounts[osseus.helpers.randomNum(2)]
-        let from = {accountAddress: fromAccount, currency: ccAddress}
-        let to = {accountAddress: toAccount, currency: ccAddress}
+        let from = {accountAddress: fromAccount, currency: currencyAddress}
+        let to = {accountAddress: toAccount, currency: currencyAddress}
         let amount = (osseus.helpers.randomNum(5) + 1) * TOKEN_DECIMALS
         txs.push(makeTransaction(from, to, amount))
       }

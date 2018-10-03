@@ -64,14 +64,14 @@ module.exports = (osseus) => {
 
   return {
     init: async () => {
-      const currencies = await osseus.db_models.currency.getAll()
+      const currencies = await osseus.db_models.currency.getAllCCs()
       if (!currencies || currencies.length === 0) {
         osseus.logger.warn(`Transfer events listener - init - no currencies`)
         return
       }
       async.each(currencies, async (currency) => {
-        const address = currency.ccAddress
-        const abi = JSON.parse(currency.ccABI)
+        const address = currency.currencyAddress
+        const abi = JSON.parse(currency.currencyABI)
         osseus.logger.silly(`Transfer events listener - init - currency address: ${address}`)
         const CurrencyContract = new osseus.web3WS.eth.Contract(abi, address)
         CurrencyContract.events.Transfer(onEvent)
@@ -83,16 +83,16 @@ module.exports = (osseus) => {
     },
 
     getPastEvents: async () => {
-      const currencies = await osseus.db_models.currency.getAll()
+      const currencies = await osseus.db_models.currency.getAllCCs()
       if (!currencies || currencies.length === 0) {
         osseus.logger.warn(`Transfer events listener - getPastEvents - no currencies`)
         return
       }
       const pastEventsBlockLimit = osseus.config.past_events_block_limit || 1000
       async.each(currencies, async (currency) => {
-        const address = currency.ccAddress
-        const abi = JSON.parse(currency.ccABI)
-        const creationBlock = currency.ccBlockchainInfo.blockNumber
+        const address = currency.currencyAddress
+        const abi = JSON.parse(currency.currencyABI)
+        const creationBlock = currency.currencyBlockchainInfo.blockNumber
         const currentBlock = await osseus.web3WS.eth.getBlockNumber()
         const CurrencyContract = new osseus.web3WS.eth.Contract(abi, address)
         const lastBlock = await osseus.db_models.bcevent.getLastBlock(address)
