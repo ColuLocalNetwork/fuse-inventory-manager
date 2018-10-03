@@ -785,7 +785,7 @@ contract('BLOCKCHAIN_TRANSACTION', async (accounts) => {
       })
     })
 
-    it('should make some successful tranasctions (transfers and changes) and be able to update their state accordingly (using address & type filters)', async () => {
+    it('should make some successful tranasctions (transfers and changes) and be able to update their state accordingly', async () => {
       const transferTxs = await makeSomeTransferTransactions(osseus.helpers.randomNum(10) + 1)
 
       const updatedTxs = await osseus.lib.BlockchainTransaction.syncState(communityManagerAddress, 'TRANSFER')
@@ -796,13 +796,11 @@ contract('BLOCKCHAIN_TRANSACTION', async (accounts) => {
         expect(tx.blockNumber).not.to.be.undefined
       })
 
-      const updatedTxs2 = await osseus.lib.BlockchainTransaction.syncState(communityManagerAddress, 'CHANGE').catch(err => {
-        expect(err).not.to.be.undefined
-      })
-      expect(updatedTxs2).to.be.undefined
+      const updatedTxs2 = await osseus.lib.BlockchainTransaction.syncState(communityManagerAddress, 'CHANGE')
+      expect(updatedTxs2).to.have.lengthOf(0)
     })
 
-    it('should make some successful tranasctions (transfers and changes) and be able to update their state accordingly (CONFIRMED and FINALIZED)', async () => {
+    it('should make some successful tranasctions (transfers and changes) and be able to update their state accordingly', async () => {
       const transferTxs = await makeSomeTransferTransactions(osseus.helpers.randomNum(10) + 1)
       const changeTxs = await makeSomeChangeTransactions(osseus.helpers.randomNum(10) + 1)
 

@@ -385,9 +385,7 @@ module.exports = (osseus) => {
           if (err) {
             return reject(err)
           }
-          if (!docs || docs.length === 0) {
-            return reject(new Error(`No transactions found`))
-          }
+          docs = docs || []
           docs = docs.map(doc => {
             doc.amount = getDecimal128(doc.amount)
             return doc
@@ -409,9 +407,7 @@ module.exports = (osseus) => {
           if (err) {
             return reject(err)
           }
-          if (!docs || docs.length === 0) {
-            return reject(new Error(`No transactions found`))
-          }
+          docs = docs || []
           docs = docs.map(doc => {
             doc.amount = getDecimal128(doc.amount)
             return doc
