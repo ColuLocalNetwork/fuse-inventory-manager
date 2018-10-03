@@ -206,6 +206,20 @@ contract('UTILS', async (accounts) => {
     expect(valid2).to.be.true
   })
 
+  it('should be able to get unknown blockchain transactions if exist', async () => {
+    let bctx = await osseus.db_models.bctx.update({}, {$set: {}, $setOnInsert: {known: false}})
+
+    let unknownBctxs = await osseus.utils.getUnknownBlockchainTransactions()
+    expect(unknownBctxs).to.be.an('array')
+    expect(unknownBctxs).to.have.lengthOf(1)
+
+    await osseus.db_models.bctx.update({_id: bctx._id}, {$set: {known: true}})
+
+    unknownBctxs = await osseus.utils.getUnknownBlockchainTransactions()
+    expect(unknownBctxs).to.be.an('array')
+    expect(unknownBctxs).to.have.lengthOf(0)
+  })
+
   after(async function () {
     Object.keys(osseus.db_models).forEach(model => {
       osseus.db_models[model].getModel().remove({}, () => {})

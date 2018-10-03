@@ -107,6 +107,22 @@ const updateBlockchainBalance = (address, token) => {
   })
 }
 
+const getUnknownBlockchainTransactions = (filters, projection, limit, sort) => {
+  return new Promise(async (resolve, reject) => {
+    try {
+      filters = filters || {}
+      filters.known = false
+      this.osseus.logger.debug(`filters: ${JSON.stringify(filters)}, projection: ${JSON.stringify(projection)}, limit: ${limit}, sort: ${JSON.stringify(sort)}`)
+      const transactions = await this.osseus.db_models.bctx.get(filters, projection, limit, sort)
+      this.osseus.logger.debug(`got ${transactions.length} unknown transactions`)
+      // TODO here probably need to notify someone/somehow
+      resolve(transactions)
+    } catch (err) {
+      reject(err)
+    }
+  })
+}
+
 const init = (osseus) => {
   this.osseus = osseus
   return new Promise((resolve, reject) => {
@@ -115,7 +131,8 @@ const init = (osseus) => {
       getBlockchainBalance: getBlockchainBalance,
       validateBlockchainBalance: validateBlockchainBalance,
       validateAggregatedBalances: validateAggregatedBalances,
-      updateBlockchainBalance: updateBlockchainBalance
+      updateBlockchainBalance: updateBlockchainBalance,
+      getUnknownBlockchainTransactions: getUnknownBlockchainTransactions
     }
     osseus.logger.info(`Utils ready`)
     return resolve()

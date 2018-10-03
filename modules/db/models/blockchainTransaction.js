@@ -118,6 +118,7 @@ module.exports = (osseus) => {
         if (filters.hash) conditions.push({hash: filters.hash})
         if (filters.type) conditions.push({type: filters.type})
         if (filters.state) conditions.push({state: filters.state})
+        if (typeof filters.known !== 'undefined') conditions.push({known: filters.known})
       }
       if (conditions.length > 0) query.$and = conditions
 
