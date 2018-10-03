@@ -28,7 +28,8 @@ module.exports = (osseus) => {
     value: {type: db.mongoose.Schema.Types.Decimal128, set: setDecimal128, get: getDecimal128},
     type: {type: String, enum: ['TRANSFER', 'CHANGE', 'DEPOSIT']},
     meta: {type: db.mongoose.Schema.Types.Mixed},
-    state: {type: String, enum: ['TRANSMITTED', 'CONFIRMED', 'FINALIZED'], default: 'TRANSMITTED'}
+    state: {type: String, enum: ['TRANSMITTED', 'CONFIRMED', 'FINALIZED'], default: 'TRANSMITTED'},
+    known: {type: Boolean, default: true}
   }).plugin(timestamps())
 
   BlockchainTransactionSchema.set('toJSON', {
@@ -52,7 +53,8 @@ module.exports = (osseus) => {
         value: ret.value,
         type: ret.type,
         meta: ret.meta,
-        state: ret.state
+        state: ret.state,
+        known: ret.known
       }
       return safeRet
     }
@@ -78,9 +80,12 @@ module.exports = (osseus) => {
     })
   }
 
-  blockchainTransaction.update = (id, data) => {
+  blockchainTransaction.update = (condition, update) => {
     return new Promise((resolve, reject) => {
-      BlockchainTransaction.findOneAndUpdate({_id: id}, {$set: data}, {new: true}, (err, updatedObj) => {
+      if (update.$set.gas) update.$set.gas = setDecimal128(update.$set.gas)
+      if (update.$set.gasPrice) update.$set.gasPrice = setDecimal128(update.$set.gasPrice)
+      if (update.$set.value) update.$set.value = setDecimal128(update.$set.value)
+      BlockchainTransaction.findOneAndUpdate(condition, update, {upsert: true, new: true, setDefaultsOnInsert: true}, (err, updatedObj) => {
         if (err) {
           return reject(err)
         }

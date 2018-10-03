@@ -80,6 +80,7 @@ contract('WALLET', async (accounts) => {
         currency: currency,
         blockchainAmount: 0,
         offchainAmount: 10 * TOKEN_DECIMALS,
+        blockNumberOfLastUpdate: 0,
         pendingTxs: []
       }]
     })
@@ -97,6 +98,7 @@ contract('WALLET', async (accounts) => {
         currency: currency,
         blockchainAmount: 0,
         offchainAmount: 10 * TOKEN_DECIMALS,
+        blockNumberOfLastUpdate: 0,
         pendingTxs: []
       }]
     })
@@ -109,6 +111,7 @@ contract('WALLET', async (accounts) => {
         currency: currency,
         blockchainAmount: 0,
         offchainAmount: 10 * TOKEN_DECIMALS,
+        blockNumberOfLastUpdate: 0,
         pendingTxs: []
       }]
     }).catch(err => {
@@ -128,6 +131,7 @@ contract('WALLET', async (accounts) => {
         currency: currency,
         blockchainAmount: 0,
         offchainAmount: 10 * TOKEN_DECIMALS,
+        blockNumberOfLastUpdate: 0,
         pendingTxs: []
       }]
     })
@@ -146,6 +150,7 @@ contract('WALLET', async (accounts) => {
         currency: currency,
         blockchainAmount: 0,
         offchainAmount: 10 * TOKEN_DECIMALS,
+        blockNumberOfLastUpdate: 0,
         pendingTxs: []
       }]
     })
@@ -165,6 +170,7 @@ contract('WALLET', async (accounts) => {
         currency: currency,
         blockchainAmount: 0,
         offchainAmount: 10 * TOKEN_DECIMALS,
+        blockNumberOfLastUpdate: 0,
         pendingTxs: []
       }]
     })
@@ -186,6 +192,7 @@ contract('WALLET', async (accounts) => {
         currency: currency,
         blockchainAmount: 10 * TOKEN_DECIMALS,
         offchainAmount: 10 * TOKEN_DECIMALS,
+        blockNumberOfLastUpdate: 0,
         pendingTxs: []
       }]
     })

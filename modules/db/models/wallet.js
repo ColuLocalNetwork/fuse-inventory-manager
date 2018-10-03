@@ -17,6 +17,7 @@ module.exports = (osseus) => {
   const BalanceSchema = new Schema({
     currency: {type: Schema.Types.ObjectId, ref: 'Currency'},
     blockchainAmount: {type: db.mongoose.Schema.Types.Decimal128, set: setDecimal128, get: getDecimal128},
+    blockNumberOfLastUpdate: {type: Number},
     offchainAmount: {type: db.mongoose.Schema.Types.Decimal128, set: setDecimal128, get: getDecimal128},
     pendingTxs: [{type: String}]
   }).plugin(timestamps())
@@ -40,6 +41,7 @@ module.exports = (osseus) => {
         createdAt: ret.created_at,
         updatedAt: ret.updated_at,
         currency: ret.currency,
+        blockNumberOfLastUpdate: ret.blockNumberOfLastUpdate,
         blockchainAmount: ret.blockchainAmount,
         offchainAmount: ret.offchainAmount,
         pendingTxs: ret.pendingTxs
@@ -98,9 +100,11 @@ module.exports = (osseus) => {
     })
   }
 
-  wallet.updateBlockchainBalance = (condition, amount) => {
+  wallet.updateBlockchainBalance = (address, currencyId, blockNumber, amount) => {
     return new Promise((resolve, reject) => {
-      Wallet.findOneAndUpdate(condition, {$set: {'balances.$.blockchainAmount': amount}}, {new: true}, (err, updatedObj) => {
+      const condition = {'address': address, 'balances.currency': currencyId, 'balances.blockNumberOfLastUpdate': {'$lte': blockNumber}}
+      const update = {$set: {'balances.$.blockchainAmount': amount, 'balances.$.blockNumberOfLastUpdate': blockNumber}}
+      Wallet.findOneAndUpdate(condition, update, {new: true}, (err, updatedObj) => {
         if (err) {
           return reject(err)
         }

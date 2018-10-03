@@ -40,6 +40,7 @@ module.exports = (osseus) => {
         const defaultBalance = {
           currency: defaultCurrency,
           blockchainAmount: 0,
+          blockNumberOfLastUpdate: 0,
           offchainAmount: 0,
           pendingTxs: []
         }
