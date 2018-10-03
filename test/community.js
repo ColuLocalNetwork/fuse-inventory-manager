@@ -19,8 +19,8 @@ contract('COMMUNITY', async (accounts) => {
 
   let currencyBlockchainInfo
 
-  const currencyABI = JSON.stringify(require('./helpers/abi/cc'))
-  const marketMakerABI = JSON.stringify(require('./helpers/abi/mm'))
+  const currencyABI = JSON.stringify(require('../config/abi/ColuLocalCurrency'))
+  const marketMakerABI = JSON.stringify(require('../config/abi/EllipseMarketMaker'))
 
   const communityName = 'Test Community'
 

@@ -19,8 +19,8 @@ contract('WALLET', async (accounts) => {
 
   let currencyBlockchainInfo
 
-  const currencyABI = JSON.stringify(require('./helpers/abi/cc'))
-  const marketMakerABI = JSON.stringify(require('./helpers/abi/mm'))
+  const currencyABI = JSON.stringify(require('../config/abi/ColuLocalCurrency'))
+  const marketMakerABI = JSON.stringify(require('../config/abi/EllipseMarketMaker'))
 
   const validateWallet = (wallet1, wallet2, currency, offchainAmount, blockchainAmount) => {
     expect(wallet1).to.be.a('Object')

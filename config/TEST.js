@@ -17,6 +17,5 @@ module.exports = {
   OSSEUS_MONGO_URI: 'mongodb://localhost/inventory-manager-tests',
   WEB3_PROVIDER: 'http://127.0.0.1:7545',
   SECRET: 'thisissomekindofsecret',
-  CLN_ABI: require('./abi/ColuLocalNetwork'),
   BLOCKS_TO_FINALIZE_BCTX: 20
 }

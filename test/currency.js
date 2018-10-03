@@ -22,9 +22,9 @@ contract('CURRENCY', async (accounts) => {
   let currencyBlockchainInfo
   let clnBlockchainInfo
 
-  const clnABI = JSON.stringify(require('./helpers/abi/cln'))
-  const currencyABI = JSON.stringify(require('./helpers/abi/cc'))
-  const marketMakerABI = JSON.stringify(require('./helpers/abi/mm'))
+  const clnABI = JSON.stringify(require('../config/abi/ColuLocalNetwork'))
+  const currencyABI = JSON.stringify(require('../config/abi/ColuLocalCurrency'))
+  const marketMakerABI = JSON.stringify(require('../config/abi/EllipseMarketMaker'))
 
   const validateCLN = (currency) => {
     expect(currency).to.be.a('Object')
