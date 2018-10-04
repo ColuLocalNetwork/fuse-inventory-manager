@@ -11,16 +11,18 @@ module.exports = (osseus) => {
   })
 
   const CurrencySchema = new Schema({
-    ccAddress: {type: String, required: true},
-    mmAddress: {type: String, required: true},
-    ccABI: {type: String, required: true},
-    mmABI: {type: String, required: true},
+    currencyType: {type: String, enum: ['CLN', 'CC'], default: 'CC'},
+    currencyAddress: {type: String, required: true},
+    marketMakerAddress: {type: String, required: () => { return this.currencyType === 'CC' }},
+    currencyABI: {type: String, required: true},
+    marketMakerABI: {type: String, required: () => { return this.currencyType === 'CC' }},
     exid: {type: String},
-    ccBlockchainInfo: {type: CurrencyBlockchainInfoSchema}
+    currencyBlockchainInfo: {type: CurrencyBlockchainInfoSchema}
   }).plugin(timestamps())
 
-  CurrencySchema.index({ccAddress: 1}, {unique: true})
-  CurrencySchema.index({mmAddress: 1}, {unique: true})
+  CurrencySchema.index({currencyType: 1, currencyAddress: 1}, {unique: true})
+  CurrencySchema.index({currencyAddress: 1}, {unique: true})
+  CurrencySchema.index({marketMakerAddress: 1}, {unique: true})
 
   CurrencyBlockchainInfoSchema.set('toJSON', {
     getters: true,
@@ -44,12 +46,13 @@ module.exports = (osseus) => {
         id: ret._id.toString(),
         createdAt: ret.created_at,
         updatedAt: ret.updated_at,
-        ccAddress: ret.ccAddress,
-        mmAddress: ret.mmAddress,
-        ccABI: ret.ccABI,
-        mmABI: ret.mmABI,
+        currencyType: ret.currencyType,
+        currencyAddress: ret.currencyAddress,
+        marketMakerAddress: ret.marketMakerAddress,
+        currencyABI: ret.currencyABI,
+        marketMakerABI: ret.marketMakerABI,
         exid: ret.exid,
-        ccBlockchainInfo: ret.ccBlockchainInfo
+        currencyBlockchainInfo: ret.currencyBlockchainInfo
       }
       return safeRet
     }
@@ -61,8 +64,8 @@ module.exports = (osseus) => {
 
   currency.create = (data) => {
     return new Promise((resolve, reject) => {
-      data.ccAddress = data.ccAddress.toLowerCase()
-      data.mmAddress = data.mmAddress.toLowerCase()
+      data.currencyAddress = data.currencyAddress.toLowerCase()
+      data.marketMakerAddress = data.marketMakerAddress && data.marketMakerAddress.toLowerCase()
       const currency = new Currency(data)
       currency.save((err, newObj) => {
         if (err) {
@@ -72,6 +75,20 @@ module.exports = (osseus) => {
           return reject(new Error('Currency not saved'))
         }
         resolve(newObj)
+      })
+    })
+  }
+
+  currency.getCLN = () => {
+    return new Promise((resolve, reject) => {
+      Currency.findOne({currencyType: 'CLN'}, (err, doc) => {
+        if (err) {
+          return reject(err)
+        }
+        if (!doc) {
+          return reject(new Error(`Currency CLN not found`))
+        }
+        resolve(doc)
       })
     })
   }
@@ -92,12 +109,12 @@ module.exports = (osseus) => {
 
   currency.getByCurrencyAddress = (address) => {
     return new Promise((resolve, reject) => {
-      Currency.findOne({ccAddress: address.toLowerCase()}, (err, doc) => {
+      Currency.findOne({currencyAddress: address.toLowerCase()}, (err, doc) => {
         if (err) {
           return reject(err)
         }
         if (!doc) {
-          return reject(new Error(`Currency not found for ccAddress: ${address}`))
+          return reject(new Error(`Currency not found for currencyAddress: ${address}`))
         }
         resolve(doc)
       })
@@ -106,21 +123,21 @@ module.exports = (osseus) => {
 
   currency.getByMarketMakerAddress = (address) => {
     return new Promise((resolve, reject) => {
-      Currency.findOne({mmAddress: address.toLowerCase()}, (err, doc) => {
+      Currency.findOne({marketMakerAddress: address.toLowerCase()}, (err, doc) => {
         if (err) {
           return reject(err)
         }
         if (!doc) {
-          return reject(new Error(`Currency not found for mmAddress: ${address}`))
+          return reject(new Error(`Currency not found for marketMakerAddress: ${address}`))
         }
         resolve(doc)
       })
     })
   }
 
-  currency.getAll = () => {
+  currency.getAllCCs = () => {
     return new Promise((resolve, reject) => {
-      Currency.find({}, (err, docs) => {
+      Currency.find({currencyType: 'CC'}, (err, docs) => {
         if (err) {
           return reject(err)
         }

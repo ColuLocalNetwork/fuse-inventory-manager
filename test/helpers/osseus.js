@@ -1,12 +1,19 @@
 const Osseus = require('@colucom/osseus')
 const path = require('path')
 const cwd = process.cwd()
+const bip39 = require('bip39')
+const HDWalletProvider = require('truffle-hdwallet-provider')
 
 module.exports = async () => {
   let osseus = await Osseus.get()
   osseus.cwd = osseus.cwd || cwd
   osseus.web3 = web3 // this is the global web3 created by truffle...
-  if (!osseus.utils) require(path.join(cwd, '/modules/utils')).init(osseus)
+  if (!osseus.utils) require(path.join(cwd, 'modules/utils')).init(osseus)
+  osseus.abi = {
+    cln: JSON.stringify(require(path.join(cwd, 'config/abi/ColuLocalNetwork'))),
+    cc: JSON.stringify(require(path.join(cwd, 'config/abi/ColuLocalCurrency'))),
+    mm: JSON.stringify(require(path.join(cwd, 'config/abi/EllipseMarketMaker')))
+  }
   osseus.db_models = osseus.db_models || {
     bctx: require(path.join(cwd, 'modules/db/models/blockchainTransaction'))(osseus),
     currency: require(path.join(cwd, 'modules/db/models/currency'))(osseus),
@@ -25,5 +32,7 @@ module.exports = async () => {
     randomNum: (n) => { return Math.floor(Math.random() * n) },
     randomStr: (n) => { return Math.random().toString(36).substr(2, n) }
   }
+  osseus.helpers.provider = new HDWalletProvider([{mnemonic: bip39.generateMnemonic(), password: osseus.helpers.randomStr(10)}], osseus.config.web3_provider)
+
   return osseus
 }

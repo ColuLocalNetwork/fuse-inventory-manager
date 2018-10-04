@@ -56,7 +56,7 @@ module.exports = (osseus) => {
           let transmit = await osseus.db_models.transmit.workOn(filters.currency)
           transmits = [transmit]
         } else {
-          const currencies = await osseus.db_models.currency.getAll()
+          const currencies = await osseus.db_models.currency.getAllCCs()
           const tasks = []
           currencies.forEach(currency => {
             tasks.push(new Promise(async (resolve, reject) => {
@@ -112,7 +112,7 @@ module.exports = (osseus) => {
         transactions.forEach(transaction => {
           let txid = transaction._id.toString()
           let from = transaction.from.accountAddress
-          let token = transaction.from.currency.ccAddress
+          let token = transaction.from.currency.currencyAddress
           let to = transaction.to.accountAddress
           let amount = new BigNumber(transaction.amount)
 

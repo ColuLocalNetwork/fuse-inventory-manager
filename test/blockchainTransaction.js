@@ -78,13 +78,11 @@ contract('BLOCKCHAIN_TRANSACTION', async (accounts) => {
   let cc
   let mm
 
-  let ccAddress
-  let mmAddress
+  let currencyAddress
+  let marketMakerAddress
 
-  let ccBlockchainInfo
-
-  const ccABI = JSON.stringify(require('./helpers/abi/cc'))
-  const mmABI = JSON.stringify(require('./helpers/abi/mm'))
+  let clnBlockchainInfo
+  let currencyBlockchainInfo
 
   let currency
   let community
@@ -100,25 +98,31 @@ contract('BLOCKCHAIN_TRANSACTION', async (accounts) => {
     mmLib = await EllipseMarketMakerLib.new()
 
     cln = await ColuLocalNetwork.new(CLN_MAX_TOKENS)
+    const clnCreationBlock = await web3.eth.getTransaction(cln.transactionHash)
+    clnBlockchainInfo = {
+      blockHash: clnCreationBlock.blockHash,
+      blockNumber: clnCreationBlock.blockNumber,
+      transactionHash: cln.transactionHash
+    }
     await cln.makeTokensTransferable()
 
     currencyFactory = await CurrencyFactory.new(mmLib.address, cln.address, {from: accounts[0]})
     const result = await currencyFactory.createCurrency('TestLocalCurrency', 'TLC', 18, CC_MAX_TOKENS, 'ipfs://hash', {from: accounts[0]})
-    ccAddress = result.logs[0].args.token
-    ccBlockchainInfo = {
+    currencyAddress = result.logs[0].args.token
+    currencyBlockchainInfo = {
       blockHash: result.logs[0].blockHash,
       blockNumber: result.logs[0].blockNumber,
       transactionHash: result.logs[0].transactionHash
     }
-    cc = await ColuLocalCurrency.at(ccAddress)
+    cc = await ColuLocalCurrency.at(currencyAddress)
 
-    let insertCLNtoMarketMakerData = encodeInsertData(ccAddress)
+    let insertCLNtoMarketMakerData = encodeInsertData(currencyAddress)
     await cln.transferAndCall(currencyFactory.address, 100000 * TOKEN_DECIMALS, insertCLNtoMarketMakerData)
 
-    await currencyFactory.openMarket(ccAddress)
+    await currencyFactory.openMarket(currencyAddress)
 
-    mmAddress = await currencyFactory.getMarketMakerAddressFromToken(ccAddress)
-    mm = await EllipseMarketMaker.at(mmAddress)
+    marketMakerAddress = await currencyFactory.getMarketMakerAddressFromToken(currencyAddress)
+    mm = await EllipseMarketMaker.at(marketMakerAddress)
 
     osseus = await OsseusHelper()
     osseus.config.cln_address = cln.address
@@ -129,7 +133,8 @@ contract('BLOCKCHAIN_TRANSACTION', async (accounts) => {
       osseus.db_models[model].getModel().remove({}, () => {})
     })
 
-    currency = await osseus.lib.Currency.create(ccAddress, mmAddress, ccABI, mmABI, ccBlockchainInfo, osseus.helpers.randomStr(10))
+    await osseus.lib.Currency.createCLN(cln.address, osseus.abi.cln, clnBlockchainInfo, osseus.helpers.randomStr(10))
+    currency = await osseus.lib.Currency.create(currencyAddress, marketMakerAddress, osseus.abi.cc, osseus.abi.mm, currencyBlockchainInfo, osseus.helpers.randomStr(10))
     community = await osseus.lib.Community.create('Test Community', currency, osseus.helpers.randomStr(10))
 
     communityManagerAddress = community.wallets.filter(wallet => wallet.type === 'manager')[0].address
