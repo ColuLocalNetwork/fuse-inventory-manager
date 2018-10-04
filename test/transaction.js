@@ -49,9 +49,6 @@ contract('TRANSACTION', async (accounts) => {
 
   let currencyBlockchainInfo
 
-  const currencyABI = JSON.stringify(require('../config/abi/ColuLocalCurrency'))
-  const marketMakerABI = JSON.stringify(require('../config/abi/EllipseMarketMaker'))
-
   let currency
   let community
 
@@ -135,7 +132,7 @@ contract('TRANSACTION', async (accounts) => {
       osseus.db_models[model].getModel().remove({}, () => {})
     })
 
-    currency = await osseus.lib.Currency.create(currencyAddress, marketMakerAddress, currencyABI, marketMakerABI, currencyBlockchainInfo, osseus.helpers.randomStr(10))
+    currency = await osseus.lib.Currency.create(currencyAddress, marketMakerAddress, osseus.abi.cc, osseus.abi.mm, currencyBlockchainInfo, osseus.helpers.randomStr(10))
     community = await osseus.lib.Community.create('Test Community', currency, osseus.helpers.randomStr(10))
 
     managerAccountAddress = community.wallets.filter(wallet => wallet.type === 'manager')[0].address

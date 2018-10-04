@@ -22,15 +22,11 @@ contract('CURRENCY', async (accounts) => {
   let currencyBlockchainInfo
   let clnBlockchainInfo
 
-  const clnABI = JSON.stringify(require('../config/abi/ColuLocalNetwork'))
-  const currencyABI = JSON.stringify(require('../config/abi/ColuLocalCurrency'))
-  const marketMakerABI = JSON.stringify(require('../config/abi/EllipseMarketMaker'))
-
   const validateCLN = (currency) => {
     expect(currency).to.be.a('Object')
     expect(currency.id).to.be.a('string')
     expect(currency.currencyAddress).to.equal(cln.address)
-    expect(currency.currencyABI).to.equal(clnABI)
+    expect(currency.currencyABI).to.equal(osseus.abi.cln)
     expect(currency.exid).to.be.a('string')
   }
 
@@ -40,8 +36,8 @@ contract('CURRENCY', async (accounts) => {
     if (currency2) expect(currency1.id).to.equal(currency2.id)
     expect(currency1.currencyAddress).to.equal(currency2 ? currency2.currencyAddress : currencyAddress)
     expect(currency1.marketMakerAddress).to.equal(currency2 ? currency2.marketMakerAddress : marketMakerAddress)
-    expect(currency1.currencyABI).to.equal(currency2 ? currency2.currencyABI : currencyABI)
-    expect(currency1.marketMakerABI).to.equal(currency2 ? currency2.marketMakerABI : marketMakerABI)
+    expect(currency1.currencyABI).to.equal(currency2 ? currency2.currencyABI : osseus.abi.cc)
+    expect(currency1.marketMakerABI).to.equal(currency2 ? currency2.marketMakerABI : osseus.abi.mm)
     expect(currency1.exid).to.be.a('string')
     if (currency2) expect(currency1.exid).to.equal(currency2.exid)
   }
@@ -95,35 +91,35 @@ contract('CURRENCY', async (accounts) => {
   })
 
   it('should create a CLN currency', async () => {
-    let currency = await osseus.lib.Currency.createCLN(cln.address, clnABI, clnBlockchainInfo, osseus.helpers.randomStr(10))
+    let currency = await osseus.lib.Currency.createCLN(cln.address, osseus.abi.cln, clnBlockchainInfo, osseus.helpers.randomStr(10))
     validateCLN(currency)
   })
 
   it('should not create more than one CLN currency', async () => {
-    let currency1 = await osseus.lib.Currency.createCLN(cln.address, clnABI, clnBlockchainInfo, osseus.helpers.randomStr(10))
+    let currency1 = await osseus.lib.Currency.createCLN(cln.address, osseus.abi.cln, clnBlockchainInfo, osseus.helpers.randomStr(10))
     validateCLN(currency1)
 
-    let currency2 = await osseus.lib.Currency.createCLN(cln.address, clnABI, clnBlockchainInfo, osseus.helpers.randomStr(10)).catch(err => {
+    let currency2 = await osseus.lib.Currency.createCLN(cln.address, osseus.abi.cln, clnBlockchainInfo, osseus.helpers.randomStr(10)).catch(err => {
       expect(err).not.to.be.undefined
     })
     expect(currency2).to.be.undefined
   })
 
   it('should create a currency', async () => {
-    let currency = await osseus.lib.Currency.create(currencyAddress, marketMakerAddress, currencyABI, marketMakerABI, currencyBlockchainInfo, osseus.helpers.randomStr(10))
+    let currency = await osseus.lib.Currency.create(currencyAddress, marketMakerAddress, osseus.abi.cc, osseus.abi.mm, currencyBlockchainInfo, osseus.helpers.randomStr(10))
     validateCurrency(currency)
   })
 
   it('should not create a currency with same address', async () => {
-    await osseus.lib.Currency.create(currencyAddress, marketMakerAddress, currencyABI, marketMakerABI, currencyBlockchainInfo, osseus.helpers.randomStr(10))
-    let currency = await osseus.lib.Currency.create(currencyAddress, marketMakerAddress, currencyABI, marketMakerABI, currencyBlockchainInfo, osseus.helpers.randomStr(10)).catch(err => {
+    await osseus.lib.Currency.create(currencyAddress, marketMakerAddress, osseus.abi.cc, osseus.abi.mm, currencyBlockchainInfo, osseus.helpers.randomStr(10))
+    let currency = await osseus.lib.Currency.create(currencyAddress, marketMakerAddress, osseus.abi.cc, osseus.abi.mm, currencyBlockchainInfo, osseus.helpers.randomStr(10)).catch(err => {
       expect(err).not.to.be.undefined
     })
     expect(currency).to.be.undefined
   })
 
   it('should get the CLN', async () => {
-    await osseus.lib.Currency.createCLN(cln.address, clnABI, clnBlockchainInfo, osseus.helpers.randomStr(10))
+    await osseus.lib.Currency.createCLN(cln.address, osseus.abi.cln, clnBlockchainInfo, osseus.helpers.randomStr(10))
     let CLN = await osseus.lib.Currency.getCLN(osseus.helpers.provider)
     validateCLN(CLN.currency)
   })
@@ -136,26 +132,26 @@ contract('CURRENCY', async (accounts) => {
   })
 
   it('should get currency (by id)', async () => {
-    let currency1 = await osseus.lib.Currency.create(currencyAddress, marketMakerAddress, currencyABI, marketMakerABI, currencyBlockchainInfo, osseus.helpers.randomStr(10))
+    let currency1 = await osseus.lib.Currency.create(currencyAddress, marketMakerAddress, osseus.abi.cc, osseus.abi.mm, currencyBlockchainInfo, osseus.helpers.randomStr(10))
     let currency2 = await osseus.db_models.currency.getById(currency1.id)
     validateCurrency(currency1, currency2)
   })
 
   it('should get currency (by currency address)', async () => {
-    let currency1 = await osseus.lib.Currency.create(currencyAddress, marketMakerAddress, currencyABI, marketMakerABI, currencyBlockchainInfo, osseus.helpers.randomStr(10))
+    let currency1 = await osseus.lib.Currency.create(currencyAddress, marketMakerAddress, osseus.abi.cc, osseus.abi.mm, currencyBlockchainInfo, osseus.helpers.randomStr(10))
     let currency2 = await osseus.db_models.currency.getByCurrencyAddress(currency1.currencyAddress)
     validateCurrency(currency1, currency2)
   })
 
   it('should get currency (by market maker address)', async () => {
-    let currency1 = await osseus.lib.Currency.create(currencyAddress, marketMakerAddress, currencyABI, marketMakerABI, currencyBlockchainInfo, osseus.helpers.randomStr(10))
+    let currency1 = await osseus.lib.Currency.create(currencyAddress, marketMakerAddress, osseus.abi.cc, osseus.abi.mm, currencyBlockchainInfo, osseus.helpers.randomStr(10))
     let currency2 = await osseus.db_models.currency.getByMarketMakerAddress(currency1.marketMakerAddress)
     validateCurrency(currency1, currency2)
   })
 
   it('should get error if currency not found (by id)', async () => {
     let fakeId = '123abc'
-    let currency1 = await osseus.lib.Currency.create(currencyAddress, marketMakerAddress, currencyABI, marketMakerABI, currencyBlockchainInfo, osseus.helpers.randomStr(10))
+    let currency1 = await osseus.lib.Currency.create(currencyAddress, marketMakerAddress, osseus.abi.cc, osseus.abi.mm, currencyBlockchainInfo, osseus.helpers.randomStr(10))
     validateCurrency(currency1)
     let currency2 = await osseus.db_models.currency.getById(fakeId).catch(err => {
       expect(err).not.to.be.undefined
@@ -164,13 +160,13 @@ contract('CURRENCY', async (accounts) => {
   })
 
   it('should get all CCs', async () => {
-    await osseus.lib.Currency.createCLN(cln.address, clnABI, clnBlockchainInfo, osseus.helpers.randomStr(10))
+    await osseus.lib.Currency.createCLN(cln.address, osseus.abi.cln, clnBlockchainInfo, osseus.helpers.randomStr(10))
 
-    let n = osseus.helpers.randomNum(10)
+    let n = (osseus.helpers.randomNum(10) + 1)
     let currencies1 = []
     for (let i = 1; i <= n; i++) {
       let cc = await createCC(`TestLocalCurrency${i}`, `TLC${i}`)
-      let currency = await osseus.lib.Currency.create(cc.currencyAddress, cc.marketMakerAddress, currencyABI, marketMakerABI, cc.currencyBlockchainInfo, osseus.helpers.randomStr(10))
+      let currency = await osseus.lib.Currency.create(cc.currencyAddress, cc.marketMakerAddress, osseus.abi.cc, osseus.abi.mm, cc.currencyBlockchainInfo, osseus.helpers.randomStr(10))
       currencies1.push(currency)
     }
 

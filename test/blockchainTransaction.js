@@ -81,10 +81,8 @@ contract('BLOCKCHAIN_TRANSACTION', async (accounts) => {
   let currencyAddress
   let marketMakerAddress
 
+  let clnBlockchainInfo
   let currencyBlockchainInfo
-
-  const currencyABI = JSON.stringify(require('../config/abi/ColuLocalCurrency'))
-  const marketMakerABI = JSON.stringify(require('../config/abi/EllipseMarketMaker'))
 
   let currency
   let community
@@ -100,6 +98,12 @@ contract('BLOCKCHAIN_TRANSACTION', async (accounts) => {
     mmLib = await EllipseMarketMakerLib.new()
 
     cln = await ColuLocalNetwork.new(CLN_MAX_TOKENS)
+    const clnCreationBlock = await web3.eth.getTransaction(cln.transactionHash)
+    clnBlockchainInfo = {
+      blockHash: clnCreationBlock.blockHash,
+      blockNumber: clnCreationBlock.blockNumber,
+      transactionHash: cln.transactionHash
+    }
     await cln.makeTokensTransferable()
 
     currencyFactory = await CurrencyFactory.new(mmLib.address, cln.address, {from: accounts[0]})
@@ -129,7 +133,8 @@ contract('BLOCKCHAIN_TRANSACTION', async (accounts) => {
       osseus.db_models[model].getModel().remove({}, () => {})
     })
 
-    currency = await osseus.lib.Currency.create(currencyAddress, marketMakerAddress, currencyABI, marketMakerABI, currencyBlockchainInfo, osseus.helpers.randomStr(10))
+    await osseus.lib.Currency.createCLN(cln.address, osseus.abi.cln, clnBlockchainInfo, osseus.helpers.randomStr(10))
+    currency = await osseus.lib.Currency.create(currencyAddress, marketMakerAddress, osseus.abi.cc, osseus.abi.mm, currencyBlockchainInfo, osseus.helpers.randomStr(10))
     community = await osseus.lib.Community.create('Test Community', currency, osseus.helpers.randomStr(10))
 
     communityManagerAddress = community.wallets.filter(wallet => wallet.type === 'manager')[0].address

@@ -19,9 +19,6 @@ contract('WALLET', async (accounts) => {
 
   let currencyBlockchainInfo
 
-  const currencyABI = JSON.stringify(require('../config/abi/ColuLocalCurrency'))
-  const marketMakerABI = JSON.stringify(require('../config/abi/EllipseMarketMaker'))
-
   const validateWallet = (wallet1, wallet2, currency, offchainAmount, blockchainAmount) => {
     expect(wallet1).to.be.a('Object')
     expect(wallet1.id).to.be.a('string')
@@ -70,7 +67,7 @@ contract('WALLET', async (accounts) => {
   })
 
   it('should create a wallet', async () => {
-    let currency = await osseus.lib.Currency.create(currencyAddress, marketMakerAddress, currencyABI, marketMakerABI, currencyBlockchainInfo, osseus.helpers.randomStr(10))
+    let currency = await osseus.lib.Currency.create(currencyAddress, marketMakerAddress, osseus.abi.cc, osseus.abi.mm, currencyBlockchainInfo, osseus.helpers.randomStr(10))
     let wallet = await osseus.db_models.wallet.create({
       address: accounts[0],
       type: 'manager',
@@ -88,7 +85,7 @@ contract('WALLET', async (accounts) => {
   })
 
   it('should not create a wallet with same address', async () => {
-    let currency = await osseus.lib.Currency.create(currencyAddress, marketMakerAddress, currencyABI, marketMakerABI, currencyBlockchainInfo, osseus.helpers.randomStr(10))
+    let currency = await osseus.lib.Currency.create(currencyAddress, marketMakerAddress, osseus.abi.cc, osseus.abi.mm, currencyBlockchainInfo, osseus.helpers.randomStr(10))
     await osseus.db_models.wallet.create({
       address: accounts[0],
       type: 'manager',
@@ -121,7 +118,7 @@ contract('WALLET', async (accounts) => {
   })
 
   it('should get wallet (by id)', async () => {
-    let currency = await osseus.lib.Currency.create(currencyAddress, marketMakerAddress, currencyABI, marketMakerABI, currencyBlockchainInfo, osseus.helpers.randomStr(10))
+    let currency = await osseus.lib.Currency.create(currencyAddress, marketMakerAddress, osseus.abi.cc, osseus.abi.mm, currencyBlockchainInfo, osseus.helpers.randomStr(10))
     let wallet1 = await osseus.db_models.wallet.create({
       address: accounts[0],
       type: 'manager',
@@ -140,7 +137,7 @@ contract('WALLET', async (accounts) => {
   })
 
   it('should get wallet (by address)', async () => {
-    let currency = await osseus.lib.Currency.create(currencyAddress, marketMakerAddress, currencyABI, marketMakerABI, currencyBlockchainInfo, osseus.helpers.randomStr(10))
+    let currency = await osseus.lib.Currency.create(currencyAddress, marketMakerAddress, osseus.abi.cc, osseus.abi.mm, currencyBlockchainInfo, osseus.helpers.randomStr(10))
     let wallet1 = await osseus.db_models.wallet.create({
       address: accounts[0],
       type: 'manager',
@@ -160,7 +157,7 @@ contract('WALLET', async (accounts) => {
 
   it('should get error if wallet not found (by id)', async () => {
     let fakeId = '123abc'
-    let currency = await osseus.lib.Currency.create(currencyAddress, marketMakerAddress, currencyABI, marketMakerABI, currencyBlockchainInfo, osseus.helpers.randomStr(10))
+    let currency = await osseus.lib.Currency.create(currencyAddress, marketMakerAddress, osseus.abi.cc, osseus.abi.mm, currencyBlockchainInfo, osseus.helpers.randomStr(10))
     let wallet1 = await osseus.db_models.wallet.create({
       address: accounts[0],
       type: 'manager',
@@ -182,7 +179,7 @@ contract('WALLET', async (accounts) => {
   })
 
   it('should get blockchain balance', async () => {
-    let currency = await osseus.lib.Currency.create(currencyAddress, marketMakerAddress, currencyABI, marketMakerABI)
+    let currency = await osseus.lib.Currency.create(currencyAddress, marketMakerAddress, osseus.abi.cc, osseus.abi.mm)
     let wallet1 = await osseus.db_models.wallet.create({
       address: accounts[0],
       type: 'manager',
