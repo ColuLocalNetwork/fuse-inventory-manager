@@ -124,9 +124,7 @@ module.exports = (osseus) => {
         if (err) {
           return reject(err)
         }
-        if (!docs || docs.length === 0) {
-          return reject(new Error(`No currencies found`))
-        }
+        docs = docs || []
         resolve(docs)
       })
     })
