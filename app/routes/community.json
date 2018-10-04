@@ -1,0 +1,31 @@
+{
+  "/community": {
+    "POST": {
+      "route": "create"
+    }
+  },
+  "/community/id/:id": {
+    "PUT": {
+      "route": "edit",
+      "validators": {
+        "params": {
+          "id": {
+            "notEmpty": true,
+            "errorMessage": "is missing"
+          }
+        }
+      }
+    },
+    "GET": {
+      "route": "get",
+      "validators": {
+        "params": {
+          "id": {
+            "notEmpty": true,
+            "errorMessage": "is missing"
+          }
+        }
+      }
+    }
+  }
+}

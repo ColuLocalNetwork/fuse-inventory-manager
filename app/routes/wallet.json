@@ -1,0 +1,55 @@
+{
+  "/wallet": {
+    "POST": {
+      "route": "create"
+    }
+  },
+  "/wallet/id/:id": {
+    "PUT": {
+      "route": "edit",
+      "validators": {
+        "params": {
+          "id": {
+            "notEmpty": true,
+            "errorMessage": "is missing"
+          }
+        }
+      }
+    },
+    "GET": {
+      "route": "get",
+      "validators": {
+        "params": {
+          "id": {
+            "notEmpty": true,
+            "errorMessage": "is missing"
+          }
+        }
+      }
+    }
+  },
+  "/wallet/address/:address": {
+    "PUT": {
+      "route": "editByAddress",
+      "validators": {
+        "params": {
+          "address": {
+            "notEmpty": true,
+            "errorMessage": "is missing"
+          }
+        }
+      }
+    },
+    "GET": {
+      "route": "getByAddress",
+      "validators": {
+        "params": {
+          "address": {
+            "notEmpty": true,
+            "errorMessage": "is missing"
+          }
+        }
+      }
+    }
+  }
+}

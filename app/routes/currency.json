@@ -1,0 +1,67 @@
+{
+  "/currency": {
+    "POST": {
+      "route": "create",
+      "validators": {
+        "params": {
+          "currencyAddress": {
+            "notEmpty": true,
+            "errorMessage": "is missing"
+          },
+          "marketMakerAddress": {
+            "notEmpty": true,
+            "errorMessage": "is missing"
+          }
+        }
+      }
+    }
+  },
+  "/currency/id/:id": {
+    "PUT": {
+      "route": "edit",
+      "validators": {
+        "params": {
+          "id": {
+            "notEmpty": true,
+            "errorMessage": "is missing"
+          }
+        }
+      }
+    },
+    "GET": {
+      "route": "get",
+      "validators": {
+        "params": {
+          "id": {
+            "notEmpty": true,
+            "errorMessage": "is missing"
+          }
+        }
+      }
+    }
+  },
+  "/currency/address/:address": {
+    "PUT": {
+      "route": "editByAddress",
+      "validators": {
+        "params": {
+          "address": {
+            "notEmpty": true,
+            "errorMessage": "is missing"
+          }
+        }
+      }
+    },
+    "GET": {
+      "route": "getByAddress",
+      "validators": {
+        "params": {
+          "address": {
+            "notEmpty": true,
+            "errorMessage": "is missing"
+          }
+        }
+      }
+    }
+  }
+}
