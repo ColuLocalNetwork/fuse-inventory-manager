@@ -2,6 +2,7 @@ const Osseus = require('@colucom/osseus')
 const Web3 = require('web3')
 const cwd = process.cwd()
 
+/** Application bootstrap */
 const main = async () => {
   try {
     const osseus = await Osseus.init()

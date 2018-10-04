@@ -8,7 +8,8 @@
     "dev": "nodemon index.js --ENV LOCAL",
     "build": "npm install",
     "lint": "./node_modules/.bin/standard",
-    "test": "./node_modules/.bin/truffle test --ENV=TEST"
+    "test": "./node_modules/.bin/truffle test --ENV=TEST",
+    "docs": "./node_modules/jsdoc/jsdoc.js -c jsdoc.json"
   },
   "author": "LiorRabin",
   "license": "MIT",
@@ -32,6 +33,7 @@
   "devDependencies": {
     "bluebird": "~3.5.2",
     "ganache-cli": "~6.1.8",
+    "jsdoc": "^3.5.5",
     "standard": "~11.0.1",
     "truffle": "~4.1.14"
   },
