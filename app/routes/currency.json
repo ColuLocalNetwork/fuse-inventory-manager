@@ -3,14 +3,31 @@
     "POST": {
       "route": "create",
       "validators": {
-        "params": {
+        "body": {
+          "cln": {
+            "optional": true
+          },
           "currencyAddress": {
             "notEmpty": true,
             "errorMessage": "is missing"
           },
           "marketMakerAddress": {
+            "optional": true
+          },
+          "creationTransactionHash": {
             "notEmpty": true,
             "errorMessage": "is missing"
+          },
+          "creationBlockHash": {
+            "notEmpty": true,
+            "errorMessage": "is missing"
+          },
+          "creationBlockNumber": {
+            "notEmpty": true,
+            "errorMessage": "is missing"
+          },
+          "externalId": {
+            "optional": true
           }
         }
       }
