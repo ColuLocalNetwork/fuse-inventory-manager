@@ -1,7 +1,25 @@
 {
   "/community": {
     "POST": {
-      "route": "create"
+      "route": "create",
+      "validators": {
+        "body": {
+          "name": {
+            "notEmpty": true,
+            "errorMessage": "is missing"
+          },
+          "defaultCurrency": {
+            "notEmpty": true,
+            "errorMessage": "is missing"
+          },
+          "externalId": {
+            "optional": true
+          },
+          "wallets": {
+            "optional": true
+          }
+        }
+      }
     }
   },
   "/community/id/:id": {

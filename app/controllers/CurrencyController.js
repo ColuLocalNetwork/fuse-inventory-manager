@@ -6,7 +6,7 @@ module.exports = (osseus) => {
     if (data.creationTransactionHash) result['currencyBlockchainInfo.transactionHash'] = data.creationTransactionHash
     if (data.creationBlockHash) result['currencyBlockchainInfo.blockHash'] = data.creationBlockHash
     if (data.creationBlockNumber) result['currencyBlockchainInfo.blockNumber'] = data.creationBlockNumber
-    if (data.externalId) result.exid = data['externalId']
+    if (data.externalId) result['exid'] = data.externalId
     return result
   }
   return {

@@ -24,10 +24,15 @@ module.exports = (osseus) => {
         updatedAt: ret.updated_at,
         name: ret.name,
         wallets: ret.wallets,
-        // mnemonic: ret.mnemonic,
-        // uuid: ret.uuid,
         defaultCurrency: ret.defaultCurrency,
-        exid: ret.exit
+        exid: ret.exid
+      }
+      if (options.onCreate) {
+        safeRet.mnemonic = ret.mnemonic
+        safeRet.uuid = ret.uuid
+        ret.wallets.map(wallet => {
+          delete wallet.balances
+        })
       }
       return safeRet
     }
@@ -69,7 +74,7 @@ module.exports = (osseus) => {
 
   community.getById = (id) => {
     return new Promise((resolve, reject) => {
-      Community.findById(id, (err, doc) => {
+      Community.findById(id).populate('wallets').exec((err, doc) => {
         if (err) {
           return reject(err)
         }
