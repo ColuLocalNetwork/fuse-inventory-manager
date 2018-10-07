@@ -39,6 +39,7 @@
   },
   "standard": {
     "ignore": [
+      "/apidocs/*",
       "/migrations/*",
       "/test/*"
     ]

@@ -55,6 +55,9 @@ module.exports = (osseus) => {
         if (err) {
           return reject(err)
         }
+        if (!updatedObj) {
+          return reject(new Error(`Transmit not found for id ${id}`))
+        }
         resolve(updatedObj)
       })
     })

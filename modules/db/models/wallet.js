@@ -95,6 +95,9 @@ module.exports = (osseus) => {
         if (err) {
           return reject(err)
         }
+        if (!updatedObj) {
+          return reject(new Error(`Wallet not found for condition: ${JSON.stringify(condition)}`))
+        }
         resolve(updatedObj)
       })
     })
