@@ -1,7 +1,7 @@
 {
   "name": "inventory-manager",
   "version": "1.0.0",
-  "description": "Inventory Manager",
+  "description": "The inventory manager is a server implementation for community currency issuers",
   "main": "index.js",
   "scripts": {
     "start": "node index.js",
