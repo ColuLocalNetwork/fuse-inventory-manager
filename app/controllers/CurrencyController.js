@@ -1,5 +1,38 @@
 module.exports = (osseus) => {
   return {
+    /**
+     * @apiDefine CurrencySuccess
+     * @apiSuccess {String} id
+     * @apiSuccess {String} createdAt
+     * @apiSuccess {String} updatedAt
+     * @apiSuccess {String} currencyType
+     * @apiSuccess {String} currencyAddress
+     * @apiSuccess {String} [marketMakerAddress]
+     * @apiSuccess {String} currencyABI
+     * @apiSuccess {String} [marketMakerABI]
+     * @apiSuccess {Object} currencyBlockchainInfo
+     * @apiSuccess {String} currencyBlockchainInfo.id
+     * @apiSuccess {String} currencyBlockchainInfo.blockHash
+     * @apiSuccess {Number} currencyBlockchainInfo.blockNumber
+     * @apiSuccess {String} currencyBlockchainInfo.transactionHash
+     */
+
+    /**
+     * @api {post} /api/currency/ Create
+     * @apiName PostCurrency
+     * @apiGroup Currency
+     * @apiVersion 1.0.0
+     *
+     * @apiParam {Boolean} [cln] indicator whether creating a CLN currency.
+     * @apiParam {String} currencyAddress currency contract address.
+     * @apiParam {String} [marketMakerAddress] market maker contract address (Mandatory if creating a CC).
+     * @apiParam {String} creationTransactionHash transaction hash of currency contract creation.
+     * @apiParam {String} creationBlockHash block hash of currency contract creation.
+     * @apiParam {Number} creationBlockNumber block number of currency contract creation.
+     * @apiParam {String} [externalId] external id of the currency on the requester system.
+     *
+     * @apiUse CurrencySuccess
+     */
     create: async (req, res, next) => {
       if (!osseus.web3.utils.isAddress(req.body.currencyAddress)) {
         return next(`Invalid currencyAddress: ${req.body.currencyAddress}`)

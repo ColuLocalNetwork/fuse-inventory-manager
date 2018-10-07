@@ -9,7 +9,7 @@
     "build": "npm install",
     "lint": "./node_modules/.bin/standard",
     "test": "./node_modules/.bin/truffle test --ENV=TEST",
-    "docs": "./node_modules/jsdoc/jsdoc.js -c jsdoc.json"
+    "apidocs": "node_modules/apidoc/bin/apidoc -i app/ -o apidocs/"
   },
   "author": "LiorRabin",
   "license": "MIT",
@@ -31,9 +31,9 @@
     "web3-eth-abi": "~1.0.0-beta.36"
   },
   "devDependencies": {
+    "apidoc": "^0.17.6",
     "bluebird": "~3.5.2",
     "ganache-cli": "~6.1.8",
-    "jsdoc": "^3.5.5",
     "standard": "~11.0.1",
     "truffle": "~4.1.14"
   },
@@ -42,5 +42,8 @@
       "/migrations/*",
       "/test/*"
     ]
+  },
+  "apidoc": {
+    "title": "Inventory Manager API"
   }
 }
