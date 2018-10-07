@@ -14,7 +14,7 @@ module.exports = (osseus) => {
   }
 
   community.getProvider = (community) => {
-    return getProvider(community)
+    return getProvider(community, community.wallets.length)
   }
 
   community.create = (name, defaultCurrency, externalId, wallets) => {
