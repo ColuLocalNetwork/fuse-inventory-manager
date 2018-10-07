@@ -9,7 +9,7 @@
     "build": "npm install",
     "lint": "./node_modules/.bin/standard",
     "test": "./node_modules/.bin/truffle test --ENV=TEST",
-    "apidocs": "node_modules/apidoc/bin/apidoc -i app/ -o apidocs/"
+    "apidocs": "node_modules/apidoc/bin/apidoc -i app/ -o docs/"
   },
   "author": "LiorRabin",
   "license": "MIT",
