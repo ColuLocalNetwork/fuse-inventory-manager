@@ -74,6 +74,20 @@ module.exports = (osseus) => {
 
   community.getById = (id) => {
     return new Promise((resolve, reject) => {
+      Community.findById(id, (err, doc) => {
+        if (err) {
+          return reject(err)
+        }
+        if (!doc) {
+          return reject(new Error(`Community not found for id ${id}`))
+        }
+        resolve(doc)
+      })
+    })
+  }
+
+  community.getByIdPopulated = (id) => {
+    return new Promise((resolve, reject) => {
       Community.findById(id).populate('wallets').exec((err, doc) => {
         if (err) {
           return reject(err)
@@ -121,6 +135,18 @@ module.exports = (osseus) => {
   }
 
   community.getAll = () => {
+    return new Promise((resolve, reject) => {
+      Community.find({}, (err, docs) => {
+        if (err) {
+          return reject(err)
+        }
+        docs = docs || []
+        resolve(docs)
+      })
+    })
+  }
+
+  community.getAllPopulated = () => {
     return new Promise((resolve, reject) => {
       Community.find({}).populate('wallets').exec((err, docs) => {
         if (err) {

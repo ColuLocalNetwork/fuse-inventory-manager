@@ -148,23 +148,7 @@ module.exports = (osseus) => {
      * @apiSuccess {String} createdAt community creation time.
      * @apiSuccess {String} updatedAt community last update time.
      * @apiSuccess {String} name community name.
-     * @apiSuccess {Wallet[]} wallets array of community wallets.
-     * @apiSuccess {String} wallet.id wallet unique id.
-     * @apiSuccess {String} wallet.createdAt wallet creation time.
-     * @apiSuccess {String} wallet.updatedAt wallet last update time.
-     * @apiSuccess {String} wallet.type wallet type (one of the defaults - "manager", "users", "merchants" or custome defined).
-     * @apiSuccess {String} [wallet.exid] wallet external id (defined by the creator).
-     * @apiSuccess {String} wallet.address wallet account address on the blockchain.
-     * @apiSuccess {Number} wallet.index wallet index the wallet is managed at by the provider.
-     * @apiSuccess {Balance[]} wallet.balances array of balances per currency for wallet
-     * @apiSuccess {String} wallet.balances.id balance unique id
-     * @apiSuccess {String} wallet.balances.createdAt balance creation time
-     * @apiSuccess {String} wallet.balances.updatedAt balance last update time
-     * @apiSuccess {String} wallet.balances.currency balance currency
-     * @apiSuccess {Number} [wallet.balances.blockNumberOfLastUpdate] the block number of last update to balance.blockchainAmount
-     * @apiSuccess {String} wallet.balances.blockchainAmount the blockchain balance (as last synced on balance.blockNumberOfLastUpdate)
-     * @apiSuccess {String} wallet.balances.offchainAmount the offchain balance (updated each offchain transaction)
-     * @apiSuccess {String[]} wallet.balances.pendingTxs array of pending offchain transactions (should be empty if all is working)
+     * @apiSuccess {Wallet[]} wallets array of community wallet unique ids.
      * @apiSuccess {String} defaultCurrency default community currency id.
      * @apiSuccess {String} [exid] external id of the community (defined by who ever created it).
 
@@ -176,64 +160,9 @@ module.exports = (osseus) => {
      *     "updatedAt": "2018-10-07T11:03:29.194Z",
      *     "name": "Community #1",
      *     "wallets": [
-     *         {
-     *             "id": "5bb9e8014350ec77ce164b2f",
-     *             "createdAt": "2018-10-07T11:03:29.216Z",
-     *             "updatedAt": "2018-10-07T11:03:29.216Z",
-     *             "type": "manager",
-     *             "address": "0xe48bd0616ede00b700470faaf7f84262cebbee05",
-     *             "index": 0,
-     *             "balances": [
-     *                  {
-     *                      "id": "5b82a665be0e070b5495c069",
-     *                      "createdAt": "2018-08-26T13:08:53.971Z",
-     *                      "updatedAt": "2018-08-26T13:08:53.971Z",
-     *                      "currency": "5b82a5c8f765bb0a6beedaef",
-     *                      "blockNumberOfLastUpdate": 123456,
-     *                      "blockchainAmount": "6262376530689889138",
-     *                      "offchainAmount": "6262376530689889138",
-     *                      "pendingTxs": []
-     *                  }
-     *              ]
-     *         },
-     *         {
-     *             "id": "5bb9e8014350ec77ce164b31",
-     *             "createdAt": "2018-10-07T11:03:29.222Z",
-     *             "updatedAt": "2018-10-07T11:03:29.222Z",
-     *             "type": "users",
-     *             "address": "0x089cd4348742ba3445d2bb8243470feebbac6a40",
-     *             "index": 1,
-     *             "balances": [
-     *                  {
-     *                      "id": "5b82a665be0e070b5495c06b",
-     *                      "createdAt": "2018-08-26T13:08:53.984Z",
-     *                      "updatedAt": "2018-08-26T13:08:53.984Z",
-     *                      "currency": "5b82a5c8f765bb0a6beedaef",
-     *                      "blockchainAmount": "0",
-     *                      "offchainAmount": "0",
-     *                      "pendingTxs": []
-     *                  }
-     *              ]
-     *         },
-     *         {
-     *             "id": "5bb9e8014350ec77ce164b33",
-     *             "createdAt": "2018-10-07T11:03:29.226Z",
-     *             "updatedAt": "2018-10-07T11:03:29.226Z",
-     *             "type": "merchants",
-     *             "address": "0x99d0a5d79cdc761525ed3cd7187f305df0559ccb",
-     *             "index": 2,
-     *             "balances": [
-     *                  {
-     *                      "id": "5b82a665be0e070b5495c06d",
-     *                      "createdAt": "2018-08-26T13:08:53.989Z",
-     *                      "updatedAt": "2018-08-26T13:08:53.989Z",
-     *                      "currency": "5b82a5c8f765bb0a6beedaef",
-     *                      "blockchainAmount": "0",
-     *                      "offchainAmount": "0",
-     *                      "pendingTxs": []
-     *                  }
-     *              ]
-     *         }
+     *         "5bb9e8014350ec77ce164b2f",
+     *         "5bb9e8014350ec77ce164b31",
+     *         "5bb9e8014350ec77ce164b33"
      *     ],
      *     "defaultCurrency": "5bb9bff7e50dea460c5f8eac"
      *  }
