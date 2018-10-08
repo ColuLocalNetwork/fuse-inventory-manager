@@ -18,6 +18,5 @@ module.exports = {
   WEB3_PROVIDER_WS: 'wss://ropsten.infura.io/ws/',
   SECRET: 'thisissomekindofsecret',
   CLN_ADDRESS: '0x41C9d91E96b933b74ae21bCBb617369CBE022530',
-  BLOCKS_TO_FINALIZE_BCTX: 20,
-  NO_LISTENERS: true
+  BLOCKS_TO_FINALIZE_BCTX: 20
 }

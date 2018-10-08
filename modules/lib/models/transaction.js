@@ -190,7 +190,7 @@ module.exports = (osseus) => {
     })
   }
 
-  transaction.transfer = (from, to, amount) => {
+  transaction.transfer = (from, to, amount, extra) => {
     return new Promise(async (resolve, reject) => {
       try {
         from = await validateParticipant(from)
@@ -206,6 +206,7 @@ module.exports = (osseus) => {
           context: 'transfer',
           transmit: transmit.id
         }
+        Object.assign(data, extra)
         const newTx = await osseus.db_models.tx.create(data)
 
         await osseus.db_models.transmit.addOffchainTransaction(transmit.id, newTx.id)

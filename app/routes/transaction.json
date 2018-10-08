@@ -1,3 +1,40 @@
 {
-
+  "/transaction/transfer": {
+    "POST": {
+      "route": "transfer",
+      "validators": {
+        "body": {
+          "fromAddress": {
+            "notEmpty": true,
+            "errorMessage": "is missing"
+          },
+          "toAddress": {
+            "notEmpty": true,
+            "errorMessage": "is missing"
+          },
+          "currencyAddress": {
+            "notEmpty": true,
+            "errorMessage": "is missing"
+          },
+          "amount": {
+            "notEmpty": true,
+            "errorMessage": "is missing"
+          }
+        }
+      }
+    }
+  },
+  "/transaction/revert/id/:id": {
+    "POST": {
+      "route": "revert",
+      "validators": {
+        "params": {
+          "id": {
+            "notEmpty": true,
+            "errorMessage": "is missing"
+          }
+        }
+      }
+    }
+  }
 }
