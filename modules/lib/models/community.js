@@ -82,12 +82,14 @@ module.exports = (osseus) => {
   community.get = (id, community) => {
     return new Promise(async (resolve, reject) => {
       try {
-        if (!community) {
-          community = await osseus.db_models.community.getByIdPopulated(id)
-        }
+        community = community || await osseus.db_models.community.getByIdPopulated(id)
         const provider = getProvider(community, community.wallets.length)
-        community.currencyContracts = await osseus.lib.Currency.getContractsForCC(community.defaultCurrency, provider)
-        resolve(community)
+        const currencyContracts = await osseus.lib.Currency.getContractsForCC(community.defaultCurrency, provider)
+        resolve({
+          community: community,
+          provider: provider,
+          currencyContracts: currencyContracts
+        })
       } catch (err) {
         reject(err)
       }

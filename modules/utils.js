@@ -12,12 +12,12 @@ const getCurrencyFromToken = (token, community) => {
         result.web3 = currency.contracts.web3
       } else {
         this.osseus.logger.silly(`getCurrencyFromToken --> CC: ${token}`)
-        const communityWithContracts = await this.osseus.lib.Community.get(community.id, community)
-        if (communityWithContracts.currencyContracts.cc.address !== token) {
+        const communityData = await this.osseus.lib.Community.get(community.id, community)
+        if (communityData.currencyContracts.cc.address !== token) {
           return reject(new Error(`Unrecognized token: ${token} for community: ${community.id}`))
         }
-        result.contract = communityWithContracts.currencyContracts.cc
-        result.web3 = communityWithContracts.currencyContracts.web3
+        result.contract = communityData.currencyContracts.cc
+        result.web3 = communityData.currencyContracts.web3
       }
       resolve(result)
     } catch (err) {

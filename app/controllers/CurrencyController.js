@@ -9,6 +9,7 @@ module.exports = (osseus) => {
     if (data.externalId) result['exid'] = data.externalId
     return result
   }
+
   return {
     /**
      * @apiDefine CurrencyResponse
@@ -48,7 +49,7 @@ module.exports = (osseus) => {
 
     /**
      * @api {post} /api/currency/ Create
-     * @apiName PostCurrency
+     * @apiName CreateCurrency
      * @apiGroup Currency
      * @apiVersion 1.0.0
      *

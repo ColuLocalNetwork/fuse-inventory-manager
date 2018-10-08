@@ -11,7 +11,7 @@ module.exports = (osseus) => {
 
     /**
      * @api {post} /api/community/ Create
-     * @apiName PostCommunity
+     * @apiName CreateCommunity
      * @apiGroup Community
      * @apiVersion 1.0.0
      *

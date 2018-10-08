@@ -1,7 +1,22 @@
 {
   "/wallet": {
     "POST": {
-      "route": "create"
+      "route": "create",
+      "validators": {
+        "body": {
+          "communityId": {
+            "notEmpty": true,
+            "errorMessage": "is missing"
+          },
+          "type": {
+            "notEmpty": true,
+            "errorMessage": "is missing"
+          },
+          "externalId": {
+            "optional": true
+          }
+        }
+      }
     }
   },
   "/wallet/id/:id": {
