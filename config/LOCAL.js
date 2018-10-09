@@ -17,7 +17,7 @@ module.exports = {
   OSSEUS_MONGO_URI: 'mongodb://localhost/inventory-manager',
   WEB3_PROVIDER: 'https://ropsten.infura.io',
   WEB3_PROVIDER_WS: 'wss://ropsten.infura.io/ws/',
-  SECRET: 'thisissomekindofsecret',
+  SECRET: 'e4365c30-ec9f-459a-8a8e-55d3818c6134kNJYzFQ1jB97WXAn',
   CLN_ADDRESS: '0x41C9d91E96b933b74ae21bCBb617369CBE022530',
   BLOCKS_TO_FINALIZE_BCTX: 20
 }

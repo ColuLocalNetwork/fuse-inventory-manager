@@ -16,6 +16,6 @@ module.exports = {
   OSSEUS_MONGO_DEPENDENCIES: ['logger'],
   OSSEUS_MONGO_URI: 'mongodb://localhost/inventory-manager-tests',
   WEB3_PROVIDER: 'http://127.0.0.1:7545',
-  SECRET: 'thisissomekindofsecret',
+  SECRET: '46fffed0-d51f-4c54-9096-e9e95e3643fbthisissomekindofsecret',
   BLOCKS_TO_FINALIZE_BCTX: 20
 }
