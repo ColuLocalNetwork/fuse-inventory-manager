@@ -6,6 +6,8 @@ module.exports = (osseus) => {
      * @apiGroup Transaction
      * @apiVersion 1.0.0
      *
+     * @apiDescription Transfer between addresses offchain
+     *
      * @apiParam {String} fromAddress account address to transfer from
      * @apiParam {String} toAddress account address to transfer to
      * @apiParam {String} currencyAddress currency contract address to transfer
@@ -205,6 +207,56 @@ module.exports = (osseus) => {
       osseus.db_models.bctx.getById(req.params.id)
         .then(bctx => { res.send(bctx) })
         .catch(err => { next(err) })
+    },
+
+    /**
+     * @api {post} /transaction/transmit Transmit
+     * @apiName Transmit
+     * @apiGroup Transaction
+     * @apiVersion 1.0.0
+     *
+     * @apiDescription Aggregate offchain transactions and transmit to blockchain
+     *
+     * @apiParam {String} [currencyId] currency id to filter transactions transmitted to the blockchain
+     *
+     * @apiSuccess {Object[]} results array of currency and transmit pairs
+     * @apiSuccess {String} results.currency currency id
+     * @apiSuccess {String} results.transmit transmit id
+     *
+     * @apiSuccessExample Success Example
+     *     HTTP/1.1 200 OK
+     *     {
+     *      "results": [
+     *       {
+     *        "currency": "gT0Ut9GT0W6WSHjR0MlWIxYpd81383",
+     *        "transmit": "LFt0hzkdD4uNbq2A1BkeSaJrudvBHA"
+     *       },
+     *       {
+     *        "currency": "KKVp3mWqLs5R6dsqAwgT0Ut9GT0W6WS",
+     *        "transmit": "yF2cN6xfbZQm1b8DHj8EYJ5yl6Rjd99"
+     *       }
+     *      ]
+     *     }
+     *
+     * @apiErrorExample Error Example
+     *     HTTP/1.1 500 Internal Server Error
+     *     {
+     *       "error": "The error description"
+     *     }
+     */
+    transmit: async (req, res, next) => {
+      let opts = req.body.currencyId ? {filters: {currency: req.body.currencyId}} : {}
+      let results = await osseus.lib.Transaction.transmit(opts).catch(err => { return next(err) })
+      if (!results || results.length === 0) {
+        return next(`Nothing to transmit`)
+      }
+      results = results.map(res => {
+        return {
+          currency: res.transmit.currency.toString(),
+          transmit: res.transmit.id.toString()
+        }
+      })
+      res.send({result: results})
     },
 
     /**
