@@ -182,7 +182,7 @@ contract('TRANSACTION', async (accounts) => {
       let amount = 10 * TOKEN_DECIMALS
       let from = {accountAddress: managerAccountAddress, currency: currencyAddress}
       let to = {accountAddress: usersAccountAddress, currency: currencyAddress}
-      
+
       let tx1 = await osseus.lib.Transaction.transfer(from, to, amount)
       from.currency = currency.id
       to.currency = currency.id

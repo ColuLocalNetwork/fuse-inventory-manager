@@ -256,7 +256,7 @@ module.exports = (osseus) => {
           transmit && tasks.push(new Promise(async (resolve, reject) => {
             const transactions = await getTransactionsToTransmit(transmit.offchainTransactions)
             if (!transactions || transactions.length === 0) {
-              return resolve({})
+              return resolve()
             }
             const txids = transactions.map(transaction => transaction._id.toString())
             const bctxs = await prepareTransactionsToBeTransmitted(transactions, opts.bc)
@@ -266,7 +266,7 @@ module.exports = (osseus) => {
         })
 
         let results = await Promise.all(tasks, task => { return task })
-        results = results.filter(res => Object.keys(res) > 0)
+        results = results.filter(res => res)
         osseus.logger.debug(`results: ${JSON.stringify(results)}`)
 
         resolve(results)

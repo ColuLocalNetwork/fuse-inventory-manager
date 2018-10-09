@@ -133,6 +133,7 @@ module.exports = (osseus) => {
         if (err) {
           return reject(err)
         }
+        blockNumber = blockNumber || 0
         condition = {
           'address': address,
           'balances.currency': currencyId,
