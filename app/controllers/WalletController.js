@@ -9,7 +9,7 @@ module.exports = (osseus) => {
      * @apiSuccess {String} address wallet account address on the blockchain.
      * @apiSuccess {Number} index wallet index the wallet is managed at by the provider.
      * @apiSuccess {String} [exid] wallet external id (defined by the creator).
-     * @apiSuccess {Balance[]} balances array of balances per currency for wallet
+     * @apiSuccess {Object[]} balances array of balances per currency for wallet
      * @apiSuccess {String} balances.id balance unique id
      * @apiSuccess {String} balances.createdAt balance creation time
      * @apiSuccess {String} balances.updatedAt balance last update time

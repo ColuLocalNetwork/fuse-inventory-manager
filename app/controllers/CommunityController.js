@@ -26,7 +26,7 @@ module.exports = (osseus) => {
      * @apiSuccess {String} createdAt community creation time.
      * @apiSuccess {String} updatedAt community last update time.
      * @apiSuccess {String} name community name.
-     * @apiSuccess {Wallet[]} wallets array of community wallets.
+     * @apiSuccess {Object[]} wallets array of community wallets.
      * @apiSuccess {String} wallet.id wallet unique id.
      * @apiSuccess {String} wallet.createdAt wallet creation time.
      * @apiSuccess {String} wallet.updatedAt wallet last update time.
@@ -99,7 +99,7 @@ module.exports = (osseus) => {
      * @apiSuccess {String} createdAt community creation time.
      * @apiSuccess {String} updatedAt community last update time.
      * @apiSuccess {String} name community name.
-     * @apiSuccess {Wallet[]} wallets array of community wallet unique ids.
+     * @apiSuccess {Object[]} wallets array of community wallet unique ids.
      * @apiSuccess {String} defaultCurrency default community currency id.
      * @apiSuccess {String} [exid] external id of the community (defined by who ever created it).
 
@@ -148,7 +148,7 @@ module.exports = (osseus) => {
      * @apiSuccess {String} createdAt community creation time.
      * @apiSuccess {String} updatedAt community last update time.
      * @apiSuccess {String} name community name.
-     * @apiSuccess {Wallet[]} wallets array of community wallet unique ids.
+     * @apiSuccess {Object[]} wallets array of community wallet unique ids.
      * @apiSuccess {String} defaultCurrency default community currency id.
      * @apiSuccess {String} [exid] external id of the community (defined by who ever created it).
 

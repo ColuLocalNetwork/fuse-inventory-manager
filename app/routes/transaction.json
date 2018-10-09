@@ -36,5 +36,53 @@
         }
       }
     }
+  },
+  "/transaction/id/:id": {
+    "GET": {
+      "route": "getTransactionById",
+      "validators": {
+        "params": {
+          "id": {
+            "optional": true
+          }
+        }
+      }
+    }
+  },
+  "/transaction/bc/id/:id": {
+    "GET": {
+      "route": "getBlockchainTransactionById",
+      "validators": {
+        "params": {
+          "id": {
+            "optional": true
+          }
+        }
+      }
+    }
+  },
+  "/transaction/transmit": {
+    "POST": {
+      "route": "transmit",
+      "validators": {
+        "body": {
+          "currencyId": {
+            "optional": true
+          }
+        }
+      }
+    }
+  },
+  "/transaction/transmit/id/:id": {
+    "GET": {
+      "route": "getTransmitById",
+      "validators": {
+        "params": {
+          "id": {
+            "optional": true
+          }
+        }
+      }
+    }
   }
 }
