@@ -38,14 +38,18 @@ module.exports = (osseus) => {
         const update = {
           $set: data,
           $setOnInsert: {
+            created_at: new Date(),
+            updated_at: new Date(),
             known: false
           }
         }
-        const tx = await osseus.db_models.bctx.update({hash: data.transactionHash}, update)
-        osseus.logger.debug(`Updated blockchain transaction: ${JSON.stringify(tx)}`)
+        const bctx = await osseus.db_models.bctx.update({hash: data.transactionHash}, update)
+        osseus.logger.debug(`Updated blockchain transaction: ${JSON.stringify(bctx)}`)
 
-        await osseus.utils.updateBlockchainBalance(from, token)
-        await osseus.utils.updateBlockchainBalance(to, token)
+        const updatedBlockchainBalanceResult = {}
+        updatedBlockchainBalanceResult.from = await osseus.utils.updateBlockchainBalance(from, token)
+        updatedBlockchainBalanceResult.to = await osseus.utils.updateBlockchainBalance(to, token)
+        osseus.logger.debug(`Updated blockchain balances: ${JSON.stringify(updatedBlockchainBalanceResult)}`)
       }
 
       resolve()
@@ -56,7 +60,7 @@ module.exports = (osseus) => {
     if (!pastEvents || pastEvents.length === 0) {
       return
     }
-    osseus.logger.debug(`Transfer events listener - handlePastEvents ${JSON.stringify(pastEvents)}`)
+    osseus.logger.silly(`Transfer events listener - handlePastEvents ${JSON.stringify(pastEvents)}`)
     pastEvents.forEach(event => {
       onEvent(null, event)
     })

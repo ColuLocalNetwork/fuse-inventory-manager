@@ -117,9 +117,12 @@ module.exports = (osseus) => {
       const update = {
         '$push': {
           'balances': {
+            'created_at': new Date(),
+            'updated_at': new Date(),
             'currency': participant.currency,
             'offchainAmount': 0,
             'blockchainAmount': 0,
+            'blockNumberOfLastUpdate': 0,
             'pendingTxs': []
           }
         }

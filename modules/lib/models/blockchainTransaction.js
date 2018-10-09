@@ -77,6 +77,8 @@ module.exports = (osseus) => {
           const update = {
             $set: tx,
             $setOnInsert: {
+              created_at: new Date(),
+              updated_at: new Date(),
               state: 'TRANSMITTED'
             }
           }
@@ -166,8 +168,8 @@ module.exports = (osseus) => {
         const transactions = await osseus.db_models.bctx.get(filters, projection, limit, sort)
         osseus.logger.debug(`got ${transactions.length} transactions`)
 
-        const latestBlock = await osseus.web3.eth.getBlock('latest')
-        osseus.logger.debug(`latestBlock.number: ${latestBlock.number}`)
+        const currentBlock = await osseus.web3.eth.getBlockNumber()
+        osseus.logger.debug(`currentBlock: ${currentBlock}`)
 
         transactions && async.map(transactions, (transaction, done) => {
           osseus.web3.eth.getTransaction(transaction.hash, async (err, tx) => {
@@ -183,7 +185,7 @@ module.exports = (osseus) => {
             let newState
             if (tx.blockNumber) {
               newState = 'CONFIRMED'
-              if (latestBlock.number - tx.blockNumber >= osseus.config.blocks_to_finalize_bctx) {
+              if (currentBlock - tx.blockNumber >= osseus.config.blocks_to_finalize_bctx) {
                 newState = 'FINALIZED'
               }
             }

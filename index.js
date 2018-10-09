@@ -9,7 +9,7 @@ const main = async () => {
 
     if (osseus.config.debug) console.time('INVENTORY MANAGER')
 
-    osseus.web3 = new Web3(new Web3.providers.WebsocketProvider(osseus.config.web3_provider))
+    osseus.web3 = new Web3(new Web3.providers.HttpProvider(osseus.config.web3_provider))
     osseus.web3WS = new Web3(new Web3.providers.WebsocketProvider(osseus.config.web3_provider_ws))
 
     osseus.abi = {
