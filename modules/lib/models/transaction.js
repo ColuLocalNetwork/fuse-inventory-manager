@@ -253,7 +253,7 @@ module.exports = (osseus) => {
         const tasks = []
         transmits.forEach(transmit => {
           osseus.logger.debug(`transmit: ${JSON.stringify(transmit)}`)
-          tasks.push(new Promise(async (resolve, reject) => {
+          transmit && tasks.push(new Promise(async (resolve, reject) => {
             const transactions = await getTransactionsToTransmit(transmit.offchainTransactions)
             if (!transactions || transactions.length === 0) {
               return resolve({})
