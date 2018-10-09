@@ -139,77 +139,6 @@ module.exports = (osseus) => {
     },
 
     /**
-     * @api {get} /transaction/bc/id/:id Get BC transaction by id
-     * @apiName GetBlockchainTransactionById
-     * @apiGroup Transaction
-     * @apiVersion 1.0.0
-     *
-     * @apiParam {String} id blockchain transaction id.
-     *
-     * @apiSuccess {String} id blockchain transaction unique id
-     * @apiSuccess {String} createdAt transaction creation time
-     * @apiSuccess {String} updatedAt transaction last update time
-     * @apiSuccess {String} blockHash block hash of transaction creation
-     * @apiSuccess {Number} blockNumber block number of transaction creation
-     * @apiSuccess {String} from sending ethereum address
-     * @apiSuccess {String} gas gas used by the transaction
-     * @apiSuccess {String} gasPrice gas price for the transaction
-     * @apiSuccess {String} hash transaction unique hash
-     * @apiSuccess {String} input tranasction encoded input data
-     * @apiSuccess {Number} nonce transaction sequence number from the sending account
-     * @apiSuccess {String} to receiving ethereum address
-     * @apiSuccess {Number} transactionIndex transaction index in the block
-     * @apiSuccess {String} value amount of ether sent in the transaction
-     * @apiSuccess {String} type transaction type ['TRANSFER', 'CHANGE', 'DEPOSIT']
-     * @apiSuccess {Object} meta transaction metadata
-     * @apiSuccess {String} meta.from sender ethereum address (internal transaction)
-     * @apiSuccess {String} meta.to receiver ethereum address (internal transaction)
-     * @apiSuccess {String} meta.token currency contract address (internal transaction)
-     * @apiSuccess {String} meta.amount currency amount transfered (internal transaction)
-     * @apiSuccess {String} state transaction state ['TRANSMITTED', 'CONFIRMED', 'FINALIZED']
-     * @apiSuccess {Boolean} known is the transaction known by the inventory manager service
-     *
-     * @apiSuccessExample Success Example
-     *     HTTP/1.1 200 OK
-     *     {
-     *         "id": "5bbca8b7876b5f2693e8336c",
-     *         "createdAt": "2018-10-09T13:10:15.466Z",
-     *         "updatedAt": "2018-10-09T13:10:15.466Z",
-     *         "blockHash": "0xf5c8668b80a8ff35a6685746ca536d76186b00b8b5348d6f80c6670a4f558a35",
-     *         "blockNumber": 4199567,
-     *         "from": "0xB8Ce4A040E8aA33bBe2dE62E92851b7D7aFd52De",
-     *         "gas": "77806",
-     *         "gasPrice": "1000000000",
-     *         "hash": "0x5f19fbbc31a8f732bd71e73e59b5bb6be400da75a8b794827486e790d2a4f31d",
-     *         "input": "0xa9059cbb000000000000000000000000d315d4762109b53acb9c7ce9c2ad9a39bbe6569e0000000000000000000000000000000000000000000000056bc75e2d63100000",
-     *         "nonce": 7,
-     *         "to": "0x24a85B72700cEc4cF1912ADCEBdB9E8f60BdAb91",
-     *         "transactionIndex": 12,
-     *         "value": "0",
-     *         "type": "DEPOSIT",
-     *         "meta": {
-     *             "from": "0xB8Ce4A040E8aA33bBe2dE62E92851b7D7aFd52De",
-     *             "to": "0xD315d4762109B53Acb9C7CE9c2AD9A39bbe6569E",
-     *             "token": "0x24a85b72700cec4cf1912adcebdb9e8f60bdab91",
-     *             "amount": "100000000000000000000"
-     *         },
-     *         "state": "CONFIRMED",
-     *         "known": true
-     *     }
-     *
-     * @apiErrorExample Error Example
-     *     HTTP/1.1 500 Internal Server Error
-     *     {
-     *       "error": "The error description"
-     *     }
-     */
-    getBlockchainTransactionById: async (req, res, next) => {
-      osseus.db_models.bctx.getById(req.params.id)
-        .then(bctx => { res.send(bctx) })
-        .catch(err => { next(err) })
-    },
-
-    /**
      * @api {post} /transaction/transmit Transmit
      * @apiName Transmit
      * @apiGroup Transaction
@@ -300,6 +229,109 @@ module.exports = (osseus) => {
     getTransmitById: async (req, res, next) => {
       osseus.db_models.transmit.getById(req.params.id)
         .then(transmit => { res.send(transmit) })
+        .catch(err => { next(err) })
+    },
+
+    /**
+     * @api {get} /transaction/bc/id/:id Get BC transaction by id
+     * @apiName GetBlockchainTransactionById
+     * @apiGroup Transaction
+     * @apiVersion 1.0.0
+     *
+     * @apiParam {String} id blockchain transaction id.
+     *
+     * @apiSuccess {String} id blockchain transaction unique id
+     * @apiSuccess {String} createdAt transaction creation time
+     * @apiSuccess {String} updatedAt transaction last update time
+     * @apiSuccess {String} blockHash block hash of transaction creation
+     * @apiSuccess {Number} blockNumber block number of transaction creation
+     * @apiSuccess {String} from sending ethereum address
+     * @apiSuccess {String} gas gas used by the transaction
+     * @apiSuccess {String} gasPrice gas price for the transaction
+     * @apiSuccess {String} hash transaction unique hash
+     * @apiSuccess {String} input tranasction encoded input data
+     * @apiSuccess {Number} nonce transaction sequence number from the sending account
+     * @apiSuccess {String} to receiving ethereum address
+     * @apiSuccess {Number} transactionIndex transaction index in the block
+     * @apiSuccess {String} value amount of ether sent in the transaction
+     * @apiSuccess {String} type transaction type ['TRANSFER', 'CHANGE', 'DEPOSIT']
+     * @apiSuccess {Object} meta transaction metadata
+     * @apiSuccess {String} meta.from sender ethereum address (internal transaction)
+     * @apiSuccess {String} meta.to receiver ethereum address (internal transaction)
+     * @apiSuccess {String} meta.token currency contract address (internal transaction)
+     * @apiSuccess {String} meta.amount currency amount transfered (internal transaction)
+     * @apiSuccess {String} state transaction state ['TRANSMITTED', 'CONFIRMED', 'FINALIZED']
+     * @apiSuccess {Boolean} known is the transaction known by the inventory manager service
+     *
+     * @apiSuccessExample Success Example
+     *     HTTP/1.1 200 OK
+     *     {
+     *         "id": "5bbca8b7876b5f2693e8336c",
+     *         "createdAt": "2018-10-09T13:10:15.466Z",
+     *         "updatedAt": "2018-10-09T13:10:15.466Z",
+     *         "blockHash": "0xf5c8668b80a8ff35a6685746ca536d76186b00b8b5348d6f80c6670a4f558a35",
+     *         "blockNumber": 4199567,
+     *         "from": "0xB8Ce4A040E8aA33bBe2dE62E92851b7D7aFd52De",
+     *         "gas": "77806",
+     *         "gasPrice": "1000000000",
+     *         "hash": "0x5f19fbbc31a8f732bd71e73e59b5bb6be400da75a8b794827486e790d2a4f31d",
+     *         "input": "0xa9059cbb000000000000000000000000d315d4762109b53acb9c7ce9c2ad9a39bbe6569e0000000000000000000000000000000000000000000000056bc75e2d63100000",
+     *         "nonce": 7,
+     *         "to": "0x24a85B72700cEc4cF1912ADCEBdB9E8f60BdAb91",
+     *         "transactionIndex": 12,
+     *         "value": "0",
+     *         "type": "DEPOSIT",
+     *         "meta": {
+     *             "from": "0xB8Ce4A040E8aA33bBe2dE62E92851b7D7aFd52De",
+     *             "to": "0xD315d4762109B53Acb9C7CE9c2AD9A39bbe6569E",
+     *             "token": "0x24a85b72700cec4cf1912adcebdb9e8f60bdab91",
+     *             "amount": "100000000000000000000"
+     *         },
+     *         "state": "CONFIRMED",
+     *         "known": true
+     *     }
+     *
+     * @apiErrorExample Error Example
+     *     HTTP/1.1 500 Internal Server Error
+     *     {
+     *       "error": "The error description"
+     *     }
+     */
+    getBlockchainTransactionById: async (req, res, next) => {
+      osseus.db_models.bctx.getById(req.params.id)
+        .then(bctx => { res.send(bctx) })
+        .catch(err => { next(err) })
+    },
+
+    /**
+     * @api {get} /transaction/bc/unknown Get unknown BC transactions
+     * @apiName getUnknownBlockchainTransactions
+     * @apiGroup Transaction
+     * @apiVersion 1.0.0
+     *
+     * @apiSuccess {String[]} ids array of blockchain transaction unique ids
+     *
+     * @apiSuccessExample Success Example
+     *     HTTP/1.1 200 OK
+     *     {
+     *         "ids": [
+     *             "5bbca8b7876b5f2693e8336c",
+     *             "5bbcb71d124d3c8f824a4e5f",
+     *             "5bbcb734124d3c8f824a4e7e",
+     *             "5bbcba87124d3c8f824a5002",
+     *             "5bbcba9e124d3c8f824a5020"
+     *         ]
+     *     }
+     *
+     * @apiErrorExample Error Example
+     *     HTTP/1.1 500 Internal Server Error
+     *     {
+     *       "error": "The error description"
+     *     }
+     */
+    getUnknownBlockchainTransactions: async (req, res, next) => {
+      osseus.db_models.bctx.get({known: true})
+        .then(bctxs => { bctxs = bctxs.map(bctx => bctx._id); res.send({ids: bctxs}) })
         .catch(err => { next(err) })
     }
   }

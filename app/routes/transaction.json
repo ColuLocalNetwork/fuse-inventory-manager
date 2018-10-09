@@ -49,18 +49,6 @@
       }
     }
   },
-  "/transaction/bc/id/:id": {
-    "GET": {
-      "route": "getBlockchainTransactionById",
-      "validators": {
-        "params": {
-          "id": {
-            "optional": true
-          }
-        }
-      }
-    }
-  },
   "/transaction/transmit": {
     "POST": {
       "route": "transmit",
@@ -83,6 +71,23 @@
           }
         }
       }
+    }
+  },
+  "/transaction/bc/id/:id": {
+    "GET": {
+      "route": "getBlockchainTransactionById",
+      "validators": {
+        "params": {
+          "id": {
+            "optional": true
+          }
+        }
+      }
+    }
+  },
+  "/transaction/bc/unknown": {
+    "GET": {
+      "route": "getUnknownBlockchainTransactions"
     }
   }
 }
