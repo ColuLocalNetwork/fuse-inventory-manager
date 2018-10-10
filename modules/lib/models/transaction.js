@@ -38,7 +38,7 @@ module.exports = (osseus) => {
         const results = await osseus.utils.validateAggregatedBalances()
         const invalid = results.filter(res => !res.valid)
         if (invalid.length > 0) {
-          // TODO here probably need to notify someone/somehow
+          // TODO NOTIFY
           return reject(new Error(`Invalid aggregated balances - ${JSON.stringify(invalid)}`))
         }
         resolve()

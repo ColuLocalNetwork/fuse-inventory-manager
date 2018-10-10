@@ -63,7 +63,9 @@ module.exports = (osseus) => {
      * @apiUse WalletResponse
      */
     create: async (req, res, next) => {
-      // TODO make sure that cannot create a `manager`
+      if (req.body.type === 'manager') {
+        return next(new Error(`Cannot create a "manager" wallet - it is created on community creation`))
+      }
       let communityData = await osseus.lib.Community.get(req.body.communityId)
 
       let address = communityData.provider.addAddress()
@@ -106,7 +108,6 @@ module.exports = (osseus) => {
      */
     edit: async (req, res, next) => {
       const allowedToEdit = ['type', 'externalId']
-      // TODO make sure that cannot edit to/from `manager` and leave community without one
       if (!req.body || !Object.keys(req.body) || !Object.keys(req.body).length) {
         return next(`Nothing to update`)
       }
@@ -154,7 +155,6 @@ module.exports = (osseus) => {
      * @apiUse CurrencyResponse
      */
     editByAddress: async (req, res, next) => {
-      // TODO make sure that cannot edit to/from `manager` and leave community without one
       const allowedToEdit = ['type', 'externalId']
       if (!req.body || !Object.keys(req.body) || !Object.keys(req.body).length) {
         return next(`Nothing to update`)

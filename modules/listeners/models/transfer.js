@@ -22,14 +22,14 @@ module.exports = (osseus) => {
 
       if (!knownTo) {
         osseus.logger.warn(`Transfer event to unknown address - from: ${from}, to: ${to}, amount: ${amount.toNumber()}`)
-        // TODO here probably need to notify someone/somehow
+        // TODO NOTIFY
       } else if (!knownFrom) {
         osseus.logger.info(`Transfer event from unknown address (deposit) - from: ${from}, to: ${to}, amount: ${amount.toNumber()}`)
         const bctx = await osseus.lib.BlockchainTransaction.deposit(data.transactionHash, from, to, token, amount)
         osseus.logger.info(`Created blockchain deposit transaction: ${JSON.stringify(bctx)}`)
         const tx = await osseus.lib.Transaction.deposit({accountAddress: to, currency: token}, amount, bctx.id)
         osseus.logger.info(`Created offchain deposit transaction: ${JSON.stringify(tx)}`)
-        // TODO here probably need to notify someone/somehow
+        // TODO NOTIFY
       } else {
         osseus.logger.info(`Transfer event with known addresses - from: ${from}, to: ${to}, amount: ${amount.toNumber()}`)
         data.type = 'TRANSFER'

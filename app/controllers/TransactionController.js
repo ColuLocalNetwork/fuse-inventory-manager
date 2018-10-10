@@ -38,7 +38,7 @@ module.exports = (osseus) => {
         req.body.amount
       ).catch(err => { return next(err) })
       if (tx.state !== 'DONE') {
-        return next(new Error(`There was an error trying to make the transfer`)) // TODO add the reason
+        return next(new Error(`There was an error trying to make the transfer`))
       }
       res.send({id: tx.id})
     },
@@ -81,7 +81,7 @@ module.exports = (osseus) => {
         {revert: tx.id}
       ).catch(err => { return next(err) })
       if (revertTx.state !== 'DONE') {
-        return next(new Error(`There was an error trying to revert`)) // TODO add the reason
+        return next(new Error(`There was an error trying to revert`))
       }
       res.send({id: revertTx.id})
     },
