@@ -49,6 +49,8 @@ module.exports = (osseus) => {
      * @apiGroup Transaction
      * @apiVersion 1.0.0
      *
+     * @apiDescription Revert a transaction (the server will create a reversed transaction)
+     *
      * @apiParam {String} id transaction to revert id
      *
      * @apiSuccess {String} id revert transaction id.
@@ -89,6 +91,8 @@ module.exports = (osseus) => {
      * @apiName GetTransactionById
      * @apiGroup Transaction
      * @apiVersion 1.0.0
+     *
+     * @apiDescription Get transaction by transaction id
      *
      * @apiParam {String} id transaction id.
      *
@@ -194,6 +198,8 @@ module.exports = (osseus) => {
      * @apiGroup Transaction
      * @apiVersion 1.0.0
      *
+     * @apiDescription Get transmit by transmit id
+     *
      * @apiParam {String} id transmit id.
      *
      * @apiSuccess {String} id transmit unique id
@@ -237,6 +243,8 @@ module.exports = (osseus) => {
      * @apiName GetBlockchainTransactionById
      * @apiGroup Transaction
      * @apiVersion 1.0.0
+     *
+     * @apiDescription Get blockchain transaction by blockchain transaction id
      *
      * @apiParam {String} id blockchain transaction id.
      *
@@ -309,6 +317,8 @@ module.exports = (osseus) => {
      * @apiGroup Transaction
      * @apiVersion 1.0.0
      *
+     * @apiDescription Get a list of unknown blockchain transactions
+     *
      * @apiSuccess {String[]} ids array of blockchain transaction unique ids
      *
      * @apiSuccessExample Success Example
@@ -331,6 +341,44 @@ module.exports = (osseus) => {
      */
     getUnknownBlockchainTransactions: async (req, res, next) => {
       osseus.db_models.bctx.get({known: true})
+        .then(bctxs => { bctxs = bctxs.map(bctx => bctx._id); res.send({ids: bctxs}) })
+        .catch(err => { next(err) })
+    },
+
+    /**
+     * @api {post} /transaction/bc/state Update BC transactions state
+     * @apiName updateBlockchainTransactionsState
+     * @apiGroup Transaction
+     * @apiVersion 1.0.0
+     *
+     * @apiDescription Update state of blockchain transactions to "CONFIRMED" (if mined into block) or "FINALIZED" according to the "BLOCKS_TO_FINALIZE_BCTX" config parameter
+     *
+     * @apiParam {String} [address] address (from/to) of blockchain transactions to filter by
+     * @apiParam {String} [type] type of blockchain transactions to filter by - ['TRANSFER', 'CHANGE', 'DEPOSIT']
+     * @apiParam {Number} [limit] number of blockchain transactions to check for state update (sorted by creation time)
+     *
+     * @apiSuccess {String[]} ids array of blockchain transaction unique ids
+     *
+     * @apiSuccessExample Success Example
+     *     HTTP/1.1 200 OK
+     *     {
+     *         "ids": [
+     *             "5bbca8b7876b5f2693e8336c",
+     *             "5bbcb71d124d3c8f824a4e5f",
+     *             "5bbcb734124d3c8f824a4e7e",
+     *             "5bbcba87124d3c8f824a5002",
+     *             "5bbcba9e124d3c8f824a5020"
+     *         ]
+     *     }
+     *
+     * @apiErrorExample Error Example
+     *     HTTP/1.1 500 Internal Server Error
+     *     {
+     *       "error": "The error description"
+     *     }
+     */
+    updateBlockchainTransactionsState: async (req, res, next) => {
+      osseus.lib.BlockchainTransaction.syncState()
         .then(bctxs => { bctxs = bctxs.map(bctx => bctx._id); res.send({ids: bctxs}) })
         .catch(err => { next(err) })
     }

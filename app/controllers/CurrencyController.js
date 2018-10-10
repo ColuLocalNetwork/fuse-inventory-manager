@@ -53,6 +53,8 @@ module.exports = (osseus) => {
      * @apiGroup Currency
      * @apiVersion 1.0.0
      *
+     * @apiDescription Create a new currency (CLN / CC)
+     *
      * @apiParam {Boolean} [cln] indicator whether creating a CLN currency.
      * @apiParam {String} currencyAddress currency contract address.
      * @apiParam {String} [marketMakerAddress] market maker contract address (Mandatory if creating a CC).
@@ -102,6 +104,8 @@ module.exports = (osseus) => {
      * @apiGroup Currency
      * @apiVersion 1.0.0
      *
+     * @apiDescription Edit currency by currency id
+     *
      * @apiParam {String} id currency id.
      * @apiParam {String} [currencyAddress] currency contract address.
      * @apiParam {String} [marketMakerAddress] market maker contract address (Mandatory if creating a CC).
@@ -129,6 +133,8 @@ module.exports = (osseus) => {
      * @apiGroup Currency
      * @apiVersion 1.0.0
      *
+     * @apiDescription Get currency by currency id
+     *
      * @apiParam {String} id currency id.
      *
      * @apiUse CurrencyResponse
@@ -144,6 +150,8 @@ module.exports = (osseus) => {
      * @apiName EditCurrencyByAddress
      * @apiGroup Currency
      * @apiVersion 1.0.0
+     *
+     * @apiDescription Edit currency by currency contract address
      *
      * @apiParam {String} address currency contract address.
      * @apiParam {String} [currencyAddress] currency contract address.
@@ -171,6 +179,8 @@ module.exports = (osseus) => {
      * @apiName GetCurrencyByAddress
      * @apiGroup Currency
      * @apiVersion 1.0.0
+     *
+     * @apiDescription Get currency by currency contract address
      *
      * @apiParam {String} address currency contract address.
      *

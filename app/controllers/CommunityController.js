@@ -15,6 +15,8 @@ module.exports = (osseus) => {
      * @apiGroup Community
      * @apiVersion 1.0.0
      *
+     * @apiDescription Create a new community
+     *
      * @apiParam {String} name community name.
      * @apiParam {String} defaultCurrency default community currency id.
      * @apiParam {String} [externalId] external id of the community on the requester system.
@@ -91,6 +93,8 @@ module.exports = (osseus) => {
      * @apiGroup Community
      * @apiVersion 1.0.0
      *
+     * @apiDescription Edit community by community id
+     *
      * @apiParam {String} id community id.
      * @apiParam {String} [name] community name.
      * @apiParam {String} [externalId] external id of the community on the requester system.
@@ -141,6 +145,8 @@ module.exports = (osseus) => {
      * @apiName GetCommunity
      * @apiGroup Community
      * @apiVersion 1.0.0
+     *
+     * @apiDescription Get community by community id
      *
      * @apiParam {String} id community id.
      *

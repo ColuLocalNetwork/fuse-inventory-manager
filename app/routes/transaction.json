@@ -89,5 +89,23 @@
     "GET": {
       "route": "getUnknownBlockchainTransactions"
     }
+  },
+  "/transaction/bc/state": {
+    "POST": {
+      "route": "updateBlockchainTransactionsState",
+      "validators": {
+        "params": {
+          "address": {
+            "optional": true
+          },
+          "type": {
+            "optional": true
+          },
+          "limit": {
+            "optional": true
+          }
+        }
+      }
+    }
   }
 }
