@@ -12,7 +12,7 @@ module.exports = {
   OSSEUS_ROUTER_CONTROLLERS_PATH: '/app/controllers',
   OSSEUS_ROUTER_POLICY_PATH: '/app/middlewares',
   OSSEUS_ROUTER_URL_PREFIX: '/api',
-  OSSEUS_ROUTER_JWT_SECRET: 'somekindofsecret',
+  OSSEUS_ROUTER_JWT_SECRET: '3g4Zy5rM7p9nV7Y3Xl7zKY4IvJo2n5lFUUTwHUGPn6',
   OSSEUS_MONGO_DEPENDENCIES: ['logger'],
   OSSEUS_MONGO_URI: 'mongodb://localhost/inventory-manager-tests',
   WEB3_PROVIDER: 'http://127.0.0.1:7545',

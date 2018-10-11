@@ -12,7 +12,7 @@ module.exports = {
   OSSEUS_ROUTER_CONTROLLERS_PATH: '/app/controllers',
   OSSEUS_ROUTER_POLICY_PATH: '/app/middlewares',
   OSSEUS_ROUTER_URL_PREFIX: '/api',
-  OSSEUS_ROUTER_JWT_SECRET: 'somekindofsecret',
+  OSSEUS_ROUTER_JWT_SECRET: 'kfeeT6AO3NWHh44uaNuJ8lTZ09pdiY1GW69PR61tBM',
   OSSEUS_MONGO_DEPENDENCIES: ['logger'],
   OSSEUS_MONGO_URI: 'mongodb://localhost/inventory-manager',
   WEB3_PROVIDER: 'https://ropsten.infura.io',
