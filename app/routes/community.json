@@ -2,6 +2,7 @@
   "/community": {
     "POST": {
       "route": "create",
+      "jwt": true,
       "validators": {
         "body": {
           "name": {
@@ -25,6 +26,7 @@
   "/community/id/:id": {
     "PUT": {
       "route": "edit",
+      "jwt": true,
       "validators": {
         "params": {
           "id": {
@@ -36,6 +38,7 @@
     },
     "GET": {
       "route": "get",
+      "jwt": true,
       "validators": {
         "params": {
           "id": {

@@ -10,12 +10,23 @@ module.exports = (osseus) => {
      */
 
     /**
+     * @apiDefine JWT
+     * @apiHeader {String} Authorization JWT token generated using OSSEUS_ROUTER_JWT_SECRET value from the config.
+     * @apiHeaderExample {json} Header-Example:
+     *  {
+     *      "Authorization": "Bearer eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJqdGkiOiJlZGVmYWNlYi1lYzIxLTRmZmQtOWQ5OS1mMTdiMmNiMDliNTEiLCJpYXQiOjE1NDAxMzEyODIsImV4cCI6MTU0MDEzNDg4Mn0.DrIdRXOPcqH_NSTs8aZ91-hpI2Tj04xgRoYxbpyr5ok"
+     *  }
+     */
+
+    /**
      * @api {post} /api/community/ Create
      * @apiName CreateCommunity
      * @apiGroup Community
      * @apiVersion 1.0.0
      *
      * @apiDescription Create a new community
+     *
+     * @apiUse JWT
      *
      * @apiParam {String} name community name.
      * @apiParam {String} defaultCurrency default community currency id.
@@ -95,6 +106,8 @@ module.exports = (osseus) => {
      *
      * @apiDescription Edit community by community id
      *
+     * @apiUse JWT
+     *
      * @apiParam {String} id community id.
      * @apiParam {String} [name] community name.
      * @apiParam {String} [externalId] external id of the community on the requester system.
@@ -147,6 +160,8 @@ module.exports = (osseus) => {
      * @apiVersion 1.0.0
      *
      * @apiDescription Get community by community id
+     *
+     * @apiUse JWT
      *
      * @apiParam {String} id community id.
      *

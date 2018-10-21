@@ -2,6 +2,7 @@
   "/currency": {
     "POST": {
       "route": "create",
+      "jwt": true,
       "validators": {
         "body": {
           "cln": {
@@ -36,6 +37,7 @@
   "/currency/id/:id": {
     "PUT": {
       "route": "edit",
+      "jwt": true,
       "validators": {
         "params": {
           "id": {
@@ -47,6 +49,7 @@
     },
     "GET": {
       "route": "get",
+      "jwt": true,
       "validators": {
         "params": {
           "id": {
@@ -60,6 +63,7 @@
   "/currency/address/:address": {
     "PUT": {
       "route": "editByAddress",
+      "jwt": true,
       "validators": {
         "params": {
           "address": {
@@ -71,6 +75,7 @@
     },
     "GET": {
       "route": "getByAddress",
+      "jwt": true,
       "validators": {
         "params": {
           "address": {

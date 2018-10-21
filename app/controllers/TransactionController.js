@@ -1,12 +1,23 @@
 module.exports = (osseus) => {
   return {
     /**
+     * @apiDefine JWT
+     * @apiHeader {String} Authorization JWT token generated using OSSEUS_ROUTER_JWT_SECRET value from the config.
+     * @apiHeaderExample {json} Header-Example:
+     *  {
+     *      "Authorization": "Bearer eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJqdGkiOiJlZGVmYWNlYi1lYzIxLTRmZmQtOWQ5OS1mMTdiMmNiMDliNTEiLCJpYXQiOjE1NDAxMzEyODIsImV4cCI6MTU0MDEzNDg4Mn0.DrIdRXOPcqH_NSTs8aZ91-hpI2Tj04xgRoYxbpyr5ok"
+     *  }
+     */
+
+    /**
      * @api {post} /transaction/transfer Transfer
      * @apiName Transfer
      * @apiGroup Transaction
      * @apiVersion 1.0.0
      *
      * @apiDescription Transfer between addresses offchain
+     *
+     * @apiUse JWT
      *
      * @apiParam {String} fromAddress account address to transfer from
      * @apiParam {String} toAddress account address to transfer to
@@ -51,6 +62,8 @@ module.exports = (osseus) => {
      *
      * @apiDescription Revert a transaction (the server will create a reversed transaction)
      *
+     * @apiUse JWT
+     *
      * @apiParam {String} id transaction to revert id
      *
      * @apiSuccess {String} id revert transaction id.
@@ -93,6 +106,8 @@ module.exports = (osseus) => {
      * @apiVersion 1.0.0
      *
      * @apiDescription Get transaction by transaction id
+     *
+     * @apiUse JWT
      *
      * @apiParam {String} id transaction id.
      *
@@ -150,6 +165,8 @@ module.exports = (osseus) => {
      *
      * @apiDescription Aggregate offchain transactions and transmit to blockchain
      *
+     * @apiUse JWT
+     *
      * @apiParam {String} [currencyId] currency id to filter transactions transmitted to the blockchain
      *
      * @apiSuccess {Object[]} results array of currency and transmit pairs
@@ -200,6 +217,8 @@ module.exports = (osseus) => {
      *
      * @apiDescription Get transmit by transmit id
      *
+     * @apiUse JWT
+     *
      * @apiParam {String} id transmit id.
      *
      * @apiSuccess {String} id transmit unique id
@@ -245,6 +264,8 @@ module.exports = (osseus) => {
      * @apiVersion 1.0.0
      *
      * @apiDescription Get blockchain transaction by blockchain transaction id
+     *
+     * @apiUse JWT
      *
      * @apiParam {String} id blockchain transaction id.
      *
@@ -319,6 +340,8 @@ module.exports = (osseus) => {
      *
      * @apiDescription Get a list of unknown blockchain transactions
      *
+     * @apiUse JWT
+     *
      * @apiSuccess {String[]} ids array of blockchain transaction unique ids
      *
      * @apiSuccessExample Success Example
@@ -352,6 +375,8 @@ module.exports = (osseus) => {
      * @apiVersion 1.0.0
      *
      * @apiDescription Update a list of blockchain transactions to be known
+     *
+     * @apiUse JWT
      *
      * @apiParam {String[]} ids blockchain transaction ids.
      *
@@ -396,6 +421,8 @@ module.exports = (osseus) => {
      * @apiVersion 1.0.0
      *
      * @apiDescription Update state of blockchain transactions to "CONFIRMED" (if mined into block) or "FINALIZED" according to the "BLOCKS_TO_FINALIZE_BCTX" config parameter
+     *
+     * @apiUse JWT
      *
      * @apiParam {String} [address] address (from/to) of blockchain transactions to filter by
      * @apiParam {String} [type] type of blockchain transactions to filter by - ['TRANSFER', 'CHANGE', 'DEPOSIT']

@@ -2,6 +2,7 @@
   "/transaction/transfer": {
     "POST": {
       "route": "transfer",
+      "jwt": true,
       "validators": {
         "body": {
           "fromAddress": {
@@ -27,6 +28,7 @@
   "/transaction/revert/id/:id": {
     "POST": {
       "route": "revert",
+      "jwt": true,
       "validators": {
         "params": {
           "id": {
@@ -40,6 +42,7 @@
   "/transaction/id/:id": {
     "GET": {
       "route": "getTransactionById",
+      "jwt": true,
       "validators": {
         "params": {
           "id": {
@@ -52,6 +55,7 @@
   "/transaction/transmit": {
     "POST": {
       "route": "transmit",
+      "jwt": true,
       "validators": {
         "body": {
           "currencyId": {
@@ -64,6 +68,7 @@
   "/transaction/transmit/id/:id": {
     "GET": {
       "route": "getTransmitById",
+      "jwt": true,
       "validators": {
         "params": {
           "id": {
@@ -76,6 +81,7 @@
   "/transaction/bc/id/:id": {
     "GET": {
       "route": "getBlockchainTransactionById",
+      "jwt": true,
       "validators": {
         "params": {
           "id": {
@@ -87,12 +93,14 @@
   },
   "/transaction/bc/unknown": {
     "GET": {
-      "route": "getUnknownBlockchainTransactions"
+      "route": "getUnknownBlockchainTransactions",
+      "jwt": true
     }
   },
   "/transaction/bc/known": {
     "POST": {
       "route": "markBlockchainTransactionsAsKnown",
+      "jwt": true,
       "validators": {
         "body": {
           "ids": {
@@ -106,6 +114,7 @@
   "/transaction/bc/state": {
     "POST": {
       "route": "updateBlockchainTransactionsState",
+      "jwt": true,
       "validators": {
         "params": {
           "address": {
