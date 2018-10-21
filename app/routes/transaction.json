@@ -1,0 +1,124 @@
+{
+  "/transaction/transfer": {
+    "POST": {
+      "route": "transfer",
+      "validators": {
+        "body": {
+          "fromAddress": {
+            "notEmpty": true,
+            "errorMessage": "is missing"
+          },
+          "toAddress": {
+            "notEmpty": true,
+            "errorMessage": "is missing"
+          },
+          "currencyAddress": {
+            "notEmpty": true,
+            "errorMessage": "is missing"
+          },
+          "amount": {
+            "notEmpty": true,
+            "errorMessage": "is missing"
+          }
+        }
+      }
+    }
+  },
+  "/transaction/revert/id/:id": {
+    "POST": {
+      "route": "revert",
+      "validators": {
+        "params": {
+          "id": {
+            "notEmpty": true,
+            "errorMessage": "is missing"
+          }
+        }
+      }
+    }
+  },
+  "/transaction/id/:id": {
+    "GET": {
+      "route": "getTransactionById",
+      "validators": {
+        "params": {
+          "id": {
+            "optional": true
+          }
+        }
+      }
+    }
+  },
+  "/transaction/transmit": {
+    "POST": {
+      "route": "transmit",
+      "validators": {
+        "body": {
+          "currencyId": {
+            "optional": true
+          }
+        }
+      }
+    }
+  },
+  "/transaction/transmit/id/:id": {
+    "GET": {
+      "route": "getTransmitById",
+      "validators": {
+        "params": {
+          "id": {
+            "optional": true
+          }
+        }
+      }
+    }
+  },
+  "/transaction/bc/id/:id": {
+    "GET": {
+      "route": "getBlockchainTransactionById",
+      "validators": {
+        "params": {
+          "id": {
+            "optional": true
+          }
+        }
+      }
+    }
+  },
+  "/transaction/bc/unknown": {
+    "GET": {
+      "route": "getUnknownBlockchainTransactions"
+    }
+  },
+  "/transaction/bc/known": {
+    "POST": {
+      "route": "markBlockchainTransactionsAsKnown",
+      "validators": {
+        "body": {
+          "ids": {
+            "notEmpty": true,
+            "errorMessage": "is missing"
+          }
+        }
+      }
+    }
+  },
+  "/transaction/bc/state": {
+    "POST": {
+      "route": "updateBlockchainTransactionsState",
+      "validators": {
+        "params": {
+          "address": {
+            "optional": true
+          },
+          "type": {
+            "optional": true
+          },
+          "limit": {
+            "optional": true
+          }
+        }
+      }
+    }
+  }
+}

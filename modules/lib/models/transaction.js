@@ -38,7 +38,7 @@ module.exports = (osseus) => {
         const results = await osseus.utils.validateAggregatedBalances()
         const invalid = results.filter(res => !res.valid)
         if (invalid.length > 0) {
-          // TODO here probably need to notify someone/somehow
+          // TODO NOTIFY
           return reject(new Error(`Invalid aggregated balances - ${JSON.stringify(invalid)}`))
         }
         resolve()
@@ -190,7 +190,7 @@ module.exports = (osseus) => {
     })
   }
 
-  transaction.transfer = (from, to, amount) => {
+  transaction.transfer = (from, to, amount, extra) => {
     return new Promise(async (resolve, reject) => {
       try {
         from = await validateParticipant(from)
@@ -206,6 +206,7 @@ module.exports = (osseus) => {
           context: 'transfer',
           transmit: transmit.id
         }
+        Object.assign(data, extra)
         const newTx = await osseus.db_models.tx.create(data)
 
         await osseus.db_models.transmit.addOffchainTransaction(transmit.id, newTx.id)
@@ -252,16 +253,25 @@ module.exports = (osseus) => {
         const tasks = []
         transmits.forEach(transmit => {
           osseus.logger.debug(`transmit: ${JSON.stringify(transmit)}`)
-          tasks.push(new Promise(async (resolve, reject) => {
+          transmit && tasks.push(new Promise(async (resolve, reject) => {
             const transactions = await getTransactionsToTransmit(transmit.offchainTransactions)
+            osseus.logger.debug('transaction.transmit --> transaction', transactions)
+            if (!transactions || transactions.length === 0) {
+              await osseus.db_models.transmit.update(transmit.id, {state: 'DONE'})
+              return resolve()
+            }
             const txids = transactions.map(transaction => transaction._id.toString())
+            osseus.logger.debug('transaction.transmit --> txids', txids)
             const bctxs = await prepareTransactionsToBeTransmitted(transactions, opts.bc)
+            osseus.logger.debug('transaction.transmit --> bctxs', bctxs)
             const result = await transmitToBlockchain(transmit, bctxs, txids)
+            osseus.logger.debug('transaction.transmit --> result', result)
             resolve(result)
           }))
         })
 
-        const results = await Promise.all(tasks, task => { return task })
+        let results = await Promise.all(tasks, task => { return task })
+        results = results.filter(res => res)
         osseus.logger.debug(`results: ${JSON.stringify(results)}`)
 
         resolve(results)

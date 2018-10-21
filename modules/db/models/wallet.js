@@ -95,6 +95,9 @@ module.exports = (osseus) => {
         if (err) {
           return reject(err)
         }
+        if (!updatedObj) {
+          return reject(new Error(`Wallet not found for condition: ${JSON.stringify(condition)}`))
+        }
         resolve(updatedObj)
       })
     })
@@ -102,13 +105,54 @@ module.exports = (osseus) => {
 
   wallet.updateBlockchainBalance = (address, currencyId, blockNumber, amount) => {
     return new Promise((resolve, reject) => {
-      const condition = {'address': address, 'balances.currency': currencyId, 'balances.blockNumberOfLastUpdate': {'$lte': blockNumber}}
-      const update = {$set: {'balances.$.blockchainAmount': amount, 'balances.$.blockNumberOfLastUpdate': blockNumber}}
-      Wallet.findOneAndUpdate(condition, update, {new: true}, (err, updatedObj) => {
+      address = address.toLowerCase()
+      let condition = {
+        'address': address,
+        'balances': {
+          '$not': {
+            '$elemMatch': {
+              'currency': currencyId
+            }
+          }
+        }
+      }
+      let update = {
+        '$push': {
+          'balances': {
+            'created_at': new Date(),
+            'updated_at': new Date(),
+            'currency': currencyId,
+            'offchainAmount': 0,
+            'blockchainAmount': 0,
+            'blockNumberOfLastUpdate': 0,
+            'pendingTxs': []
+          }
+        }
+      }
+      Wallet.findOneAndUpdate(condition, update, (err) => {
         if (err) {
           return reject(err)
         }
-        resolve(updatedObj)
+        blockNumber = blockNumber || 0
+        condition = {
+          'address': address,
+          'balances.currency': currencyId,
+          'balances.blockNumberOfLastUpdate': {
+            '$lte': blockNumber
+          }
+        }
+        update = {
+          '$set': {
+            'balances.$.blockchainAmount': amount,
+            'balances.$.blockNumberOfLastUpdate': blockNumber
+          }
+        }
+        Wallet.findOneAndUpdate(condition, update, {new: true}, (err, updatedObj) => {
+          if (err) {
+            return reject(err)
+          }
+          resolve(updatedObj)
+        })
       })
     })
   }

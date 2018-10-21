@@ -1,0 +1,84 @@
+{
+  "/currency": {
+    "POST": {
+      "route": "create",
+      "validators": {
+        "body": {
+          "cln": {
+            "optional": true
+          },
+          "currencyAddress": {
+            "notEmpty": true,
+            "errorMessage": "is missing"
+          },
+          "marketMakerAddress": {
+            "optional": true
+          },
+          "creationTransactionHash": {
+            "notEmpty": true,
+            "errorMessage": "is missing"
+          },
+          "creationBlockHash": {
+            "notEmpty": true,
+            "errorMessage": "is missing"
+          },
+          "creationBlockNumber": {
+            "notEmpty": true,
+            "errorMessage": "is missing"
+          },
+          "externalId": {
+            "optional": true
+          }
+        }
+      }
+    }
+  },
+  "/currency/id/:id": {
+    "PUT": {
+      "route": "edit",
+      "validators": {
+        "params": {
+          "id": {
+            "notEmpty": true,
+            "errorMessage": "is missing"
+          }
+        }
+      }
+    },
+    "GET": {
+      "route": "get",
+      "validators": {
+        "params": {
+          "id": {
+            "notEmpty": true,
+            "errorMessage": "is missing"
+          }
+        }
+      }
+    }
+  },
+  "/currency/address/:address": {
+    "PUT": {
+      "route": "editByAddress",
+      "validators": {
+        "params": {
+          "address": {
+            "notEmpty": true,
+            "errorMessage": "is missing"
+          }
+        }
+      }
+    },
+    "GET": {
+      "route": "getByAddress",
+      "validators": {
+        "params": {
+          "address": {
+            "notEmpty": true,
+            "errorMessage": "is missing"
+          }
+        }
+      }
+    }
+  }
+}

@@ -6,15 +6,16 @@ module.exports = (osseus) => {
   function community () {}
 
   const getProvider = (community, nWallets) => {
-    const provider = new HDWalletProvider([{
+    const data = {
       mnemonic: community.mnemonic,
       password: crypto.createHash('sha256').update(`${community.uuid}_${osseus.config.secret}`).digest('base64')
-    }], osseus.config.web3_provider, 0, nWallets)
+    }
+    const provider = new HDWalletProvider([data], osseus.config.web3_provider, 0, nWallets)
     return provider
   }
 
   community.getProvider = (community) => {
-    return getProvider(community)
+    return getProvider(community, community.wallets.length)
   }
 
   community.create = (name, defaultCurrency, externalId, wallets) => {
@@ -82,12 +83,14 @@ module.exports = (osseus) => {
   community.get = (id, community) => {
     return new Promise(async (resolve, reject) => {
       try {
-        if (!community) {
-          community = await osseus.db_models.community.getById(id)
-        }
+        community = community || await osseus.db_models.community.getByIdPopulated(id)
         const provider = getProvider(community, community.wallets.length)
-        community.currencyContracts = await osseus.lib.Currency.getContractsForCC(community.defaultCurrency, provider)
-        resolve(community)
+        const currencyContracts = await osseus.lib.Currency.getContractsForCC(community.defaultCurrency, provider)
+        resolve({
+          community: community,
+          provider: provider,
+          currencyContracts: currencyContracts
+        })
       } catch (err) {
         reject(err)
       }

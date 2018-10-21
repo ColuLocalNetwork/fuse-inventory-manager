@@ -1,6 +1,7 @@
 const BigNumber = require('bignumber.js')
 
 const getCurrencyFromToken = (token, community) => {
+  this.osseus.logger.debug(`utils --> getCurrencyFromToken --> token: ${token}, community: ${JSON.stringify(community)}`)
   return new Promise(async (resolve, reject) => {
     try {
       const result = {}
@@ -12,12 +13,13 @@ const getCurrencyFromToken = (token, community) => {
         result.web3 = currency.contracts.web3
       } else {
         this.osseus.logger.silly(`getCurrencyFromToken --> CC: ${token}`)
-        const communityWithContracts = await this.osseus.lib.Community.get(community.id, community)
-        if (communityWithContracts.currencyContracts.cc.address !== token) {
+        const communityData = await this.osseus.lib.Community.get(community.id, community)
+        if (communityData.currencyContracts.cc.address !== token) {
           return reject(new Error(`Unrecognized token: ${token} for community: ${community.id}`))
+        } else {
+          result.contract = communityData.currencyContracts.cc
+          result.web3 = communityData.currencyContracts.web3
         }
-        result.contract = communityWithContracts.currencyContracts.cc
-        result.web3 = communityWithContracts.currencyContracts.web3
       }
       resolve(result)
     } catch (err) {
@@ -27,6 +29,7 @@ const getCurrencyFromToken = (token, community) => {
 }
 
 const getBlockchainBalance = (address, token, bignum) => {
+  this.osseus.logger.debug(`utils --> getBlockchainBalance --> address: ${address}, token: ${token}, bignum: ${bignum}`)
   return new Promise(async (resolve, reject) => {
     try {
       let balance = 0
@@ -48,6 +51,7 @@ const getBlockchainBalance = (address, token, bignum) => {
 }
 
 const validateBlockchainBalance = (address, token) => {
+  this.osseus.logger.debug(`utils --> validateBlockchainBalance --> address: ${address}, token: ${token}`)
   return new Promise(async (resolve, reject) => {
     try {
       const bcBalance = await getBlockchainBalance(address, token)
@@ -70,6 +74,7 @@ const validateBlockchainBalance = (address, token) => {
 }
 
 const validateAggregatedBalances = (token) => {
+  this.osseus.logger.debug(`utils --> validateAggregatedBalances --> token: ${token}`)
   return new Promise(async (resolve, reject) => {
     try {
       const currency = token ? await this.osseus.db_models.currency.getByCurrencyAddress(token) : {}
@@ -89,15 +94,16 @@ const validateAggregatedBalances = (token) => {
 }
 
 const updateBlockchainBalance = (address, token) => {
+  this.osseus.logger.debug(`utils --> updateBlockchainBalance --> address: ${address}, token: ${token}`)
   return new Promise(async (resolve, reject) => {
     try {
-      const latestBlock = await this.osseus.web3.eth.getBlock('latest')
+      const currentBlock = await this.osseus.web3.eth.getBlockNumber()
       const balance = await getBlockchainBalance(address, token, true)
       const currency = await this.osseus.db_models.currency.getByCurrencyAddress(token)
       if (typeof balance === 'undefined') {
         return reject(new Error(`Could not get blockchain balance - address: ${address}, token: ${token}`))
       }
-      const result = await this.osseus.db_models.wallet.updateBlockchainBalance(address, currency.id, latestBlock.number, balance)
+      const result = await this.osseus.db_models.wallet.updateBlockchainBalance(address, currency.id, currentBlock, balance)
       resolve(result)
     } catch (err) {
       reject(err)
@@ -113,7 +119,7 @@ const getUnknownBlockchainTransactions = (filters, projection, limit, sort) => {
       this.osseus.logger.debug(`filters: ${JSON.stringify(filters)}, projection: ${JSON.stringify(projection)}, limit: ${limit}, sort: ${JSON.stringify(sort)}`)
       const transactions = await this.osseus.db_models.bctx.get(filters, projection, limit, sort)
       this.osseus.logger.debug(`got ${transactions.length} unknown transactions`)
-      // TODO here probably need to notify someone/somehow
+      // TODO NOTIFY
       resolve(transactions)
     } catch (err) {
       reject(err)

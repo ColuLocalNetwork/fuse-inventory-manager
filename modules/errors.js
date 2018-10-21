@@ -4,7 +4,7 @@ const init = (osseus) => {
     osseus.server.app.use((err, req, res, next) => {
       const status = err.status || (err.res && err.res.statusCode) || 500
       const error = osseus.config.env && osseus.config.env.toLowerCase() === 'production' ? (err.message || err) : err
-      osseus.logger.error(`ERROR! ${error}`)
+      osseus.logger.error('ERROR!', error)
       res.status(status).send({error: error.toString()})
     })
 

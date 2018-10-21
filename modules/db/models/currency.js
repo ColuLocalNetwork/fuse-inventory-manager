@@ -29,7 +29,7 @@ module.exports = (osseus) => {
     virtuals: true,
     transform: (doc, ret, options) => {
       const safeRet = {
-        id: ret._id.toString(),
+        // id: ret._id.toString(),
         blockHash: ret.blockHash,
         blockNumber: ret.blockNumber,
         transactionHash: ret.transactionHash
@@ -49,8 +49,8 @@ module.exports = (osseus) => {
         currencyType: ret.currencyType,
         currencyAddress: ret.currencyAddress,
         marketMakerAddress: ret.marketMakerAddress,
-        currencyABI: ret.currencyABI,
-        marketMakerABI: ret.marketMakerABI,
+        // currencyABI: ret.currencyABI,
+        // marketMakerABI: ret.marketMakerABI,
         exid: ret.exid,
         currencyBlockchainInfo: ret.currencyBlockchainInfo
       }
@@ -75,6 +75,23 @@ module.exports = (osseus) => {
           return reject(new Error('Currency not saved'))
         }
         resolve(newObj)
+      })
+    })
+  }
+
+  currency.update = (condition, update) => {
+    return new Promise((resolve, reject) => {
+      if (condition.currencyAddress) condition.currencyAddress = condition.currencyAddress.toLowerCase()
+      if (update.currencyAddress) update.currencyAddress = update.currencyAddress.toLowerCase()
+      if (update.marketMakerAddress) update.marketMakerAddress = update.marketMakerAddress.toLowerCase()
+      Currency.findOneAndUpdate(condition, {$set: update}, {new: true}, (err, updatedObj) => {
+        if (err) {
+          return reject(err)
+        }
+        if (!updatedObj) {
+          return reject(new Error(`Currency not found for condition: ${JSON.stringify(condition)}`))
+        }
+        resolve(updatedObj)
       })
     })
   }

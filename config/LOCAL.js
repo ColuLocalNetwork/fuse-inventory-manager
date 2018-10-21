@@ -1,6 +1,7 @@
 module.exports = {
   DEBUG: false,
-  OSSEUS_LOGGER_LOG_LEVEL: 'silly',
+  OSSEUS_LOGGER_LOG_LEVEL: 'debug',
+  OSSEUS_LOGGER_NO_CONSOLE_OVERRIDE: true,
   OSSEUS_SERVER_DEPENDENCIES: ['logger', 'mongo'],
   OSSEUS_SERVER_PORT: '8080',
   OSSEUS_SERVER_MORGAN_FORMAT: ':date[iso] method=":method", url=":url", statusCode=":status", route=":route", host=":host", client-ip=":client-ip", user-agent=":user-agent", httpVersion=":http-version", responseTime=":response-time"',
@@ -11,12 +12,12 @@ module.exports = {
   OSSEUS_ROUTER_CONTROLLERS_PATH: '/app/controllers',
   OSSEUS_ROUTER_POLICY_PATH: '/app/middlewares',
   OSSEUS_ROUTER_URL_PREFIX: '/api',
-  OSSEUS_ROUTER_JWT_SECRET: 'somekindofsecret',
+  OSSEUS_ROUTER_JWT_SECRET: 'kfeeT6AO3NWHh44uaNuJ8lTZ09pdiY1GW69PR61tBM',
   OSSEUS_MONGO_DEPENDENCIES: ['logger'],
   OSSEUS_MONGO_URI: 'mongodb://localhost/inventory-manager',
   WEB3_PROVIDER: 'https://ropsten.infura.io',
   WEB3_PROVIDER_WS: 'wss://ropsten.infura.io/ws/',
-  SECRET: 'thisissomekindofsecret',
+  SECRET: 'e4365c30-ec9f-459a-8a8e-55d3818c6134kNJYzFQ1jB97WXAn',
   CLN_ADDRESS: '0x41C9d91E96b933b74ae21bCBb617369CBE022530',
   BLOCKS_TO_FINALIZE_BCTX: 20
 }

@@ -67,7 +67,7 @@ module.exports = (osseus) => {
         opts.from = opts.from || from
         const receipt = await currency.contract.transfer(to, amount.toString(), opts)
         osseus.logger.debug(`blockchainTransaction.transfer --> receipt: ${JSON.stringify(receipt)}`)
-        currency.web3.eth.getTransaction(receipt.tx, async (err, tx) => {
+        osseus.web3.eth.getTransaction(receipt.tx, async (err, tx) => {
           if (err) {
             return reject(err)
           }
@@ -77,6 +77,8 @@ module.exports = (osseus) => {
           const update = {
             $set: tx,
             $setOnInsert: {
+              created_at: new Date(),
+              updated_at: new Date(),
               state: 'TRANSMITTED'
             }
           }
@@ -105,7 +107,7 @@ module.exports = (osseus) => {
         const changeData = encodeChangeData(toToken, opts.minReturn)
         const receipt = await currency.contract.transferAndCall(marketMaker, amount.toString(), changeData, opts)
         osseus.logger.debug(`blockchainTransaction.change --> receipt: ${JSON.stringify(receipt)}`)
-        currency.web3.eth.getTransaction(receipt.tx, async (err, tx) => {
+        osseus.web3.eth.getTransaction(receipt.tx, async (err, tx) => {
           if (err) {
             return reject(err)
           }
@@ -128,9 +130,7 @@ module.exports = (osseus) => {
     osseus.logger.debug(`blockchainTransaction.deposit --> txHash: ${txHash} from: ${from}, to: ${to}, token: ${token}, amount: ${amount}`)
     return new Promise(async (resolve, reject) => {
       try {
-        const community = await osseus.db_models.community.getByWalletAddress(to)
-        const currency = await osseus.utils.getCurrencyFromToken(token, community)
-        currency.web3.eth.getTransaction(txHash, async (err, tx) => {
+        osseus.web3.eth.getTransaction(txHash, async (err, tx) => {
           if (err) {
             return reject(err)
           }
@@ -166,8 +166,8 @@ module.exports = (osseus) => {
         const transactions = await osseus.db_models.bctx.get(filters, projection, limit, sort)
         osseus.logger.debug(`got ${transactions.length} transactions`)
 
-        const latestBlock = await osseus.web3.eth.getBlock('latest')
-        osseus.logger.debug(`latestBlock.number: ${latestBlock.number}`)
+        const currentBlock = await osseus.web3.eth.getBlockNumber()
+        osseus.logger.debug(`currentBlock: ${currentBlock}`)
 
         transactions && async.map(transactions, (transaction, done) => {
           osseus.web3.eth.getTransaction(transaction.hash, async (err, tx) => {
@@ -183,7 +183,7 @@ module.exports = (osseus) => {
             let newState
             if (tx.blockNumber) {
               newState = 'CONFIRMED'
-              if (latestBlock.number - tx.blockNumber >= osseus.config.blocks_to_finalize_bctx) {
+              if (currentBlock - tx.blockNumber >= osseus.config.blocks_to_finalize_bctx) {
                 newState = 'FINALIZED'
               }
             }

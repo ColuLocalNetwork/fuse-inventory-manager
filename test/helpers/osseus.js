@@ -1,5 +1,6 @@
 const Osseus = require('@colucom/osseus')
 const path = require('path')
+const util = require('util')
 const cwd = process.cwd()
 const bip39 = require('bip39')
 const HDWalletProvider = require('truffle-hdwallet-provider')
@@ -8,6 +9,7 @@ module.exports = async () => {
   let osseus = await Osseus.get()
   osseus.cwd = osseus.cwd || cwd
   osseus.web3 = web3 // this is the global web3 created by truffle...
+  osseus.web3.eth.getBlockNumber = util.promisify(osseus.web3.eth.getBlockNumber)
   if (!osseus.utils) require(path.join(cwd, 'modules/utils')).init(osseus)
   osseus.abi = {
     cln: JSON.stringify(require(path.join(cwd, 'config/abi/ColuLocalNetwork'))),

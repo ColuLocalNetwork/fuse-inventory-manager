@@ -1,0 +1,49 @@
+{
+  "/community": {
+    "POST": {
+      "route": "create",
+      "validators": {
+        "body": {
+          "name": {
+            "notEmpty": true,
+            "errorMessage": "is missing"
+          },
+          "defaultCurrency": {
+            "notEmpty": true,
+            "errorMessage": "is missing"
+          },
+          "externalId": {
+            "optional": true
+          },
+          "wallets": {
+            "optional": true
+          }
+        }
+      }
+    }
+  },
+  "/community/id/:id": {
+    "PUT": {
+      "route": "edit",
+      "validators": {
+        "params": {
+          "id": {
+            "notEmpty": true,
+            "errorMessage": "is missing"
+          }
+        }
+      }
+    },
+    "GET": {
+      "route": "get",
+      "validators": {
+        "params": {
+          "id": {
+            "notEmpty": true,
+            "errorMessage": "is missing"
+          }
+        }
+      }
+    }
+  }
+}

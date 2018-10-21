@@ -24,10 +24,15 @@ module.exports = (osseus) => {
         updatedAt: ret.updated_at,
         name: ret.name,
         wallets: ret.wallets,
-        // mnemonic: ret.mnemonic,
-        // uuid: ret.uuid,
         defaultCurrency: ret.defaultCurrency,
-        exid: ret.exit
+        exid: ret.exid
+      }
+      if (options.onCreate) {
+        safeRet.mnemonic = ret.mnemonic
+        safeRet.uuid = ret.uuid
+        ret.wallets.map(wallet => {
+          delete wallet.balances
+        })
       }
       return safeRet
     }
@@ -59,6 +64,9 @@ module.exports = (osseus) => {
         if (err) {
           return reject(err)
         }
+        if (!updatedObj) {
+          return reject(new Error(`Community not found for id ${id}`))
+        }
         resolve(updatedObj)
       })
     })
@@ -67,6 +75,20 @@ module.exports = (osseus) => {
   community.getById = (id) => {
     return new Promise((resolve, reject) => {
       Community.findById(id, (err, doc) => {
+        if (err) {
+          return reject(err)
+        }
+        if (!doc) {
+          return reject(new Error(`Community not found for id ${id}`))
+        }
+        resolve(doc)
+      })
+    })
+  }
+
+  community.getByIdPopulated = (id) => {
+    return new Promise((resolve, reject) => {
+      Community.findById(id).populate('wallets').exec((err, doc) => {
         if (err) {
           return reject(err)
         }
@@ -113,6 +135,18 @@ module.exports = (osseus) => {
   }
 
   community.getAll = () => {
+    return new Promise((resolve, reject) => {
+      Community.find({}, (err, docs) => {
+        if (err) {
+          return reject(err)
+        }
+        docs = docs || []
+        resolve(docs)
+      })
+    })
+  }
+
+  community.getAllPopulated = () => {
     return new Promise((resolve, reject) => {
       Community.find({}).populate('wallets').exec((err, docs) => {
         if (err) {

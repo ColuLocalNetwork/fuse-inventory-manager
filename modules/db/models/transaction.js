@@ -26,7 +26,8 @@ module.exports = (osseus) => {
     amount: {type: db.mongoose.Schema.Types.Decimal128, set: setDecimal128, get: getDecimal128},
     transmit: {type: Schema.Types.ObjectId, ref: 'Transmit'},
     context: {type: String, enum: ['transfer', 'change', 'deposit', 'other'], default: 'other'},
-    state: {type: String, enum: ['NEW', 'PENDING', 'DONE', 'CANCELED', 'SELECTED', 'TRANSMITTED'], default: 'NEW'}
+    state: {type: String, enum: ['NEW', 'PENDING', 'DONE', 'CANCELED', 'SELECTED', 'TRANSMITTED'], default: 'NEW'},
+    revert: {type: Schema.Types.ObjectId, ref: 'Transaction'}
   }).plugin(timestamps())
 
   TransactionSchema.index({context: 1, state: 1})
@@ -116,9 +117,12 @@ module.exports = (osseus) => {
       const update = {
         '$push': {
           'balances': {
+            'created_at': new Date(),
+            'updated_at': new Date(),
             'currency': participant.currency,
             'offchainAmount': 0,
             'blockchainAmount': 0,
+            'blockNumberOfLastUpdate': 0,
             'pendingTxs': []
           }
         }
@@ -335,6 +339,20 @@ module.exports = (osseus) => {
       } catch (err) {
         reject(err)
       }
+    })
+  }
+
+  transaction.getById = (id) => {
+    return new Promise((resolve, reject) => {
+      Transaction.findById(id, (err, doc) => {
+        if (err) {
+          return reject(err)
+        }
+        if (!doc) {
+          return reject(new Error(`Transaction not found for id ${id}`))
+        }
+        resolve(doc)
+      })
     })
   }
 

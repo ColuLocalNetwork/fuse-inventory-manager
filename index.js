@@ -9,8 +9,14 @@ const main = async () => {
 
     if (osseus.config.debug) console.time('INVENTORY MANAGER')
 
-    osseus.web3 = new Web3(new Web3.providers.WebsocketProvider(osseus.config.web3_provider))
+    osseus.web3 = new Web3(new Web3.providers.HttpProvider(osseus.config.web3_provider))
     osseus.web3WS = new Web3(new Web3.providers.WebsocketProvider(osseus.config.web3_provider_ws))
+
+    osseus.abi = {
+      ColuLocalNetwork: JSON.stringify(require('./config/abi/ColuLocalNetwork')),
+      ColuLocalCurrency: JSON.stringify(require('./config/abi/ColuLocalCurrency')),
+      EllipseMarketMaker: JSON.stringify(require('./config/abi/EllipseMarketMaker'))
+    }
 
     await require('./modules/utils').init(osseus)
     await require('./modules/db').init(osseus)
