@@ -340,7 +340,51 @@ module.exports = (osseus) => {
      *     }
      */
     getUnknownBlockchainTransactions: async (req, res, next) => {
-      osseus.db_models.bctx.get({known: true})
+      osseus.db_models.bctx.get({known: false})
+        .then(bctxs => { bctxs = bctxs.map(bctx => bctx._id); res.send({ids: bctxs}) })
+        .catch(err => { next(err) })
+    },
+
+    /**
+     * @api {post} /transaction/bc/known Mark BC transactions as known
+     * @apiName markBlockchainTransactionsAsKnown
+     * @apiGroup Transaction
+     * @apiVersion 1.0.0
+     *
+     * @apiDescription Update a list of blockchain transactions to be known
+     *
+     * @apiParam {String[]} ids blockchain transaction ids.
+     *
+     * @apiSuccess {String[]} ids array of updated blockchain transaction unique ids
+     *
+     * @apiSuccessExample Success Example
+     *     HTTP/1.1 200 OK
+     *     {
+     *         "ids": [
+     *             "5bbca8b7876b5f2693e8336c",
+     *             "5bbcb71d124d3c8f824a4e5f",
+     *             "5bbcb734124d3c8f824a4e7e",
+     *             "5bbcba87124d3c8f824a5002",
+     *             "5bbcba9e124d3c8f824a5020"
+     *         ]
+     *     }
+     *
+     * @apiErrorExample Error Example
+     *     HTTP/1.1 500 Internal Server Error
+     *     {
+     *       "error": "The error description"
+     *     }
+     */
+    markBlockchainTransactionsAsKnown: async (req, res, next) => {
+      const tasks = []
+      req.body.ids.forEach((id) => {
+        tasks.push(new Promise(async (resolve, reject) => {
+          osseus.db_models.bctx.update({_id: id}, {$set: {known: true}})
+            .then(bctx => resolve(bctx))
+            .catch(err => reject(err))
+        }))
+      })
+      Promise.all(tasks, res => { return res })
         .then(bctxs => { bctxs = bctxs.map(bctx => bctx._id); res.send({ids: bctxs}) })
         .catch(err => { next(err) })
     },

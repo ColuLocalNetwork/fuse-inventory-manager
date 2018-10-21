@@ -90,6 +90,19 @@
       "route": "getUnknownBlockchainTransactions"
     }
   },
+  "/transaction/bc/known": {
+    "POST": {
+      "route": "markBlockchainTransactionsAsKnown",
+      "validators": {
+        "body": {
+          "ids": {
+            "notEmpty": true,
+            "errorMessage": "is missing"
+          }
+        }
+      }
+    }
+  },
   "/transaction/bc/state": {
     "POST": {
       "route": "updateBlockchainTransactionsState",
