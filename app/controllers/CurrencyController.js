@@ -48,12 +48,23 @@ module.exports = (osseus) => {
      */
 
     /**
+     * @apiDefine JWT
+     * @apiHeader {String} Authorization JWT token generated using OSSEUS_ROUTER_JWT_SECRET value from the config.
+     * @apiHeaderExample {json} Header-Example:
+     *  {
+     *      "Authorization": "Bearer eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJqdGkiOiJlZGVmYWNlYi1lYzIxLTRmZmQtOWQ5OS1mMTdiMmNiMDliNTEiLCJpYXQiOjE1NDAxMzEyODIsImV4cCI6MTU0MDEzNDg4Mn0.DrIdRXOPcqH_NSTs8aZ91-hpI2Tj04xgRoYxbpyr5ok"
+     *  }
+     */
+
+    /**
      * @api {post} /api/currency/ Create
      * @apiName CreateCurrency
      * @apiGroup Currency
      * @apiVersion 1.0.0
      *
      * @apiDescription Create a new currency (CLN / CC)
+     *
+     * @apiUse JWT
      *
      * @apiParam {Boolean} [cln] indicator whether creating a CLN currency.
      * @apiParam {String} currencyAddress currency contract address.
@@ -106,6 +117,8 @@ module.exports = (osseus) => {
      *
      * @apiDescription Edit currency by currency id
      *
+     * @apiUse JWT
+     *
      * @apiParam {String} id currency id.
      * @apiParam {String} [currencyAddress] currency contract address.
      * @apiParam {String} [marketMakerAddress] market maker contract address (Mandatory if creating a CC).
@@ -135,6 +148,8 @@ module.exports = (osseus) => {
      *
      * @apiDescription Get currency by currency id
      *
+     * @apiUse JWT
+     *
      * @apiParam {String} id currency id.
      *
      * @apiUse CurrencyResponse
@@ -152,6 +167,8 @@ module.exports = (osseus) => {
      * @apiVersion 1.0.0
      *
      * @apiDescription Edit currency by currency contract address
+     *
+     * @apiUse JWT
      *
      * @apiParam {String} address currency contract address.
      * @apiParam {String} [currencyAddress] currency contract address.
@@ -181,6 +198,8 @@ module.exports = (osseus) => {
      * @apiVersion 1.0.0
      *
      * @apiDescription Get currency by currency contract address
+     *
+     * @apiUse JWT
      *
      * @apiParam {String} address currency contract address.
      *
