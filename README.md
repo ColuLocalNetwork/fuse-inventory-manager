@@ -4,12 +4,15 @@
 
 The inventory manager is an [osseus](https://github.com/colucom/osseus) based server implementation for community currency issuers.
 
+It provides blockchain reflection of offchain activities on community currencies issued against the [CLN](https://cln.network/).
+
+
 ## Dependencies
 
 To make sure that the following instructions work, please install the following dependencies
 on you machine:
 
-- Node.js (comes with a bundles npm)
+- Node.js (comes with a bundled npm)
 - Git
 - MongoDB
 
@@ -31,12 +34,24 @@ $ npm install
 
 This commands installs everything which is required for building and testing the project.
 
+## Developing
+### Run locally: `npm run dev`
+This task will run the application and start listening on port `8080`.
+
+Under the hood, we use a complete [osseus](https://github.com/colucom/osseus) stack.
+
+You will find the local configuration at [LOCAL.js](https://github.com/ColuLocalNetwork/inventory-manager/blob/master/config/LOCAL.js).
+
+## Getting Started
+See [tutorial](https://github.com/ColuLocalNetwork/inventory-manager/blob/master/GETTING-STARTED.md).
+
+
 ## Testing
 
-### Source linting: `npm run lint`
+### Source linting
 `npm run lint` performs a lint for all source code using [standard js](https://standardjs.com/).
 
-### Unit testing: `npm test`
+### Unit testing
 `npm test` executes (as you might think) the unit tests, which are located
 in [`test`](https://github.com/ColuLocalNetwork/inventory-manager/blob/master/test).
 
@@ -52,14 +67,6 @@ $ export A_LOT_OF_TXS={n}
 * There's a 1 second delay between each blockchain transaction so be patient :)
 
 The task uses [truffle framework](https://truffleframework.com/).
-
-## Developing
-### Run locally: `npm run dev`
-This task will run the application and start listening on port `8080`.
-
-Under the hood, we use a complete [Osseus](https://github.com/colucom/osseus) stack.
-
-You will find the local configuration at [LOCAL.js](https://github.com/ColuLocalNetwork/inventory-manager/blob/master/config/LOCAL.js).
 
 
 ## Contributing
