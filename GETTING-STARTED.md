@@ -10,7 +10,7 @@ After you have issued your community currency you can use the available [Invento
 
 For this example we will use the ropsten testnet CLN at [0x41c9d91e96b933b74ae21bcbb617369cbe022530](https://ropsten.etherscan.io/address/0x41c9d91e96b933b74ae21bcbb617369cbe022530) and issue a new community currency IMT at [0xbc2a27de3e15f61012d855b7372f1bf6dcf8f2a3](https://ropsten.etherscan.io/token/0xbc2a27de3e15f61012d855b7372f1bf6dcf8f2a3).
 
-Now we will [run the inventory manager locally](https://github.com/ColuLocalNetwork/inventory-manager/blob/master/config/LOCAL.js) and can start using the API.
+Now we will [run the inventory manager locally](https://github.com/ColuLocalNetwork/inventory-manager#run-locally-npm-run-dev) and can start using the API.
 
 ### Authorization
 All requests send to the API should contain a valid JWT `Authorization` header of type `Bearer Token`.
