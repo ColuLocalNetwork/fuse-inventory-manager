@@ -5,8 +5,12 @@ const init = (osseus) => {
       osseus.logger.warn(`Listeners skipped`)
       return resolve()
     }
-    await require('./models/transfer')(osseus).getPastEvents()
-    await require('./models/transfer')(osseus).init()
+    const transferListener = require('./models/transfer')(osseus)
+    const pastEventsInterval = parseInt((osseus.config.past_events_interval || 10000), 10)
+    setInterval(async () => {
+      await transferListener.getPastEvents()
+    }, pastEventsInterval)
+    await transferListener.init()
     osseus.logger.info(`Listeners ready`)
     resolve()
   })
