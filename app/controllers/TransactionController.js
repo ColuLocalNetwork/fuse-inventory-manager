@@ -163,7 +163,11 @@ module.exports = (osseus) => {
      * @apiGroup Transaction
      * @apiVersion 1.0.0
      *
-     * @apiDescription Aggregate offchain transactions and transmit to blockchain
+     * @apiDescription Aggregate offchain transactions and transmit to blockchain.
+     *
+     * Note that transactions are queued and transmitted serially.
+     *
+     * The array of results contains the transmit ids which can be sampled to get the relevant blockchain transactions, which can also be sampled to get their respective statuses.
      *
      * @apiUse JWT
      *
