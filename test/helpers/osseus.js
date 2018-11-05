@@ -24,6 +24,7 @@ module.exports = async () => {
     tx: require(path.join(cwd, 'modules/db/models/transaction'))(osseus),
     wallet: require(path.join(cwd, 'modules/db/models/wallet'))(osseus)
   }
+  if (!osseus.agenda) require(path.join(cwd, 'modules/jobs')).init(osseus)
   osseus.lib = osseus.lib || {
     Currency: require(path.join(cwd, 'modules/lib/models/currency'))(osseus),
     Community: require(path.join(cwd, 'modules/lib/models/community'))(osseus),

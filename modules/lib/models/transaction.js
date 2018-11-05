@@ -164,13 +164,12 @@ module.exports = (osseus) => {
   const transmitToBlockchain = (transmit, bctxs, txids) => {
     return new Promise(async (resolve, reject) => {
       try {
-        const transmittedBctxs = await Promise.mapSeries(bctxs, async tx => {
-          let bctx = await osseus.lib.BlockchainTransaction.transfer(tx.from, tx.to, tx.token, tx.amount, tx.opts)
-          await osseus.db_models.transmit.addBlockchainTransaction(transmit.id, bctx.result.id)
-          return bctx
+        const bctxJobs = await Promise.mapSeries(bctxs, async tx => {
+          let bctxJob = osseus.agenda.now('bctx-transfer', {transmitId: transmit.id, tx: JSON.stringify(tx)})
+          return bctxJob
         })
 
-        osseus.logger.debug(`transmittedBctxs: ${JSON.stringify(transmittedBctxs)}`)
+        osseus.logger.debug(`bctxJobs: ${JSON.stringify(bctxJobs)}`)
         osseus.logger.debug(`transaction ids to update: ${JSON.stringify(txids)}`)
 
         const nUpdated = await osseus.db_models.tx.markAsTransmitted(txids, transmit.id)
@@ -180,7 +179,7 @@ module.exports = (osseus) => {
 
         resolve({
           txs: txids,
-          bctxs: transmittedBctxs,
+          bctxJobs: bctxJobs,
           transmit: updatedTransmit,
           nUpdated: nUpdated
         })

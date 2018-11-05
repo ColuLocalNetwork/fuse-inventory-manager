@@ -20,6 +20,7 @@ const main = async () => {
 
     await require('./modules/utils').init(osseus)
     await require('./modules/db').init(osseus)
+    await require('./modules/jobs').init(osseus)
     await require('./modules/lib').init(osseus)
     await require('./modules/listeners').init(osseus)
     await require('./modules/errors').init(osseus)

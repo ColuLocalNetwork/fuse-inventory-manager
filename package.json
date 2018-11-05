@@ -19,23 +19,24 @@
     "@colucom/osseus-mongo": "~0.3.1",
     "@colucom/osseus-router": "~0.4.1",
     "@colucom/osseus-server": "~0.2.1",
-    "async": "~2.6.1",
-    "bignumber.js": "~7.2.1",
-    "bip39": "~2.5.0",
+    "agenda": "^2.0.2",
+    "async": "^2.6.1",
+    "bignumber.js": "^7.2.1",
+    "bip39": "^2.5.0",
     "cln-solidity": "github:ColuLocalNetwork/CLN-solidity",
-    "mongoose-time": "~0.1.0",
-    "truffle-contract": "~3.0.6",
+    "mongoose-time": "^0.1.0",
+    "truffle-contract": "^3.0.6",
     "truffle-hdwallet-provider": "github:ColuLocalNetwork/truffle-hdwallet-provider",
-    "uuid": "~3.3.2",
-    "web3": "~1.0.0-beta.36",
-    "web3-eth-abi": "~1.0.0-beta.36"
+    "uuid": "^3.3.2",
+    "web3": "^1.0.0-beta.36",
+    "web3-eth-abi": "^1.0.0-beta.36"
   },
   "devDependencies": {
-    "apidoc": "~0.17.6",
-    "bluebird": "~3.5.2",
-    "ganache-cli": "~6.1.8",
-    "standard": "~11.0.1",
-    "truffle": "~4.1.14"
+    "apidoc": "^0.17.6",
+    "bluebird": "^3.5.2",
+    "ganache-cli": "^6.1.8",
+    "standard": "^11.0.1",
+    "truffle": "^4.1.14"
   },
   "standard": {
     "ignore": [
