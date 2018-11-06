@@ -485,6 +485,25 @@ contract('TRANSACTION', async (accounts) => {
       expect(failedStateChecks).to.have.lengthOf(0)
     }
 
+    const jobsToFinish = () => {
+      return new Promise(async (resolve, reject) => {
+        const jobs = await osseus.agenda.jobs({name: 'bctx-transfer'})
+        const nJobs = jobs.length
+        let completed = 0
+        osseus.agenda.on('complete:bctx-transfer', job => {
+          completed++
+          job.remove()
+        })
+        setInterval(() => {
+          if (completed < nJobs) {
+            // console.log(`completed: ${completed} out of ${nJobs} jobs - keep waiting...`)
+          } else {
+            resolve()
+          }
+        }, 1000)
+      })
+    }
+
     it('should be able to transmit transactions for specific currency', async () => {
       let txs = makeSomeTransactions(osseus.helpers.randomNum(100) + 1)
       let offchainResults = await Promise.all(txs, tx => { return tx })
@@ -493,6 +512,7 @@ contract('TRANSACTION', async (accounts) => {
       expect(transmitResults).to.have.lengthOf(1)
       let offchainResultsFiltered = offchainResults.filter(obj => obj.from.currency.toString() === currency.id)
       await validate(offchainResultsFiltered, transmitResults[0])
+      await jobsToFinish()
     })
 
     it('should be able to transmit all transactions', async () => {
@@ -502,6 +522,7 @@ contract('TRANSACTION', async (accounts) => {
       expect(transmitResults).to.be.an('array')
       expect(transmitResults).to.have.lengthOf(1)
       await validate(offchainResults, transmitResults[0])
+      await jobsToFinish()
     })
 
     it('should be able to transmit relevant transacions, create some more and transmit only the ones not transmitted', async () => {
@@ -511,6 +532,7 @@ contract('TRANSACTION', async (accounts) => {
       expect(transmitResults1).to.be.an('array')
       expect(transmitResults1).to.have.lengthOf(1)
       await validate(offchainResults1, transmitResults1[0])
+      await jobsToFinish()
 
       let txs2 = makeSomeTransactions(osseus.helpers.randomNum(100) + 1)
       let offchainResults2 = await Promise.all(txs2, tx => { return tx })
@@ -518,6 +540,7 @@ contract('TRANSACTION', async (accounts) => {
       expect(transmitResults2).to.be.an('array')
       expect(transmitResults2).to.have.lengthOf(1)
       await validate(offchainResults2, transmitResults2[0])
+      await jobsToFinish()
     })
   })
 
@@ -525,5 +548,6 @@ contract('TRANSACTION', async (accounts) => {
     Object.keys(osseus.db_models).forEach(model => {
       osseus.db_models[model].getModel().remove({}, () => {})
     })
+    osseus.agenda.purge()
   })
 })

@@ -184,5 +184,6 @@ contract('CURRENCY', async (accounts) => {
     Object.keys(osseus.db_models).forEach(model => {
       osseus.db_models[model].getModel().remove({}, () => {})
     })
+    osseus.agenda.purge()
   })
 })
