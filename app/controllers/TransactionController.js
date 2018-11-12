@@ -1,3 +1,5 @@
+const BigNumber = require('bignumber.js')
+
 module.exports = (osseus) => {
   return {
     /**
@@ -19,10 +21,13 @@ module.exports = (osseus) => {
      *
      * @apiUse JWT
      *
-     * @apiParam {String} fromAddress account address to transfer from
-     * @apiParam {String} toAddress account address to transfer to
+     * @apiParam {Object[]} from transaction from array (currently supports only one object)
+     * @apiParam {String} from.accountAddress account address to transfer from
+     * @apiParam {String} from.amount amount to transfer as string (for example: 100 can be sent as "100" or "1e2")
+     * @apiParam {Object[]} to transaction to array (currently supports only one object)
+     * @apiParam {String} to.accountAddress account address to transfer to
+     * @apiParam {String} to.amount amount to transfer as string (for example: 100 can be sent as "100" or "1e2")
      * @apiParam {String} currencyAddress currency contract address to transfer
-     * @apiParam {String} amount amount to transfer as string (for example: 100 can be sent as "100" or "1e2")
      *
      * @apiSuccess {String} id transaction unique id.
      *
@@ -37,16 +42,25 @@ module.exports = (osseus) => {
      *     }
      */
     transfer: async (req, res, next) => {
+      const amountReducer = (a, b) => (new BigNumber(a)).plus(new BigNumber(b))
+
+      let fromAmount = req.body.from.map(elem => elem.amount).reduce(amountReducer, new BigNumber(0))
+      let toAmount = req.body.to.map(elem => elem.amount).reduce(amountReducer, new BigNumber(0))
+
+      if (!fromAmount.isEqualTo(toAmount)) {
+        return next(new Error(`There was an error trying to make the transfer (amounts mismatch)`))
+      }
+
       let tx = await osseus.lib.Transaction.transfer(
         {
-          accountAddress: req.body.fromAddress,
+          accountAddress: req.body.from[0].accountAddress,
           currency: req.body.currencyAddress
         },
         {
-          accountAddress: req.body.toAddress,
+          accountAddress: req.body.to[0].accountAddress,
           currency: req.body.currencyAddress
         },
-        req.body.amount
+        fromAmount
       ).catch(err => { return next(err) })
       if (tx.state !== 'DONE') {
         return next(new Error(`There was an error trying to make the transfer`))
@@ -114,7 +128,7 @@ module.exports = (osseus) => {
      * @apiSuccess {String} id transaction unique id
      * @apiSuccess {String} createdAt transaction creation time
      * @apiSuccess {String} updatedAt transaction last update time
-     * @apiSuccess {Object} from transacrtion from object
+     * @apiSuccess {Object} from transaction from object
      * @apiSuccess {String} from.accountAddress transaction from account address
      * @apiSuccess {String} from.currency transaction from currency contract address
      * @apiSuccess {Object} to tranasction to object

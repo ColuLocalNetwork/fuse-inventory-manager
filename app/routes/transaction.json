@@ -5,19 +5,15 @@
       "jwt": true,
       "validators": {
         "body": {
-          "fromAddress": {
+          "from": {
             "notEmpty": true,
             "errorMessage": "is missing"
           },
-          "toAddress": {
+          "to": {
             "notEmpty": true,
             "errorMessage": "is missing"
           },
           "currencyAddress": {
-            "notEmpty": true,
-            "errorMessage": "is missing"
-          },
-          "amount": {
             "notEmpty": true,
             "errorMessage": "is missing"
           }
