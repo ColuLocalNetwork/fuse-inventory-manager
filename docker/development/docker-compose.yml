@@ -1,0 +1,18 @@
+#
+# For running some services on development without tainting your system
+#
+version: '2'
+services:
+
+  mongo:
+    image: "mongo"
+    container_name: im_development-mongo
+    ports:
+      - '127.0.0.1:27017:27017'
+    volumes:
+      - 'mongo:/var/lib/mongo/data'
+    environment:
+      KEY: VALUE
+
+volumes:
+  mongo:
