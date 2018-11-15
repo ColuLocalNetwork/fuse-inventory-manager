@@ -35,6 +35,9 @@ $ npm install
 This commands installs everything which is required for building and testing the project.
 
 ## Developing
+### Install nodemon: `npm i -g nodemon`
+Firstly, you must install nodemon, as the dev environment uses it.
+
 ### Run locally: `npm run dev`
 This task will run the application and start listening on port `8080`.
 
