@@ -4,7 +4,7 @@
   "description": "The inventory manager is a server implementation for community currency issuers",
   "main": "index.js",
   "scripts": {
-    "start": "node index.js --ENV PRODUCTION",
+    "start": "node index.js",
     "dev": "nodemon index.js --ENV LOCAL",
     "build": "npm install",
     "lint": "./node_modules/.bin/standard",
