@@ -28,7 +28,7 @@ module.exports = (osseus) => {
     value: {type: db.mongoose.Schema.Types.Decimal128, set: setDecimal128, get: getDecimal128},
     type: {type: String, enum: ['TRANSFER', 'CHANGE', 'DEPOSIT']},
     meta: {type: db.mongoose.Schema.Types.Mixed},
-    state: {type: String, enum: ['TRANSMITTED', 'CONFIRMED', 'FINALIZED'], default: 'TRANSMITTED'},
+    state: {type: String, enum: ['TRANSMITTED', 'DONE', 'CONFIRMED'], default: 'TRANSMITTED'},
     known: {type: Boolean, default: true}
   }).plugin(timestamps())
 

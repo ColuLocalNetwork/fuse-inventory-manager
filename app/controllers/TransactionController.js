@@ -243,7 +243,7 @@ module.exports = (osseus) => {
      * @apiSuccess {String} createdAt transmit creation time
      * @apiSuccess {String} updatedAt transmit last update time
      * @apiSuccess {String} currency currency id of transactions in the transmit
-     * @apiSuccess {String} state transmit state ['ACTIVE', 'WORKING_ON', 'DONE']
+     * @apiSuccess {String} state transmit state ['PENDING', 'WORKING', 'DONE']
      * @apiSuccess {String[]} offchainTransactions array of offchain transaction ids processed in the transmit
      * @apiSuccess {String[]} blockchainTransactions array of blockchain transaction ids created in the transmit
      *
@@ -307,7 +307,7 @@ module.exports = (osseus) => {
      * @apiSuccess {String} meta.to receiver ethereum address (internal transaction)
      * @apiSuccess {String} meta.token currency contract address (internal transaction)
      * @apiSuccess {String} meta.amount currency amount transfered (internal transaction)
-     * @apiSuccess {String} state transaction state ['TRANSMITTED', 'CONFIRMED', 'FINALIZED']
+     * @apiSuccess {String} state transaction state ['TRANSMITTED', 'DONE', 'CONFIRMED']
      * @apiSuccess {Boolean} known is the transaction known by the inventory manager service
      *
      * @apiSuccessExample Success Example
@@ -438,7 +438,7 @@ module.exports = (osseus) => {
      * @apiGroup Transaction
      * @apiVersion 1.0.0
      *
-     * @apiDescription Update state of blockchain transactions to "CONFIRMED" (if mined into block) or "FINALIZED" according to the "BLOCKS_TO_FINALIZE_BCTX" config parameter
+     * @apiDescription Update state of blockchain transactions to "DONE" (if mined into block) or "CONFIRMED" according to the "BLOCKS_TO_CONFIRM_BCTX" config parameter
      *
      * @apiUse JWT
      *
