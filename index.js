@@ -11,12 +11,6 @@ const main = async () => {
 
     osseus.web3 = new Web3(new Web3.providers.HttpProvider(osseus.config.web3_provider))
 
-    osseus.abi = {
-      ColuLocalNetwork: JSON.stringify(require('./config/abi/ColuLocalNetwork')),
-      ColuLocalCurrency: JSON.stringify(require('./config/abi/ColuLocalCurrency')),
-      EllipseMarketMaker: JSON.stringify(require('./config/abi/EllipseMarketMaker'))
-    }
-
     await require('./modules/utils').init(osseus)
     await require('./modules/db').init(osseus)
     await require('./modules/jobs').init(osseus)

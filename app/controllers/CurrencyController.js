@@ -89,7 +89,7 @@ module.exports = (osseus) => {
       if (req.body.cln) {
         currency = await osseus.lib.Currency.createCLN(
           req.body.currencyAddress,
-          osseus.abi.ColuLocalNetwork,
+          osseus.config.abi.ColuLocalNetwork,
           currencyBlockchainInfo,
           req.body.externalId
         ).catch(err => { return next(err) })
@@ -100,8 +100,8 @@ module.exports = (osseus) => {
         currency = await osseus.lib.Currency.create(
           req.body.currencyAddress,
           req.body.marketMakerAddress,
-          osseus.abi.ColuLocalCurrency,
-          osseus.abi.EllipseMarketMaker,
+          osseus.config.abi.CommunityCurrency,
+          osseus.config.abi.MarketMaker,
           currencyBlockchainInfo,
           req.body.externalId
         ).catch(err => { return next(err) })

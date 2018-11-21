@@ -17,5 +17,10 @@ module.exports = {
   OSSEUS_MONGO_URI: 'mongodb://localhost/inventory-manager-tests',
   WEB3_PROVIDER: 'http://127.0.0.1:7545',
   SECRET: '46fffed0-d51f-4c54-9096-e9e95e3643fbthisissomekindofsecret',
-  BLOCKS_TO_CONFIRM_BCTX: 20
+  BLOCKS_TO_CONFIRM_BCTX: 20,
+  ABI: {
+    CLN: JSON.stringify(require('./abi/ColuLocalNetwork')),
+    CommunityCurrency: JSON.stringify(require('./abi/ColuLocalCurrency')),
+    MarketMaker: JSON.stringify(require('./abi/EllipseMarketMaker'))
+  }
 }

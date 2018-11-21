@@ -78,7 +78,7 @@ contract('COMMUNITY', async (accounts) => {
   })
 
   it('should create a community (with default wallets)', async () => {
-    let currency = await osseus.lib.Currency.create(currencyAddress, marketMakerAddress, osseus.abi.cc, osseus.abi.mm, currencyBlockchainInfo, osseus.helpers.randomStr(10))
+    let currency = await osseus.lib.Currency.create(currencyAddress, marketMakerAddress, osseus.config.abi.CommunityCurrency, osseus.config.abi.MarketMaker, currencyBlockchainInfo, osseus.helpers.randomStr(10))
     let community = await osseus.lib.Community.create(communityName, currency.id, osseus.helpers.randomStr(10))
     validateCommunity(community, undefined, currency, undefined, undefined, true)
   })
@@ -88,7 +88,7 @@ contract('COMMUNITY', async (accounts) => {
     for (var i = 1; i < osseus.helpers.randomNum(100); i++) {
       wallets.push({type: `user ${i}`, exid: osseus.helpers.randomStr(10)})
     }
-    let currency = await osseus.lib.Currency.create(currencyAddress, marketMakerAddress, osseus.abi.cc, osseus.abi.mm, currencyBlockchainInfo, osseus.helpers.randomStr(10))
+    let currency = await osseus.lib.Currency.create(currencyAddress, marketMakerAddress, osseus.config.abi.CommunityCurrency, osseus.config.abi.MarketMaker, currencyBlockchainInfo, osseus.helpers.randomStr(10))
     let community = await osseus.lib.Community.create(communityName, currency.id, osseus.helpers.randomStr(10), wallets)
     validateCommunity(community, undefined, currency, undefined, wallets.length, true)
   })
@@ -98,7 +98,7 @@ contract('COMMUNITY', async (accounts) => {
     for (var i = 1; i < osseus.helpers.randomNum(100); i++) {
       wallets.push({type: `user ${i}`, exid: osseus.helpers.randomStr(10)})
     }
-    let currency = await osseus.lib.Currency.create(currencyAddress, marketMakerAddress, osseus.abi.cc, osseus.abi.mm, currencyBlockchainInfo, osseus.helpers.randomStr(10))
+    let currency = await osseus.lib.Currency.create(currencyAddress, marketMakerAddress, osseus.config.abi.CommunityCurrency, osseus.config.abi.MarketMaker, currencyBlockchainInfo, osseus.helpers.randomStr(10))
     let community = await osseus.lib.Community.create(communityName, currency.id, osseus.helpers.randomStr(10), wallets).catch(err => {
       expect(err).not.to.be.undefined
     })
@@ -106,7 +106,7 @@ contract('COMMUNITY', async (accounts) => {
   })
 
   it('should get community (by id)', async () => {
-    let currency = await osseus.lib.Currency.create(currencyAddress, marketMakerAddress, osseus.abi.cc, osseus.abi.mm, currencyBlockchainInfo, osseus.helpers.randomStr(10))
+    let currency = await osseus.lib.Currency.create(currencyAddress, marketMakerAddress, osseus.config.abi.CommunityCurrency, osseus.config.abi.MarketMaker, currencyBlockchainInfo, osseus.helpers.randomStr(10))
     let community1 = await osseus.lib.Community.create(communityName, currency.id, osseus.helpers.randomStr(10))
     let community2 = await osseus.db_models.community.getById(community1.id)
     let community3 = await osseus.db_models.community.getByIdPopulated(community1.id)
@@ -115,14 +115,14 @@ contract('COMMUNITY', async (accounts) => {
   })
 
   it('should get community (by name)', async () => {
-    let currency = await osseus.lib.Currency.create(currencyAddress, marketMakerAddress, osseus.abi.cc, osseus.abi.mm, currencyBlockchainInfo, osseus.helpers.randomStr(10))
+    let currency = await osseus.lib.Currency.create(currencyAddress, marketMakerAddress, osseus.config.abi.CommunityCurrency, osseus.config.abi.MarketMaker, currencyBlockchainInfo, osseus.helpers.randomStr(10))
     let community1 = await osseus.lib.Community.create(communityName, currency.id, osseus.helpers.randomStr(10))
     let community2 = await osseus.db_models.community.getByName(communityName)
     validateCommunity(community1, community2, currency, undefined, undefined, true)
   })
 
   it('should get community (by wallet address)', async () => {
-    let currency = await osseus.lib.Currency.create(currencyAddress, marketMakerAddress, osseus.abi.cc, osseus.abi.mm, currencyBlockchainInfo, osseus.helpers.randomStr(10))
+    let currency = await osseus.lib.Currency.create(currencyAddress, marketMakerAddress, osseus.config.abi.CommunityCurrency, osseus.config.abi.MarketMaker, currencyBlockchainInfo, osseus.helpers.randomStr(10))
     let community1 = await osseus.lib.Community.create(communityName, currency.id, osseus.helpers.randomStr(10))
     let community2 = await osseus.db_models.community.getByWalletAddress(community1.wallets[0].address)
     validateCommunity(community1, community2, currency, undefined, undefined, true)
@@ -136,7 +136,7 @@ contract('COMMUNITY', async (accounts) => {
 
   it('should get error if community not found (by id)', async () => {
     let fakeId = '123abc'
-    let currency = await osseus.lib.Currency.create(currencyAddress, marketMakerAddress, osseus.abi.cc, osseus.abi.mm, currencyBlockchainInfo, osseus.helpers.randomStr(10))
+    let currency = await osseus.lib.Currency.create(currencyAddress, marketMakerAddress, osseus.config.abi.CommunityCurrency, osseus.config.abi.MarketMaker, currencyBlockchainInfo, osseus.helpers.randomStr(10))
     let community1 = await osseus.lib.Community.create(communityName, currency.id, osseus.helpers.randomStr(10))
     validateCommunity(community1, undefined, currency, undefined, undefined, true)
     let community2 = await osseus.db_models.community.getById(fakeId).catch(err => {
@@ -146,7 +146,7 @@ contract('COMMUNITY', async (accounts) => {
   })
 
   it('should get all communities', async () => {
-    let currency = await osseus.lib.Currency.create(currencyAddress, marketMakerAddress, osseus.abi.cc, osseus.abi.mm, currencyBlockchainInfo, osseus.helpers.randomStr(10))
+    let currency = await osseus.lib.Currency.create(currencyAddress, marketMakerAddress, osseus.config.abi.CommunityCurrency, osseus.config.abi.MarketMaker, currencyBlockchainInfo, osseus.helpers.randomStr(10))
     let community1 = await osseus.lib.Community.create(`${communityName} #1`, currency.id, osseus.helpers.randomStr(10))
     let community2 = await osseus.lib.Community.create(`${communityName} #2`, currency.id, osseus.helpers.randomStr(10))
     let community3 = await osseus.lib.Community.create(`${communityName} #3`, currency.id, osseus.helpers.randomStr(10))

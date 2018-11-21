@@ -11,11 +11,6 @@ module.exports = async () => {
   osseus.web3 = web3 // this is the global web3 created by truffle...
   osseus.web3.eth.getBlockNumber = util.promisify(osseus.web3.eth.getBlockNumber)
   if (!osseus.utils) require(path.join(cwd, 'modules/utils')).init(osseus)
-  osseus.abi = {
-    cln: JSON.stringify(require(path.join(cwd, 'config/abi/ColuLocalNetwork'))),
-    cc: JSON.stringify(require(path.join(cwd, 'config/abi/ColuLocalCurrency'))),
-    mm: JSON.stringify(require(path.join(cwd, 'config/abi/EllipseMarketMaker')))
-  }
   osseus.db_models = osseus.db_models || {
     bctx: require(path.join(cwd, 'modules/db/models/blockchainTransaction'))(osseus),
     currency: require(path.join(cwd, 'modules/db/models/currency'))(osseus),
