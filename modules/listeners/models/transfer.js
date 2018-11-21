@@ -67,26 +67,6 @@ module.exports = (osseus) => {
   }
 
   return {
-    init: async () => {
-      osseus.logger.silly(`Transfer events listener - init`)
-      const currencies = await osseus.db_models.currency.getAllCCs()
-      if (!currencies || currencies.length === 0) {
-        osseus.logger.warn(`Transfer events listener - init - no currencies`)
-        return
-      }
-      async.each(currencies, async (currency) => {
-        const address = currency.currencyAddress
-        const abi = JSON.parse(currency.currencyABI)
-        osseus.logger.silly(`Transfer events listener - init - currency address: ${address}`)
-        const CurrencyContract = new osseus.web3WS.eth.Contract(abi, address)
-        CurrencyContract.events.Transfer(onEvent)
-      }, (err) => {
-        return err
-          ? osseus.logger.warn(`Transfer events listener - init - error`, err)
-          : osseus.logger.silly(`Transfer events listener - init - done`)
-      })
-    },
-
     getPastEvents: async () => {
       osseus.logger.silly(`Transfer events listener - getPastEvents`)
       const currencies = await osseus.db_models.currency.getAllCCs()
