@@ -10,7 +10,6 @@ const init = (osseus) => {
     setInterval(async () => {
       await transferListener.getPastEvents()
     }, pastEventsInterval)
-    await transferListener.init()
     osseus.logger.info(`Listeners ready`)
     resolve()
   })
