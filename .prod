@@ -1,0 +1,39 @@
+version: '2'
+services:
+
+  mongo:
+    image: "mongo"
+    container_name: mongodb_prod
+    expose:
+      - '27017'
+    volumes:
+      - 'mongodb_prod:/var/lib/mongo/data'
+
+  im_prod:
+    build: .
+    image: 'im'
+    container_name: im_prod
+    environment:
+      to_execute: 'node index.js'
+      mongodb_container: 'mongodb_prod'
+      im_container: 'im_prod'
+    ports:
+     - "8080:8080"
+     - "7545:7545"
+    volumes:
+     - .:/im_prod
+    tty: true
+    privileged: true
+    links:
+     - "mongo:mongodb_prod"
+    depends_on:
+      - mongo
+    command:
+      - /bin/bash
+      - -c
+      - |
+         /inventory-manager/docker/entrypoint.sh
+
+volumes:
+  mongodb_prod:
+  im_prod:

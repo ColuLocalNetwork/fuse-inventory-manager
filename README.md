@@ -11,36 +11,25 @@ It provides blockchain reflection of offchain activities on community currencies
 
 To avoid any sort of setup on your host machine, you may choose to use our docker-compose solution for a complete testing environment.
 
-Alternatively, you can download and install Node.js and run the mongodb container only.
+MongoDB only: `sudo docker-compose up -d`
+ - Exposes localhost:27017, makes mongodb://localhost/ responsive.
 
-### Complete Testing Environment
+Dev: `sudo docker-compose -f .dev up -d`
+ - Forwards 8082 to 8080**, makes http://localhost:8082 seem like http://localhost:8080 (local)
+ - Forwards 7547 to 7545**, makes http://localhost:7547 seem like http://localhost:7545 (truffle)
+ - Runs `npm run dev` in the project folder
 
-```sh
-git clone https://github.com/ColuLocalNetwork/inventory-manager
-cd inventory-manager/docker/test
-sudo docker-compose up -d
-```
+Test: `sudo docker-compose -f .test up -d`
+ - Forwards **8081** to **8081**, makes http://localhost:8081 seem like http://localhost:8081 (test)
+ - Forwards **7546** to **7545**, makes http://localhost:7546 seem like http://localhost:7545 (truffle)
+ - Runs `npm test` in the project folder
 
-The last command will build and run the environment. A copy of the inventory-manager folder will be bound in the app container, so you can make changes to files on your local machine and run the tests within the container.
+Prod: `sudo docker-compose -f .prod up -d`
+ - Forwards **8080** to **8080**, makes http://localhost:8080 seem like http://localhost:8080 (prod)
+ - Forwards **7545** to **7545**, makes http://localhost:7545 seem like http://localhost:7545 (truffle)
+ - Runs `node index.js` in the project folder
 
-To enter the app container:
-```sh
-sudo docker exec -it inventory-manager-development bash
-```
-
-And go to `/inventory-manager/home/USERNAME/**/inventory-manager` to run `npm test` or other commands.
-
-### MondoDB Container
-
-```sh
-git clone https://github.com/ColuLocalNetwork/inventory-manager
-cd inventory-manager/docker/mongo
-sudo docker-compose up -d
-```
-
-Then, you'll be able to reach the container by pinging http://localhost:27017.
-
-With the MongoDB container, you won't be required to install it as a dependency in the list below.
+All three of Dev, Test and Prod containers share the same image and mount the local project folder to the container's `/im_{dev|test|prod}`. Every container 
 
 ## Dependencies
 

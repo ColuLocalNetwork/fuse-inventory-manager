@@ -1,0 +1,39 @@
+version: '2'
+services:
+
+  mongo:
+    image: "mongo"
+    container_name: mongodb_test
+    expose:
+      - '27017'
+    volumes:
+      - 'mongodb_test:/var/lib/mongo/data'
+
+  im_test:
+    build: .
+    image: 'im'
+    container_name: im_test
+    environment:
+      to_execute: 'npm test'
+      mongodb_container: 'mongodb_test'
+      im_container: 'im_test'
+    ports:
+     - "8081:8081"
+     - "7546:7545"
+    volumes:
+     - .:/im_test
+    tty: true
+    privileged: true
+    links:
+     - "mongo:mongodb_test"
+    depends_on:
+      - mongo
+    command:
+      - /bin/bash
+      - -c
+      - |
+         /inventory-manager/docker/entrypoint.sh
+
+volumes:
+  mongodb_test:
+  im_test:

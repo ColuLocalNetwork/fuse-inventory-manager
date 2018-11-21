@@ -1,0 +1,39 @@
+version: '2'
+services:
+
+  mongo:
+    image: "mongo"
+    container_name: mongodb_dev
+    expose:
+      - '27017'
+    volumes:
+      - 'mongodb_dev:/var/lib/mongo/data'
+
+  im_dev:
+    build: .
+    image: 'im'
+    container_name: im_dev
+    environment:
+      to_execute: 'npm run dev'
+      mongodb_container: 'mongodb_dev'
+      im_container: 'im_dev'
+    ports:
+     - "8082:8080"
+     - "7547:7545"
+    volumes:
+     - .:/im_dev
+    tty: true
+    privileged: true
+    links:
+     - "mongo:mongodb_dev"
+    depends_on:
+      - mongo
+    command:
+      - /bin/bash
+      - -c
+      - |
+         /inventory-manager/docker/entrypoint.sh
+
+volumes:
+  mongodb_dev:
+  im_dev:
