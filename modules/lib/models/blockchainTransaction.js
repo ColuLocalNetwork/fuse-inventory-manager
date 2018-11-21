@@ -135,7 +135,7 @@ module.exports = (osseus) => {
             return reject(err)
           }
           tx.type = 'DEPOSIT'
-          tx.state = 'CONFIRMED'
+          tx.state = 'DONE'
           tx.meta = {from: from, to: to, token: token, amount: amount.toString()}
           const result = await osseus.db_models.bctx.create(tx)
           osseus.logger.debug(`blockchainTransaction.deposit --> result: ${JSON.stringify(result)}`)
@@ -152,7 +152,7 @@ module.exports = (osseus) => {
     return new Promise(async (resolve, reject) => {
       try {
         const filters = {
-          state: {$ne: 'FINALIZED'}
+          state: {$ne: 'CONFIRMED'}
         }
 
         if (address) filters.address = address
@@ -182,9 +182,9 @@ module.exports = (osseus) => {
             osseus.logger.silly(`tx: ${JSON.stringify(tx)}`)
             let newState
             if (tx.blockNumber) {
-              newState = 'CONFIRMED'
-              if (currentBlock - tx.blockNumber >= osseus.config.blocks_to_finalize_bctx) {
-                newState = 'FINALIZED'
+              newState = 'DONE'
+              if (currentBlock - tx.blockNumber >= osseus.config.blocks_to_confirm_bctx) {
+                newState = 'CONFIRMED'
               }
             }
             let updatedTransaction = await osseus.db_models.bctx.update({_id: transaction._id}, {$set: {state: newState, blockHash: tx.blockHash, blockNumber: tx.blockNumber}})

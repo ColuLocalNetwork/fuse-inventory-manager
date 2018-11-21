@@ -6,7 +6,7 @@ module.exports = (osseus) => {
 
   const TransmitSchema = new Schema({
     currency: {type: Schema.Types.ObjectId, ref: 'Currency', required: true},
-    state: {type: String, enum: ['ACTIVE', 'WORKING_ON', 'DONE'], default: 'ACTIVE'},
+    state: {type: String, enum: ['PENDING', 'WORKING', 'DONE'], default: 'PENDING'},
     offchainTransactions: [{type: Schema.Types.ObjectId, ref: 'Transaction'}],
     blockchainTransactions: [{type: Schema.Types.ObjectId, ref: 'Blockchain_Transaction'}]
   }).plugin(timestamps())
@@ -99,9 +99,9 @@ module.exports = (osseus) => {
     })
   }
 
-  transmit.getActive = (currency) => {
+  transmit.getPending = (currency) => {
     return new Promise((resolve, reject) => {
-      Transmit.findOne({currency: currency, state: 'ACTIVE'}, async (err, doc) => {
+      Transmit.findOne({currency: currency, state: 'PENDING'}, async (err, doc) => {
         if (err) {
           return reject(err)
         }
@@ -115,11 +115,11 @@ module.exports = (osseus) => {
 
   transmit.workOn = (currency) => {
     return new Promise((resolve, reject) => {
-      Transmit.findOneAndUpdate({currency: currency, state: 'ACTIVE'}, {$set: {state: 'WORKING_ON'}}, {new: true}, async (err, updatedObj) => {
+      Transmit.findOneAndUpdate({currency: currency, state: 'PENDING'}, {$set: {state: 'WORKING'}}, {new: true}, async (err, updatedObj) => {
         if (err) {
           return reject(err)
         }
-        await transmit.getActive(currency)
+        await transmit.getPending(currency)
         resolve(updatedObj)
       })
     })

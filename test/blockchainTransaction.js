@@ -784,7 +784,7 @@ contract('BLOCKCHAIN_TRANSACTION', async (accounts) => {
       const updatedTxs = await osseus.lib.BlockchainTransaction.syncState()
       expect(updatedTxs).to.have.lengthOf(transferTxs.length + changeTxs.length)
       updatedTxs.forEach(tx => {
-        expect(tx.state).to.equal('CONFIRMED')
+        expect(tx.state).to.equal('DONE')
         expect(tx.blockHash).not.to.be.undefined
         expect(tx.blockNumber).not.to.be.undefined
       })
@@ -796,7 +796,7 @@ contract('BLOCKCHAIN_TRANSACTION', async (accounts) => {
       const updatedTxs = await osseus.lib.BlockchainTransaction.syncState(communityManagerAddress, 'TRANSFER')
       expect(updatedTxs).to.have.lengthOf(transferTxs.length)
       updatedTxs.forEach(tx => {
-        expect(tx.state).to.equal('CONFIRMED')
+        expect(tx.state).to.equal('DONE')
         expect(tx.blockHash).not.to.be.undefined
         expect(tx.blockNumber).not.to.be.undefined
       })
@@ -809,23 +809,23 @@ contract('BLOCKCHAIN_TRANSACTION', async (accounts) => {
       const transferTxs = await makeSomeTransferTransactions(osseus.helpers.randomNum(10) + 1)
       const changeTxs = await makeSomeChangeTransactions(osseus.helpers.randomNum(10) + 1)
 
-      osseus.config.blocks_to_finalize_bctx = 20
+      osseus.config.blocks_to_confirm_bctx = 20
 
       const updatedTxs = await osseus.lib.BlockchainTransaction.syncState()
       expect(updatedTxs).to.have.lengthOf(transferTxs.length + changeTxs.length)
       updatedTxs.forEach(tx => {
-        expect(tx.state).to.equal('CONFIRMED')
+        expect(tx.state).to.equal('DONE')
         expect(tx.blockHash).not.to.be.undefined
         expect(tx.blockNumber).not.to.be.undefined
       })
 
-      osseus.config.blocks_to_finalize_bctx = 1
+      osseus.config.blocks_to_confirm_bctx = 1
 
       const updatedTxs2 = await osseus.lib.BlockchainTransaction.syncState()
       expect(updatedTxs2).to.have.lengthOf(updatedTxs.length)
       updatedTxs2.forEach((tx, i) => {
         let isLast = i < updatedTxs2.length - 1
-        expect(tx.state).to.equal(isLast ? 'FINALIZED' : 'CONFIRMED')
+        expect(tx.state).to.equal(isLast ? 'CONFIRMED' : 'DONE')
       })
     })
   })

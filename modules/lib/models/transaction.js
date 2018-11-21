@@ -196,7 +196,7 @@ module.exports = (osseus) => {
         to = await validateParticipant(to)
         amount = await validateAmount(amount)
 
-        const transmit = await osseus.db_models.transmit.getActive(from.currency)
+        const transmit = await osseus.db_models.transmit.getPending(from.currency)
 
         const data = {
           from: from,

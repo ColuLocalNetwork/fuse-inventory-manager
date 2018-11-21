@@ -33,7 +33,7 @@ module.exports = (osseus) => {
       } else {
         osseus.logger.info(`Transfer event with known addresses - from: ${from}, to: ${to}, amount: ${amount.toNumber()}`)
         data.type = 'TRANSFER'
-        data.state = 'CONFIRMED'
+        data.state = 'DONE'
         data.meta = {from: from, to: to, token: token, amount: amount.toString()}
         const update = {
           $set: data,
