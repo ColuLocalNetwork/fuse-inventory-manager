@@ -45,6 +45,7 @@ module.exports = (osseus) => {
      * @apiUse JWT
      *
      * @apiParam {String} address market maker contract address.
+     * @apiParam {Object} abi market maker contract abi.
      * @apiParam {String} tokenAddress1 first token address supported by the market maker contract.
      * @apiParam {String} tokenAddress2 second token address supported by the market maker contract.
      *
@@ -58,6 +59,7 @@ module.exports = (osseus) => {
       })
       const marketMaker = await osseus.lib.MarketMaker.create(
         req.body.address,
+        JSON.stringify(req.body.abi),
         req.body.tokenAddress1,
         req.body.tokenAddress2
       ).catch(err => { return next(err) })
@@ -76,6 +78,7 @@ module.exports = (osseus) => {
      *
      * @apiParam {String} id market maker id.
      * @apiParam {String} [address] market maker contract address.
+     * @apiParam {Object} [abi] market maker contract abi.
      * @apiParam {String} [tokenAddress1] first token address supported by the market maker contract.
      * @apiParam {String} [tokenAddress2] second token address supported by the market maker contract.
      *
@@ -122,6 +125,7 @@ module.exports = (osseus) => {
      *
      * @apiParam {String} address market maker contract address.
      * @apiParam {String} [address] market maker contract address.
+     * @apiParam {Object} [abi] market maker contract abi.
      * @apiParam {String} [tokenAddress1] first token address supported by the market maker contract.
      * @apiParam {String} [tokenAddress2] second token address supported by the market maker contract.
      *

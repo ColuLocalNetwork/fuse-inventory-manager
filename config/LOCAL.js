@@ -17,10 +17,5 @@ module.exports = {
   OSSEUS_MONGO_URI: 'mongodb://localhost/inventory-manager',
   WEB3_PROVIDER: 'https://ropsten.infura.io',
   SECRET: 'e4365c30-ec9f-459a-8a8e-55d3818c6134kNJYzFQ1jB97WXAn',
-  BLOCKS_TO_CONFIRM_BCTX: 20,
-  ABI: {
-    CLN: JSON.stringify(require('./abi/ColuLocalNetwork')),
-    CommunityCurrency: JSON.stringify(require('./abi/ColuLocalCurrency')),
-    MarketMaker: JSON.stringify(require('./abi/EllipseMarketMaker'))
-  }
+  BLOCKS_TO_CONFIRM_BCTX: 20
 }

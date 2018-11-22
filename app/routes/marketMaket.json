@@ -9,6 +9,10 @@
             "notEmpty": true,
             "errorMessage": "is missing"
           },
+          "abi": {
+            "notEmpty": true,
+            "errorMessage": "is missing"
+          },
           "tokenAddress1": {
             "notEmpty": true,
             "errorMessage": "is missing"

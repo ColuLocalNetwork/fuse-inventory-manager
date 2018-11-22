@@ -3,14 +3,14 @@ const contract = require('truffle-contract')
 module.exports = (osseus) => {
   function marketMaker () {}
 
-  marketMaker.create = (address, tokenAddress1, tokenAddress2) => {
+  marketMaker.create = (address, abi, tokenAddress1, tokenAddress2) => {
     return new Promise(async (resolve, reject) => {
       try {
         const data = {
           address: address,
           tokenAddress1: tokenAddress1,
           tokenAddress2: tokenAddress2,
-          abi: osseus.config.abi.MarketMaker
+          abi: abi
         }
         const newMarketMaker = await osseus.db_models.marketMaker.create(data)
         resolve(newMarketMaker)

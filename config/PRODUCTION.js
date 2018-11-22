@@ -12,10 +12,5 @@ module.exports = {
   OSSEUS_ROUTER_POLICY_PATH: '/app/middlewares',
   OSSEUS_ROUTER_URL_PREFIX: '/api',
   OSSEUS_MONGO_DEPENDENCIES: ['logger'],
-  BLOCKS_TO_CONFIRM_BCTX: 20,
-  ABI: {
-    CLN: JSON.stringify(require('./abi/ColuLocalNetwork')),
-    CommunityCurrency: JSON.stringify(require('./abi/ColuLocalCurrency')),
-    MarketMaker: JSON.stringify(require('./abi/EllipseMarketMaker'))
-  }
+  BLOCKS_TO_CONFIRM_BCTX: 20
 }

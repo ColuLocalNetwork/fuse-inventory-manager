@@ -62,6 +62,7 @@ module.exports = (osseus) => {
      * @apiUse JWT
      *
      * @apiParam {String} address currency contract address.
+     * @apiParam {Object} abi currency contract abi.
      * @apiParam {String} creationTransactionHash transaction hash of currency contract creation.
      * @apiParam {String} creationBlockHash block hash of currency contract creation.
      * @apiParam {Number} creationBlockNumber block number of currency contract creation.
@@ -81,7 +82,7 @@ module.exports = (osseus) => {
       }
       currency = await osseus.lib.Currency.create(
         req.body.address,
-        osseus.config.abi.CommunityCurrency,
+        JSON.stringify(req.body.abi),
         blockchainInfo,
         req.body.externalId
       ).catch(err => { return next(err) })
@@ -100,6 +101,7 @@ module.exports = (osseus) => {
      *
      * @apiParam {String} id currency id.
      * @apiParam {String} [address] currency contract address.
+     * @apiParam {Object} [abi] currency contract abi.
      * @apiParam {String} [creationTransactionHash] transaction hash of currency contract creation.
      * @apiParam {String} [creationBlockHash] block hash of currency contract creation.
      * @apiParam {Number} [creationBlockNumber] block number of currency contract creation.
@@ -149,6 +151,7 @@ module.exports = (osseus) => {
      * @apiUse JWT
      *
      * @apiParam {String} address currency contract address.
+     * @apiParam {Object} [abi] currency contract abi.
      * @apiParam {String} [address] currency contract address.
      * @apiParam {String} [creationTransactionHash] transaction hash of currency contract creation.
      * @apiParam {String} [creationBlockHash] block hash of currency contract creation.
