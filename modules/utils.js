@@ -4,24 +4,13 @@ const getCurrencyFromToken = (token, community) => {
   this.osseus.logger.debug(`utils --> getCurrencyFromToken --> token: ${token}, community: ${JSON.stringify(community)}`)
   return new Promise(async (resolve, reject) => {
     try {
-      const result = {}
-      if (token === this.osseus.config.cln_address) {
-        this.osseus.logger.silly(`getCurrencyFromToken --> CLN: ${token}`)
-        const provider = await this.osseus.lib.Community.getProvider(community)
-        const currency = await this.osseus.lib.Currency.getCLN(provider)
-        result.contract = currency.contracts.cln
-        result.web3 = currency.contracts.web3
-      } else {
-        this.osseus.logger.silly(`getCurrencyFromToken --> CC: ${token}`)
-        const communityData = await this.osseus.lib.Community.get(community.id, community)
-        if (communityData.currencyContracts.cc.address !== token) {
-          return reject(new Error(`Unrecognized token: ${token} for community: ${community.id}`))
-        } else {
-          result.contract = communityData.currencyContracts.cc
-          result.web3 = communityData.currencyContracts.web3
-        }
-      }
-      resolve(result)
+      const provider = await this.osseus.lib.Community.getProvider(community)
+      const currency = await this.osseus.db_models.currency.getByAddress(token)
+      const currencyContracts = await this.osseus.lib.Currency.getContracts(currency.id, provider)
+      resolve({
+        contract: currencyContracts.currency,
+        web3: currencyContracts.web3
+      })
     } catch (err) {
       reject(err)
     }

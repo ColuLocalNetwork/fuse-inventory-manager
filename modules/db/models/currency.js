@@ -11,14 +11,12 @@ module.exports = (osseus) => {
   })
 
   const CurrencySchema = new Schema({
-    currencyType: {type: String, enum: ['CLN', 'CC'], default: 'CC'},
     address: {type: String, required: true},
     abi: {type: String, required: true},
     exid: {type: String},
     blockchainInfo: {type: CurrencyBlockchainInfoSchema}
   }).plugin(timestamps())
 
-  CurrencySchema.index({currencyType: 1, address: 1}, {unique: true})
   CurrencySchema.index({address: 1}, {unique: true})
 
   CurrencyBlockchainInfoSchema.set('toJSON', {
@@ -43,7 +41,6 @@ module.exports = (osseus) => {
         id: ret._id.toString(),
         createdAt: ret.created_at,
         updatedAt: ret.updated_at,
-        currencyType: ret.currencyType,
         address: ret.address,
         // abi: ret.abi,
         exid: ret.exid,
@@ -89,20 +86,6 @@ module.exports = (osseus) => {
     })
   }
 
-  currency.getCLN = () => {
-    return new Promise((resolve, reject) => {
-      Currency.findOne({currencyType: 'CLN'}, (err, doc) => {
-        if (err) {
-          return reject(err)
-        }
-        if (!doc) {
-          return reject(new Error(`Currency CLN not found`))
-        }
-        resolve(doc)
-      })
-    })
-  }
-
   currency.getById = (id) => {
     return new Promise((resolve, reject) => {
       Currency.findById(id, (err, doc) => {
@@ -131,9 +114,9 @@ module.exports = (osseus) => {
     })
   }
 
-  currency.getAllCCs = () => {
+  currency.getAll = () => {
     return new Promise((resolve, reject) => {
-      Currency.find({currencyType: 'CC'}, (err, docs) => {
+      Currency.find({}, (err, docs) => {
         if (err) {
           return reject(err)
         }

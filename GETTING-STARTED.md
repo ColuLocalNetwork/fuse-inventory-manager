@@ -21,10 +21,9 @@ The secret for the JWT token is the value of the config param `OSSEUS_ROUTER_JWT
 
 * Create the CLN currency using the [create currency endpoint](https://colulocalnetwork.github.io/inventory-manager/#api-Currency-CreateCurrency).
 
-	* Request `curl  -X POST http://localhost:8080/api/currency -H 'Content-Type: application/json' -H 'Authorization:Bearer <JWT_TOKEN>' -d '{
-"cln": true, "address": "0x41C9d91E96b933b74ae21bCBb617369CBE022530", "creationTransactionHash": "0xa06b0a418df1ce9c1a315b8570c2c5a2c1ba2712fee61293499d429883d55dad", "creationBlockHash": "0x1997f3345a9b75557c5fa0d1a187265267c1a8b332239fd85ebc12be717850f4", "creationBlockNumber": 2684045}'`
+	* Request `curl  -X POST http://localhost:8080/api/currency -H 'Content-Type: application/json' -H 'Authorization:Bearer <JWT_TOKEN>' -d '{"address": "0x41C9d91E96b933b74ae21bCBb617369CBE022530", "creationTransactionHash": "0xa06b0a418df1ce9c1a315b8570c2c5a2c1ba2712fee61293499d429883d55dad", "creationBlockHash": "0x1997f3345a9b75557c5fa0d1a187265267c1a8b332239fd85ebc12be717850f4", "creationBlockNumber": 2684045}'`
 
-	* Response `{"id":"5bcdca167b42b274bab942c6","createdAt":"2018-10-22T13:01:10.857Z","updatedAt":"2018-10-22T13:01:10.857Z","currencyType":"CLN","address":"0x41c9d91e96b933b74ae21bcbb617369cbe022530","blockchainInfo":{"blockHash":"0x1997f3345a9b75557c5fa0d1a187265267c1a8b332239fd85ebc12be717850f4","blockNumber":2684045,"transactionHash":"0xa06b0a418df1ce9c1a315b8570c2c5a2c1ba2712fee61293499d429883d55dad"}}`
+	* Response `{"id":"5bcdca167b42b274bab942c6","createdAt":"2018-10-22T13:01:10.857Z","updatedAt":"2018-10-22T13:01:10.857Z","address":"0x41c9d91e96b933b74ae21bcbb617369cbe022530","blockchainInfo":{"blockHash":"0x1997f3345a9b75557c5fa0d1a187265267c1a8b332239fd85ebc12be717850f4","blockNumber":2684045,"transactionHash":"0xa06b0a418df1ce9c1a315b8570c2c5a2c1ba2712fee61293499d429883d55dad"}}`
 
 * Create the IMT community currency using the [create currency endpoint](https://colulocalnetwork.github.io/inventory-manager/#api-Currency-CreateCurrency).
 
@@ -34,7 +33,7 @@ The secret for the JWT token is the value of the config param `OSSEUS_ROUTER_JWT
   "creationBlockHash": "0xc5143f36a8129eea1faae562f9dac21e307b54a12ccf833824a3f6d8d02d09f5",
   "creationBlockNumber": 4279718
 }'`
-	* Response `{"id":"5bcdcb0d7b42b274bab942c9","createdAt":"2018-10-22T13:05:17.281Z","updatedAt":"2018-10-22T13:05:17.281Z","currencyType":"CC","address":"0xbc2a27de3e15f61012d855b7372f1bf6dcf8f2a3","blockchainInfo":{"blockHash":"0xc5143f36a8129eea1faae562f9dac21e307b54a12ccf833824a3f6d8d02d09f5","blockNumber":4279718,"transactionHash":"0xe7307b4f1f49f7a5f75e03e419c08d8f3405f65fe70dfba8b5814be3c9c9e69e"}}`
+	* Response `{"id":"5bcdcb0d7b42b274bab942c9","createdAt":"2018-10-22T13:05:17.281Z","updatedAt":"2018-10-22T13:05:17.281Z","address":"0xbc2a27de3e15f61012d855b7372f1bf6dcf8f2a3","blockchainInfo":{"blockHash":"0xc5143f36a8129eea1faae562f9dac21e307b54a12ccf833824a3f6d8d02d09f5","blockNumber":4279718,"transactionHash":"0xe7307b4f1f49f7a5f75e03e419c08d8f3405f65fe70dfba8b5814be3c9c9e69e"}}`
 
 * Create the IMT market maker using the [create market maker endpoint](https://colulocalnetwork.github.io/inventory-manager/#api-MarketMaker-CreateMarketMaker).
 	* Request `curl -X POST http://localhost:8080/api/market-maker -H 'Content-Type: application/json' -H 'Authorization:Bearer <JWT_TOKEN>' -d '{

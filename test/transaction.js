@@ -121,7 +121,6 @@ contract('TRANSACTION', async (accounts) => {
     await currencyFactory.openMarket(currencyAddress)
 
     osseus = await OsseusHelper()
-    osseus.config.cln_address = cln.address
   })
 
   beforeEach(async function () {

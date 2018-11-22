@@ -15,7 +15,6 @@ module.exports = (osseus) => {
      * @apiSuccess {String} id currency unique id.
      * @apiSuccess {String} createdAt currency creation time.
      * @apiSuccess {String} updatedAt currency last update time.
-     * @apiSuccess {String} currencyType type of currency - CLN or CC.
      * @apiSuccess {String} address currency contract address.
      * @apiSuccess {String} [exid] external id of the currency (defined by who ever created it).
      * @apiSuccess {Object} blockchainInfo see below.
@@ -28,7 +27,6 @@ module.exports = (osseus) => {
      *     "id": "5bb9d9ab565e2f63d5f0263c",
      *     "createdAt": "2018-10-07T10:02:19.305Z",
      *     "updatedAt": "2018-10-07T10:02:19.305Z",
-     *     "currencyType": "CC",
      *     "address": "0x245cf01fecaa32ab0566c318d1f28df91caf7865",
      *     "exid": "123abc456def",
      *     "blockchainInfo": {
@@ -59,11 +57,10 @@ module.exports = (osseus) => {
      * @apiGroup Currency
      * @apiVersion 1.0.0
      *
-     * @apiDescription Create a new currency (CLN / CC)
+     * @apiDescription Create a new currency
      *
      * @apiUse JWT
      *
-     * @apiParam {Boolean} [cln] indicator whether creating a CLN currency.
      * @apiParam {String} address currency contract address.
      * @apiParam {String} creationTransactionHash transaction hash of currency contract creation.
      * @apiParam {String} creationBlockHash block hash of currency contract creation.
@@ -82,21 +79,12 @@ module.exports = (osseus) => {
         blockHash: req.body.creationBlockHash,
         blockNumber: req.body.creationBlockNumber
       }
-      if (req.body.cln) {
-        currency = await osseus.lib.Currency.createCLN(
-          req.body.address,
-          osseus.config.abi.ColuLocalNetwork,
-          blockchainInfo,
-          req.body.externalId
-        ).catch(err => { return next(err) })
-      } else {
-        currency = await osseus.lib.Currency.create(
-          req.body.address,
-          osseus.config.abi.CommunityCurrency,
-          blockchainInfo,
-          req.body.externalId
-        ).catch(err => { return next(err) })
-      }
+      currency = await osseus.lib.Currency.create(
+        req.body.address,
+        osseus.config.abi.CommunityCurrency,
+        blockchainInfo,
+        req.body.externalId
+      ).catch(err => { return next(err) })
       res.send(currency)
     },
 

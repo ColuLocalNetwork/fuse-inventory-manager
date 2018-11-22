@@ -125,7 +125,6 @@ contract('BLOCKCHAIN_TRANSACTION', async (accounts) => {
     mm = await EllipseMarketMaker.at(marketMakerAddress)
 
     osseus = await OsseusHelper()
-    osseus.config.cln_address = cln.address
   })
 
   beforeEach(async function () {
@@ -133,7 +132,7 @@ contract('BLOCKCHAIN_TRANSACTION', async (accounts) => {
       osseus.db_models[model].getModel().remove({}, () => {})
     })
 
-    await osseus.lib.Currency.createCLN(cln.address, osseus.config.abi.CLN, clnBlockchainInfo, osseus.helpers.randomStr(10))
+    await osseus.lib.Currency.create(cln.address, osseus.config.abi.CLN, clnBlockchainInfo, osseus.helpers.randomStr(10))
     currency = await osseus.lib.Currency.create(currencyAddress, osseus.config.abi.CommunityCurrency, currencyBlockchainInfo, osseus.helpers.randomStr(10))
     community = await osseus.lib.Community.create('Test Community', currency, osseus.helpers.randomStr(10))
 

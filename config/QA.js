@@ -12,7 +12,6 @@ module.exports = {
   OSSEUS_ROUTER_POLICY_PATH: '/app/middlewares',
   OSSEUS_ROUTER_URL_PREFIX: '/api',
   OSSEUS_MONGO_DEPENDENCIES: ['logger'],
-  CLN_ADDRESS: '0x41C9d91E96b933b74ae21bCBb617369CBE022530',
   BLOCKS_TO_CONFIRM_BCTX: 20,
   ABI: {
     CLN: JSON.stringify(require('./abi/ColuLocalNetwork')),

@@ -69,7 +69,7 @@ module.exports = (osseus) => {
   return {
     getPastEvents: async () => {
       osseus.logger.silly(`Transfer events listener - getPastEvents`)
-      const currencies = await osseus.db_models.currency.getAllCCs()
+      const currencies = await osseus.db_models.currency.getAll()
       if (!currencies || currencies.length === 0) {
         osseus.logger.warn(`Transfer events listener - getPastEvents - no currencies`)
         return

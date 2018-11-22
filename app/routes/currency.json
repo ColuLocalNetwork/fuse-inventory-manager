@@ -5,9 +5,6 @@
       "jwt": true,
       "validators": {
         "body": {
-          "cln": {
-            "optional": true
-          },
           "address": {
             "notEmpty": true,
             "errorMessage": "is missing"

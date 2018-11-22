@@ -56,7 +56,7 @@ module.exports = (osseus) => {
           let transmit = await osseus.db_models.transmit.workOn(filters.currency)
           transmits = [transmit]
         } else {
-          const currencies = await osseus.db_models.currency.getAllCCs()
+          const currencies = await osseus.db_models.currency.getAll()
           const tasks = []
           currencies.forEach(currency => {
             tasks.push(new Promise(async (resolve, reject) => {
