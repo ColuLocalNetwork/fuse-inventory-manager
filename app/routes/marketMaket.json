@@ -1,3 +1,94 @@
 {
-
+  "/market-maker": {
+    "POST": {
+      "route": "create",
+      "jwt": true,
+      "validators": {
+        "body": {
+          "address": {
+            "notEmpty": true,
+            "errorMessage": "is missing"
+          },
+          "tokenAddress1": {
+            "notEmpty": true,
+            "errorMessage": "is missing"
+          },
+          "tokenAddress2": {
+            "notEmpty": true,
+            "errorMessage": "is missing"
+          }
+        }
+      }
+    }
+  },
+  "/market-maker/id/:id": {
+    "PUT": {
+      "route": "edit",
+      "jwt": true,
+      "validators": {
+        "params": {
+          "id": {
+            "notEmpty": true,
+            "errorMessage": "is missing"
+          }
+        }
+      }
+    },
+    "GET": {
+      "route": "get",
+      "jwt": true,
+      "validators": {
+        "params": {
+          "id": {
+            "notEmpty": true,
+            "errorMessage": "is missing"
+          }
+        }
+      }
+    }
+  },
+  "/market-maker/address/:address": {
+    "PUT": {
+      "route": "editByAddress",
+      "jwt": true,
+      "validators": {
+        "params": {
+          "address": {
+            "notEmpty": true,
+            "errorMessage": "is missing"
+          }
+        }
+      }
+    },
+    "GET": {
+      "route": "getByAddress",
+      "jwt": true,
+      "validators": {
+        "params": {
+          "address": {
+            "notEmpty": true,
+            "errorMessage": "is missing"
+          }
+        }
+      }
+    }
+  },
+  "/market-maker/pair": {
+    "GET": {
+      "route": "getByPair",
+      "jwt": true,
+      "validators": {
+        "query": {
+          "tokenAddress1": {
+            "notEmpty": true,
+            "errorMessage": "is missing"
+          },
+          "tokenAddress2": {
+            "notEmpty": true,
+            "errorMessage": "is missing"
+          }
+        }
+      }
+    }
+  }
 }

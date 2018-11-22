@@ -20,7 +20,9 @@ module.exports = (osseus) => {
     virtuals: true,
     transform: (doc, ret, options) => {
       const safeRet = {
-        // id: ret._id.toString(),
+        id: ret._id.toString(),
+        createdAt: ret.created_at,
+        updatedAt: ret.updated_at,
         address: ret.address,
         tokenAddress1: ret.tokenAddress1,
         tokenAddress2: ret.tokenAddress2
@@ -100,7 +102,11 @@ module.exports = (osseus) => {
 
   marketMaker.getByPair = (tokenAddress1, tokenAddress2) => {
     return new Promise((resolve, reject) => {
-      MarketMaker.findOne({tokenAddress1: tokenAddress1.toLowerCase(), tokenAddress2: tokenAddress2.toLowerCase()}, (err, doc) => {
+      const condition = {$or: [
+        {tokenAddress1: tokenAddress1.toLowerCase(), tokenAddress2: tokenAddress2.toLowerCase()},
+        {tokenAddress1: tokenAddress2.toLowerCase(), tokenAddress2: tokenAddress1.toLowerCase()}
+      ]}
+      MarketMaker.findOne(condition, (err, doc) => {
         if (err) {
           return reject(err)
         }

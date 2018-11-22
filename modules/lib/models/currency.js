@@ -59,7 +59,7 @@ module.exports = (osseus) => {
     })
   }
 
-  currency.getContractsForCC = (currencyId, provider) => {
+  currency.getContracts = (currencyId, provider) => {
     return new Promise(async (resolve, reject) => {
       try {
         const currency = await osseus.db_models.currency.getById(currencyId)

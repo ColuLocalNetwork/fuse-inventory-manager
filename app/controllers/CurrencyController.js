@@ -93,7 +93,6 @@ module.exports = (osseus) => {
         currency = await osseus.lib.Currency.create(
           req.body.address,
           osseus.config.abi.CommunityCurrency,
-          osseus.config.abi.MarketMaker,
           blockchainInfo,
           req.body.externalId
         ).catch(err => { return next(err) })
