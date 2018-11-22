@@ -13,8 +13,9 @@ module.exports = async () => {
   if (!osseus.utils) require(path.join(cwd, 'modules/utils')).init(osseus)
   osseus.db_models = osseus.db_models || {
     bctx: require(path.join(cwd, 'modules/db/models/blockchainTransaction'))(osseus),
-    currency: require(path.join(cwd, 'modules/db/models/currency'))(osseus),
     community: require(path.join(cwd, 'modules/db/models/community'))(osseus),
+    currency: require(path.join(cwd, 'modules/db/models/currency'))(osseus),
+    marketMaker: require(path.join(cwd, 'modules/db/models/marketMaker'))(osseus),
     transmit: require(path.join(cwd, 'modules/db/models/transmit'))(osseus),
     tx: require(path.join(cwd, 'modules/db/models/transaction'))(osseus),
     wallet: require(path.join(cwd, 'modules/db/models/wallet'))(osseus)

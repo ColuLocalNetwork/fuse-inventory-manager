@@ -55,7 +55,7 @@ const validateBlockchainBalance = (address, token) => {
   return new Promise(async (resolve, reject) => {
     try {
       const bcBalance = await getBlockchainBalance(address, token)
-      const currency = await this.osseus.db_models.currency.getByCurrencyAddress(token)
+      const currency = await this.osseus.db_models.currency.getByAddress(token)
       const bcBalanceInDB = await this.osseus.db_models.wallet.getBlockchainBalance(address, currency.id)
 
       if (typeof bcBalance === 'undefined') {
@@ -73,19 +73,18 @@ const validateBlockchainBalance = (address, token) => {
   })
 }
 
-const validateAggregatedBalances = (token) => {
-  this.osseus.logger.debug(`utils --> validateAggregatedBalances --> token: ${token}`)
+const validateAggregatedBalances = (currencyId) => {
+  this.osseus.logger.debug(`utils --> validateAggregatedBalances --> currencyId: ${currencyId}`)
   return new Promise(async (resolve, reject) => {
     try {
-      const currency = token ? await this.osseus.db_models.currency.getByCurrencyAddress(token) : {}
-      const aggregatedBalances = await this.osseus.db_models.wallet.aggregateBalancesPerCurrency(currency.id)
+      const aggregatedBalances = await this.osseus.db_models.wallet.aggregateBalancesPerCurrency(currencyId)
       const results = aggregatedBalances.map(balance => {
         balance.totalBlockchainAmount = balance.totalBlockchainAmount.toNumber()
         balance.totalOffchainAmount = balance.totalOffchainAmount.toNumber()
         balance.valid = balance.totalBlockchainAmount >= balance.totalOffchainAmount
         return balance
       })
-      this.osseus.logger.debug(`validateAggregatedBalances --> token: ${token}, results: ${JSON.stringify(results)}`)
+      this.osseus.logger.debug(`validateAggregatedBalances --> currencyId: ${currencyId}, results: ${JSON.stringify(results)}`)
       resolve(results)
     } catch (err) {
       reject(err)
@@ -99,7 +98,7 @@ const updateBlockchainBalance = (address, token) => {
     try {
       const currentBlock = await this.osseus.web3.eth.getBlockNumber()
       const balance = await getBlockchainBalance(address, token, true)
-      const currency = await this.osseus.db_models.currency.getByCurrencyAddress(token)
+      const currency = await this.osseus.db_models.currency.getByAddress(token)
       if (typeof balance === 'undefined') {
         return reject(new Error(`Could not get blockchain balance - address: ${address}, token: ${token}`))
       }

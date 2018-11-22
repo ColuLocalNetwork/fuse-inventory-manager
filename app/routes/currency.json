@@ -8,12 +8,9 @@
           "cln": {
             "optional": true
           },
-          "currencyAddress": {
+          "address": {
             "notEmpty": true,
             "errorMessage": "is missing"
-          },
-          "marketMakerAddress": {
-            "optional": true
           },
           "creationTransactionHash": {
             "notEmpty": true,

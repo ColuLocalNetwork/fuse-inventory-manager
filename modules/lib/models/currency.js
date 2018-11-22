@@ -3,15 +3,15 @@ const contract = require('truffle-contract')
 module.exports = (osseus) => {
   function currency () {}
 
-  currency.createCLN = (currencyAddress, currencyABI, currencyBlockchainInfo, externalId) => {
+  currency.createCLN = (address, abi, blockchainInfo, externalId) => {
     return new Promise(async (resolve, reject) => {
       try {
         const data = {
           currencyType: 'CLN',
-          currencyAddress: currencyAddress,
-          currencyABI: currencyABI,
+          address: address,
+          abi: abi,
           exid: externalId,
-          currencyBlockchainInfo: currencyBlockchainInfo
+          blockchainInfo: blockchainInfo
         }
         const newCurrency = await osseus.db_models.currency.create(data)
         await osseus.db_models.transmit.create({currency: newCurrency.id})
@@ -22,16 +22,14 @@ module.exports = (osseus) => {
     })
   }
 
-  currency.create = (currencyAddress, marketMakerAddress, currencyABI, marketMakerABI, currencyBlockchainInfo, externalId) => {
+  currency.create = (address, abi, blockchainInfo, externalId) => {
     return new Promise(async (resolve, reject) => {
       try {
         const data = {
-          currencyAddress: currencyAddress,
-          marketMakerAddress: marketMakerAddress,
-          currencyABI: currencyABI,
-          marketMakerABI: marketMakerABI,
+          address: address,
+          abi: abi,
           exid: externalId,
-          currencyBlockchainInfo: currencyBlockchainInfo
+          blockchainInfo: blockchainInfo
         }
         const newCurrency = await osseus.db_models.currency.create(data)
         await osseus.db_models.transmit.create({currency: newCurrency.id})
@@ -48,9 +46,9 @@ module.exports = (osseus) => {
         const currency = await osseus.db_models.currency.getCLN()
         const contracts = {}
 
-        const CLN = contract({abi: currency.currencyABI})
+        const CLN = contract({abi: currency.abi})
         CLN.setProvider(provider)
-        contracts.cln = await CLN.at(currency.currencyAddress)
+        contracts.cln = await CLN.at(currency.address)
 
         contracts.web3 = CLN.web3
 
@@ -67,13 +65,9 @@ module.exports = (osseus) => {
         const currency = await osseus.db_models.currency.getById(currencyId)
         const contracts = {}
 
-        const CC = contract({abi: currency.currencyABI})
+        const CC = contract({abi: currency.abi})
         CC.setProvider(provider)
-        contracts.cc = await CC.at(currency.currencyAddress)
-
-        const MM = contract({abi: currency.marketMakerABI})
-        MM.setProvider(provider)
-        contracts.mm = await MM.at(currency.marketMakerAddress)
+        contracts.cc = await CC.at(currency.address)
 
         contracts.web3 = CC.web3
 

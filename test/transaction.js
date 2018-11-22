@@ -45,7 +45,6 @@ contract('TRANSACTION', async (accounts) => {
   let cc
 
   let currencyAddress
-  let marketMakerAddress
 
   let currencyBlockchainInfo
 
@@ -119,8 +118,6 @@ contract('TRANSACTION', async (accounts) => {
 
     await currencyFactory.openMarket(currencyAddress)
 
-    marketMakerAddress = await currencyFactory.getMarketMakerAddressFromToken(currencyAddress)
-
     await currencyFactory.openMarket(currencyAddress)
 
     osseus = await OsseusHelper()
@@ -132,7 +129,7 @@ contract('TRANSACTION', async (accounts) => {
       osseus.db_models[model].getModel().remove({}, () => {})
     })
 
-    currency = await osseus.lib.Currency.create(currencyAddress, marketMakerAddress, osseus.config.abi.CommunityCurrency, osseus.config.abi.MarketMaker, currencyBlockchainInfo, osseus.helpers.randomStr(10))
+    currency = await osseus.lib.Currency.create(currencyAddress, osseus.config.abi.CommunityCurrency, currencyBlockchainInfo, osseus.helpers.randomStr(10))
     community = await osseus.lib.Community.create('Test Community', currency, osseus.helpers.randomStr(10))
 
     managerAccountAddress = community.wallets.filter(wallet => wallet.type === 'manager')[0].address
@@ -496,7 +493,7 @@ contract('TRANSACTION', async (accounts) => {
         })
         setInterval(() => {
           if (completed < nJobs) {
-            // console.log(`completed: ${completed} out of ${nJobs} jobs - keep waiting...`)
+            console.log(`completed: ${completed} out of ${nJobs} jobs - keep waiting...`)
           } else {
             resolve()
           }

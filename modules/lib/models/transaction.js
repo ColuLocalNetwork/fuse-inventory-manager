@@ -8,7 +8,7 @@ module.exports = (osseus) => {
     return new Promise(async (resolve, reject) => {
       try {
         await osseus.db_models.community.getByWalletAddress(participant.accountAddress)
-        let currency = await osseus.db_models.currency.getByCurrencyAddress(participant.currency)
+        let currency = await osseus.db_models.currency.getByAddress(participant.currency)
         resolve({
           accountAddress: participant.accountAddress,
           currency: currency.id
@@ -32,10 +32,10 @@ module.exports = (osseus) => {
     })
   }
 
-  const validateAggregatedBalances = () => {
+  const validateAggregatedBalances = (currencyId) => {
     return new Promise(async (resolve, reject) => {
       try {
-        const results = await osseus.utils.validateAggregatedBalances()
+        const results = await osseus.utils.validateAggregatedBalances(currencyId)
         const invalid = results.filter(res => !res.valid)
         if (invalid.length > 0) {
           // TODO NOTIFY
@@ -112,7 +112,7 @@ module.exports = (osseus) => {
         transactions.forEach(transaction => {
           let txid = transaction._id.toString()
           let from = transaction.from.accountAddress
-          let token = transaction.from.currency.currencyAddress
+          let token = transaction.from.currency.address
           let to = transaction.to.accountAddress
           let amount = new BigNumber(transaction.amount)
 
@@ -245,7 +245,7 @@ module.exports = (osseus) => {
   transaction.transmit = (opts) => {
     return new Promise(async (resolve, reject) => {
       try {
-        await validateAggregatedBalances()
+        await validateAggregatedBalances(opts.filters && opts.filters.currency)
 
         const transmits = await startWorkingOnTransmits(opts.filters)
         osseus.logger.debug(`found ${transmits.length} transmits to work on`)

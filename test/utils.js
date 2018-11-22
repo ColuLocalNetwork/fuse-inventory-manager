@@ -101,7 +101,7 @@ contract('UTILS', async (accounts) => {
     })
 
     await osseus.lib.Currency.createCLN(cln.address, osseus.config.abi.CLN, clnBlockchainInfo, osseus.helpers.randomStr(10))
-    currency = await osseus.lib.Currency.create(currencyAddress, marketMakerAddress, osseus.config.abi.CommunityCurrency, osseus.config.abi.MarketMaker, currencyBlockchainInfo, osseus.helpers.randomStr(10))
+    currency = await osseus.lib.Currency.create(currencyAddress, osseus.config.abi.CommunityCurrency, currencyBlockchainInfo, osseus.helpers.randomStr(10))
     community = await osseus.lib.Community.create('Test Community', currency, osseus.helpers.randomStr(10))
 
     communityManagerAddress = community.wallets.filter(wallet => wallet.type === 'manager')[0].address
@@ -183,7 +183,7 @@ contract('UTILS', async (accounts) => {
   })
 
   it('aggregated balances should be valid (for specific currency)', async () => {
-    let results = await osseus.utils.validateAggregatedBalances(currencyAddress)
+    let results = await osseus.utils.validateAggregatedBalances(currency.id)
     expect(results).to.have.lengthOf(1)
     expect(results[0].currency).to.equal(currency.id)
     expect(results[0].totalBlockchainAmount).to.equal(COMMUNITY_MANAGER_CC_BALANCE)

@@ -76,9 +76,9 @@ module.exports = (osseus) => {
       }
       const pastEventsBlockLimit = osseus.config.past_events_block_limit || 1000
       async.each(currencies, async (currency) => {
-        const address = currency.currencyAddress
-        const abi = JSON.parse(currency.currencyABI)
-        const creationBlock = currency.currencyBlockchainInfo.blockNumber
+        const address = currency.address
+        const abi = JSON.parse(currency.abi)
+        const creationBlock = currency.blockchainInfo.blockNumber
         const currentBlock = await osseus.web3.eth.getBlockNumber()
         const CurrencyContract = new osseus.web3.eth.Contract(abi, address)
         const lastBlock = await osseus.db_models.bcevent.getLastBlock(address)

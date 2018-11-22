@@ -134,7 +134,7 @@ contract('BLOCKCHAIN_TRANSACTION', async (accounts) => {
     })
 
     await osseus.lib.Currency.createCLN(cln.address, osseus.config.abi.CLN, clnBlockchainInfo, osseus.helpers.randomStr(10))
-    currency = await osseus.lib.Currency.create(currencyAddress, marketMakerAddress, osseus.config.abi.CommunityCurrency, osseus.config.abi.MarketMaker, currencyBlockchainInfo, osseus.helpers.randomStr(10))
+    currency = await osseus.lib.Currency.create(currencyAddress, osseus.config.abi.CommunityCurrency, currencyBlockchainInfo, osseus.helpers.randomStr(10))
     community = await osseus.lib.Community.create('Test Community', currency, osseus.helpers.randomStr(10))
 
     communityManagerAddress = community.wallets.filter(wallet => wallet.type === 'manager')[0].address
