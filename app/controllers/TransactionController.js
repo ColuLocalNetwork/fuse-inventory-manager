@@ -33,7 +33,9 @@ module.exports = (osseus) => {
      *
      * @apiSuccessExample Success Example
      *     HTTP/1.1 200 OK
-     *     "id": "5bb9d9ab565e2f63d5f0263c"
+     *     {
+     *      "id": "5bb9d9ab565e2f63d5f0263c"
+     *     }
      *
      * @apiErrorExample Error Example
      *     HTTP/1.1 500 Internal Server Error
@@ -84,7 +86,9 @@ module.exports = (osseus) => {
      *
      * @apiSuccessExample Success Example
      *     HTTP/1.1 200 OK
-     *     "id": "5bb9d9ab565e2f63d5f0263c"
+     *     {
+     *      "id": "5bb9d9ab565e2f63d5f0263c"
+     *     }
      *
      * @apiErrorExample Error Example
      *     HTTP/1.1 500 Internal Server Error

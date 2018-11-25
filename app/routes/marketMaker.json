@@ -94,5 +94,27 @@
         }
       }
     }
+  },
+  "/market-maker/quote": {
+    "GET": {
+      "route": "quote",
+      "jwt": true,
+      "validators": {
+        "query": {
+          "fromToken": {
+            "notEmpty": true,
+            "errorMessage": "is missing"
+          },
+          "toToken": {
+            "notEmpty": true,
+            "errorMessage": "is missing"
+          },
+          "amount": {
+            "notEmpty": true,
+            "errorMessage": "is missing"
+          }
+        }
+      }
+    }
   }
 }

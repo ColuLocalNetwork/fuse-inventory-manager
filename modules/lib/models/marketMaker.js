@@ -1,4 +1,5 @@
 const contract = require('truffle-contract')
+const BigNumber = require('bignumber.js')
 
 module.exports = (osseus) => {
   function marketMaker () {}
@@ -33,6 +34,31 @@ module.exports = (osseus) => {
         contracts.web3 = MM.web3
 
         resolve(contracts)
+      } catch (err) {
+        reject(err)
+      }
+    })
+  }
+
+  marketMaker.quote = (fromTokenAddress, toTokenAddress, amount) => {
+    return new Promise(async (resolve, reject) => {
+      try {
+        const marketMaker = await osseus.db_models.marketMaker.getByPair(fromTokenAddress, toTokenAddress)
+        const MarketMakerContract = new osseus.web3.eth.Contract(JSON.parse(marketMaker.abi), marketMaker.address)
+        MarketMakerContract.methods.quote(fromTokenAddress, osseus.web3.utils.toHex(new BigNumber(amount)), toTokenAddress).call((err, quote) => {
+          err ? reject(err) : resolve(quote)
+        })
+      } catch (err) {
+        reject(err)
+      }
+    })
+  }
+
+  marketMaker.change = (fromAccountAddress, fromTokenAddress, toTokenAddress, amount, minReturn) => {
+    return new Promise(async (resolve, reject) => {
+      try {
+        reject(new Error('not implemented yet'))
+        // TODO
       } catch (err) {
         reject(err)
       }

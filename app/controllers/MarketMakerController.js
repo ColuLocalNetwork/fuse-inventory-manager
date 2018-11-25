@@ -11,12 +11,14 @@ module.exports = (osseus) => {
 
      * @apiSuccessExample Success Example
      *     HTTP/1.1 200 OK
-     *     "id": "5bf6a7828f86a54ffe3a58d3",
-     *     "createdAt": "2018-11-22T12:56:34.660Z",
-     *     "updatedAt": "2018-11-22T12:56:34.660Z",
-     *     "address": "0x54b35ee5d1739018a9ce29c44bdf145529136706",
-     *     "tokenAddress1": "0x41c9d91e96b933b74ae21bcbb617369cbe022530",
-     *     "tokenAddress2": "0x24a85b72700cec4cf1912adcebdb9e8f60bdab91"
+     *     {
+     *      "id": "5bf6a7828f86a54ffe3a58d3",
+     *      "createdAt": "2018-11-22T12:56:34.660Z",
+     *      "updatedAt": "2018-11-22T12:56:34.660Z",
+     *      "address": "0x54b35ee5d1739018a9ce29c44bdf145529136706",
+     *      "tokenAddress1": "0x41c9d91e96b933b74ae21bcbb617369cbe022530",
+     *      "tokenAddress2": "0x24a85b72700cec4cf1912adcebdb9e8f60bdab91"
+     *     }
 
      * @apiErrorExample Error Example
      *     HTTP/1.1 500 Internal Server Error
@@ -178,6 +180,48 @@ module.exports = (osseus) => {
     getByPair: async (req, res, next) => {
       osseus.db_models.marketMaker.getByPair(req.query.tokenAddress1, req.query.tokenAddress2)
         .then(marketMaker => { res.send(marketMaker) })
+        .catch(err => { next(err) })
+    },
+
+    /**
+     * @api {get} market-maker/quote Get quote for exchaning
+     * @apiName GetQuote
+     * @apiGroup Market Maker
+     * @apiVersion 1.0.0
+     *
+     * @apiDescription Get quote from market maker for exchanging `amount` of `fromToken` to `toToken`
+     *
+     * @apiUse JWT
+     *
+     * @apiParam {String} fromToken token address of the token to sell
+     * @apiParam {String} toToken token address of the token to buy
+     * @apiParam {String} amount amount of `fromToken` to sell in exchange for `toToken` as string
+     *
+     * @apiSuccess {String} quote the amount of `toToken` which will be received in exchange for `amount` of `fromToken`.
+     *
+     * @apiSuccessExample Success Example
+     *     HTTP/1.1 200 OK
+     *     {
+     *       "quote": "289581836731872302913"
+     *     }
+
+     * @apiErrorExample Error Example
+     *     HTTP/1.1 500 Internal Server Error
+     *     {
+     *       "error": "The error description"
+     *     }
+     */
+    quote: async (req, res, next) => {
+      osseus.lib.MarketMaker.quote(req.query.fromToken, req.query.toToken, req.query.amount)
+        .then(quote => { res.send({quote: quote.toString()}) })
+        .catch(err => { next(err) })
+    },
+
+    /**
+     */
+    change: async (req, res, next) => {
+      osseus.lib.MarketMaker.change(req.body.from, req.body.fromToken, req.body.toToken, req.body.amount, req.body.minReturn)
+        .then(tx => { res.send(tx.id) })
         .catch(err => { next(err) })
     }
   }

@@ -24,15 +24,17 @@ module.exports = (osseus) => {
 
      * @apiSuccessExample Success Example
      *     HTTP/1.1 200 OK
-     *     "id": "5bb9d9ab565e2f63d5f0263c",
-     *     "createdAt": "2018-10-07T10:02:19.305Z",
-     *     "updatedAt": "2018-10-07T10:02:19.305Z",
-     *     "address": "0x245cf01fecaa32ab0566c318d1f28df91caf7865",
-     *     "exid": "123abc456def",
-     *     "blockchainInfo": {
-     *        "blockHash": "0x66fc96b1cbf1de29ba0eea72492048f7c823bb7701d290229a2934fff5d59df1",
-     *        "blockNumber": 3280283,
-     *        "transactionHash": "0x21f3a02b07def2acddef6ebc9b2fdc40e7f138d662c64cb004e55f1dfde06859"
+     *     {
+     *      "id": "5bb9d9ab565e2f63d5f0263c",
+     *      "createdAt": "2018-10-07T10:02:19.305Z",
+     *      "updatedAt": "2018-10-07T10:02:19.305Z",
+     *      "address": "0x245cf01fecaa32ab0566c318d1f28df91caf7865",
+     *      "exid": "123abc456def",
+     *      "blockchainInfo": {
+     *         "blockHash": "0x66fc96b1cbf1de29ba0eea72492048f7c823bb7701d290229a2934fff5d59df1",
+     *         "blockNumber": 3280283,
+     *         "transactionHash": "0x21f3a02b07def2acddef6ebc9b2fdc40e7f138d662c64cb004e55f1dfde06859"
+     *      }
      *     }
 
      * @apiErrorExample Error Example
