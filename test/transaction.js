@@ -118,8 +118,6 @@ contract('TRANSACTION', async (accounts) => {
 
     await currencyFactory.openMarket(currencyAddress)
 
-    await currencyFactory.openMarket(currencyAddress)
-
     osseus = await OsseusHelper()
   })
 
