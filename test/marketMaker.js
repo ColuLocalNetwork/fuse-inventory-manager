@@ -30,7 +30,7 @@ const encodeInsertData = (toToken) => {
   return coder.encodeFunctionCall(abi, params)
 }
 
-contract.only('MARKET_MAKER', async (accounts) => {
+contract('MARKET_MAKER', async (accounts) => {
   let osseus
 
   let cln
