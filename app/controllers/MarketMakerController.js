@@ -184,7 +184,7 @@ module.exports = (osseus) => {
     },
 
     /**
-     * @api {get} /api/market-maker/quote Get quote for exchaning
+     * @api {get} /api/market-maker/quote Get quote for exchanging
      * @apiName GetQuote
      * @apiGroup Market Maker
      * @apiVersion 1.0.0
