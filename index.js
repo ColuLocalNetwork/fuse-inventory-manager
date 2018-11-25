@@ -25,7 +25,7 @@ const main = async () => {
     await require('./modules/errors').init(osseus)
 
     if (osseus.config.debug) console.timeEnd('INVENTORY MANAGER')
-
+    console.log(test);
     osseus.logger.info('INVENTORY MANAGER IS RUNNING :)')
   } catch (err) {
     console.error('BOOTSTRAP ERROR!', err.stack || err)

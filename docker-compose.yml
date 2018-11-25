@@ -1,0 +1,44 @@
+version: '3.2'
+services:
+    mongo:
+        container_name: $PROJECT_NAME-mongo
+        build: ./docker/mongo
+        restart: always
+        env_file: .env
+        environment:
+            - AUTH=yes
+            - MONGODB_ADMIN_USER=mongo
+            - MONGODB_ADMIN_PASS=mongo
+            - MONGODB_APPLICATION_DATABASE=${MONGO_DBNAME}
+            - MONGODB_APPLICATION_USER=${MONGO_USER}
+            - MONGODB_APPLICATION_PASS=${MONGO_PASS}
+        volumes:
+            - ./docker/mongo/db:/data/db
+            - ./docker/mongo/config:/data/configdb
+        networks:
+            internal-network:
+            external-network:
+                aliases:
+                    - $PROJECT_NAME-mongo
+        ports:
+            - "27017"
+    inventory:
+        build: ./
+        restart: always
+        env_file: .env
+        working_dir: /app
+        command: 'npm run dev'
+        environment:
+            - OSSEUS_ENV=${APP_OSSEUS_ENV}
+            - OSSEUS_PORT=${APP_OSSEUS_PORT}
+            - MONGODB_URI="mongodb://${MONGO_HOST}/${MONGO_DBNAME}"
+            - MONGODB_APPLICATION_USER=${MONGO_USER}
+            - MONGODB_APPLICATION_PASS=${MONGO_PASS}
+            - WEB3_PROVIDER_URI=${APP_WEB3_PROVIDER_URI}
+        volumes:
+            - .:/app
+networks:
+  internal-network:
+  external-network:
+    external:
+      name: $PROJECT_NAME
