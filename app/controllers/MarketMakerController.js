@@ -69,7 +69,7 @@ module.exports = (osseus) => {
     },
 
     /**
-     * @api {put} market-maker/id/:id Edit by id
+     * @api {put} /api/market-maker/id/:id Edit by id
      * @apiName EditMarketMakerById
      * @apiGroup Market Maker
      * @apiVersion 1.0.0
@@ -96,7 +96,7 @@ module.exports = (osseus) => {
     },
 
     /**
-     * @api {get} market-maker/id/:id Get by id
+     * @api {get} /api/market-maker/id/:id Get by id
      * @apiName GetMarketMakerById
      * @apiGroup Market Maker
      * @apiVersion 1.0.0
@@ -116,7 +116,7 @@ module.exports = (osseus) => {
     },
 
     /**
-     * @api {put} market-maker/address/:address Edit by address
+     * @api {put} /api/market-maker/address/:address Edit by address
      * @apiName EditMarketMakerByAddress
      * @apiGroup Market Maker
      * @apiVersion 1.0.0
@@ -143,7 +143,7 @@ module.exports = (osseus) => {
     },
 
     /**
-     * @api {get} market-maker/address/:address Get by address
+     * @api {get} /api/market-maker/address/:address Get by address
      * @apiName GetMarketMakerByAddress
      * @apiGroup Market Maker
      * @apiVersion 1.0.0
@@ -163,7 +163,7 @@ module.exports = (osseus) => {
     },
 
     /**
-     * @api {get} market-maker/pair Get by pair of tokens
+     * @api {get} /api/market-maker/pair Get by pair of tokens
      * @apiName GetMarketMakerByPair
      * @apiGroup Market Maker
      * @apiVersion 1.0.0
@@ -184,7 +184,7 @@ module.exports = (osseus) => {
     },
 
     /**
-     * @api {get} market-maker/quote Get quote for exchaning
+     * @api {get} /api/market-maker/quote Get quote for exchaning
      * @apiName GetQuote
      * @apiGroup Market Maker
      * @apiVersion 1.0.0
