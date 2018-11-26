@@ -38,7 +38,6 @@ module.exports = (osseus) => {
         const results = await osseus.utils.validateAggregatedBalances(currencyId)
         const invalid = results.filter(res => !res.valid)
         if (invalid.length > 0) {
-          // TODO NOTIFY
           return reject(new Error(`Invalid aggregated balances - ${JSON.stringify(invalid)}`))
         }
         resolve()
@@ -210,6 +209,37 @@ module.exports = (osseus) => {
 
         await osseus.db_models.transmit.addOffchainTransaction(transmit.id, newTx.id)
 
+        resolve(newTx)
+      } catch (err) {
+        reject(err)
+      }
+    })
+  }
+
+  transaction.change = (fromAccountAddress, fromTokenAddress, toTokenAddress, amount, minReturn) => {
+    return new Promise(async (resolve, reject) => {
+      try {
+        amount = await validateAmount(amount)
+        const marketMaker = await osseus.db_models.marketMaker.getByPair(fromTokenAddress, toTokenAddress)
+        const opts = {}
+        if (minReturn) opts.minReturn = await validateAmount(minReturn)
+        const changeData = await osseus.lib.BlockchainTransaction.change(fromAccountAddress, fromTokenAddress, toTokenAddress, marketMaker.address, amount, opts)
+        const fromCurrency = await osseus.db_models.currency.getByAddress(fromTokenAddress)
+        const toCurrency = await osseus.db_models.currency.getByAddress(toTokenAddress)
+        const data = {
+          from: {
+            accountAddress: fromAccountAddress,
+            currency: fromCurrency.id,
+            amount: amount
+          },
+          to: {
+            accountAddress: fromAccountAddress,
+            currency: toCurrency.id,
+            amount: changeData.result.meta.toAmount
+          },
+          context: 'change'
+        }
+        const newTx = await osseus.db_models.tx.createChange(data)
         resolve(newTx)
       } catch (err) {
         reject(err)

@@ -107,7 +107,6 @@ const getUnknownBlockchainTransactions = (filters, projection, limit, sort) => {
       this.osseus.logger.debug(`filters: ${JSON.stringify(filters)}, projection: ${JSON.stringify(projection)}, limit: ${limit}, sort: ${JSON.stringify(sort)}`)
       const transactions = await this.osseus.db_models.bctx.get(filters, projection, limit, sort)
       this.osseus.logger.debug(`got ${transactions.length} unknown transactions`)
-      // TODO NOTIFY
       resolve(transactions)
     } catch (err) {
       reject(err)

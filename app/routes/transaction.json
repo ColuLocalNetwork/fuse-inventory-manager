@@ -21,6 +21,35 @@
       }
     }
   },
+  "/transaction/change": {
+    "POST": {
+      "route": "change",
+      "jwt": true,
+      "validators": {
+        "body": {
+          "account": {
+            "notEmpty": true,
+            "errorMessage": "is missing"
+          },
+          "fromToken": {
+            "notEmpty": true,
+            "errorMessage": "is missing"
+          },
+          "toToken": {
+            "notEmpty": true,
+            "errorMessage": "is missing"
+          },
+          "amount": {
+            "notEmpty": true,
+            "errorMessage": "is missing"
+          },
+          "minReturn": {
+            "optional": true
+          }
+        }
+      }
+    }
+  },
   "/transaction/revert/id/:id": {
     "POST": {
       "route": "revert",

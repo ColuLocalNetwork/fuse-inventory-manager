@@ -61,7 +61,8 @@ const validateBlockchainTranscation = (tx, from, to, type, meta) => {
     expect(tx.meta.from).to.equal(meta.from)
     expect(tx.meta.fromToken).to.equal(meta.fromToken)
     expect(tx.meta.toToken).to.equal(meta.toToken)
-    expect(tx.meta.amount.toString()).to.equal(meta.amount.toString())
+    expect(tx.meta.fromAmount.toString()).to.equal(meta.fromAmount.toString())
+    expect(tx.meta.toAmount.toString()).to.equal(meta.toAmount.toString())
   }
   expect(tx.state).to.equal('TRANSMITTED')
 }
@@ -354,8 +355,10 @@ contract('BLOCKCHAIN_TRANSACTION', async (accounts) => {
         expect(bctx).to.be.undefined
       } else {
         bctx = await osseus.lib.BlockchainTransaction.change(data.from, data.fromToken, data.toToken, data.marketMaker, data.amount, opts)
-        validateBlockchainTranscation(bctx.result, data.from, data.fromToken, 'CHANGE', data)
         let returnAmount = bctx.receipt.logs.filter(log => log.args.to === data.from)[0].args.value
+        data.fromAmount = data.amount
+        data.toAmount = returnAmount
+        validateBlockchainTranscation(bctx.result, data.from, data.fromToken, 'CHANGE', data)
         return returnAmount
       }
     }
@@ -745,8 +748,10 @@ contract('BLOCKCHAIN_TRANSACTION', async (accounts) => {
         opts.gas = 1000000
 
         let bctx = await osseus.lib.BlockchainTransaction.change(data.from, data.fromToken, data.toToken, data.marketMaker, data.amount, opts)
+        let returnAmount = bctx.receipt.logs.filter(log => log.args.to === data.from)[0].args.value
+        data.fromAmount = data.amount
+        data.toAmount = returnAmount
         validateBlockchainTranscation(bctx.result, data.from, data.fromToken, 'CHANGE', data)
-        // let returnAmount = bctx.receipt.logs.filter(log => log.args.to === data.from)[0].args.value
         return bctx
       }
 

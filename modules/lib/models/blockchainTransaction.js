@@ -112,7 +112,13 @@ module.exports = (osseus) => {
             return reject(err)
           }
           tx.type = 'CHANGE'
-          tx.meta = {from: from, fromToken: fromToken, toToken: toToken, amount: amount.toString()}
+          tx.meta = {
+            from: from,
+            fromToken: fromToken,
+            fromAmount: amount.toString(),
+            toToken: toToken,
+            toAmount: receipt.logs.filter(log => log.args.to === from)[0].args.value
+          }
           const result = await osseus.db_models.bctx.create(tx)
           osseus.logger.debug(`blockchainTransaction.change --> result: ${JSON.stringify(result)}`)
           resolve({

@@ -54,16 +54,5 @@ module.exports = (osseus) => {
     })
   }
 
-  marketMaker.change = (fromAccountAddress, fromTokenAddress, toTokenAddress, amount, minReturn) => {
-    return new Promise(async (resolve, reject) => {
-      try {
-        reject(new Error('not implemented yet'))
-        // TODO
-      } catch (err) {
-        reject(err)
-      }
-    })
-  }
-
   return marketMaker
 }

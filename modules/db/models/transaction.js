@@ -17,7 +17,8 @@ module.exports = (osseus) => {
 
   const ParticipantSchema = new Schema({
     accountAddress: {type: String},
-    currency: {type: Schema.Types.ObjectId, ref: 'Currency'}
+    currency: {type: Schema.Types.ObjectId, ref: 'Currency'},
+    amount: {type: db.mongoose.Schema.Types.Decimal128, set: setDecimal128, get: getDecimal128} // for 'change' transactions
   }).plugin(timestamps())
 
   const TransactionSchema = new Schema({
@@ -41,7 +42,8 @@ module.exports = (osseus) => {
         createdAt: ret.created_at,
         updatedAt: ret.updated_at,
         accountAddress: ret.accountAddress,
-        currency: ret.currency
+        currency: ret.currency,
+        amount: ret.amount
       }
       return safeRet
     }
@@ -120,9 +122,6 @@ module.exports = (osseus) => {
             'created_at': new Date(),
             'updated_at': new Date(),
             'currency': participant.currency,
-            'offchainAmount': 0,
-            'blockchainAmount': 0,
-            'blockNumberOfLastUpdate': 0,
             'pendingTxs': []
           }
         }
@@ -306,6 +305,44 @@ module.exports = (osseus) => {
   }
 
   transaction.createDeposit = (data) => {
+    const Wallet = osseus.db_models.wallet.getModel()
+
+    const addNewBalance = (participant) => {
+      return new Promise(async (resolve, reject) => {
+        const condition = {
+          'address': participant.accountAddress.toLowerCase(),
+          'balances': {
+            '$not': {
+              '$elemMatch': {
+                'currency': participant.currency
+              }
+            }
+          }
+        }
+        const update = {
+          '$push': {
+            'balances': {
+              'created_at': new Date(),
+              'updated_at': new Date(),
+              'currency': participant.currency,
+              'pendingTxs': []
+            }
+          }
+        }
+        const opts = {
+          upsert: false,
+          multi: false
+        }
+        // console.log(`createDeposit --> addNewBalance: ${JSON.stringify(condition)}, ${JSON.stringify(update)}`)
+        Wallet.update(condition, update, opts).exec((err, raw) => {
+          if (err) {
+            return reject(err)
+          }
+          resolve(!!raw.nModified)
+        })
+      })
+    }
+
     return new Promise(async (resolve, reject) => {
       try {
         if (!data.transmit) {
@@ -314,28 +351,117 @@ module.exports = (osseus) => {
         data.state = 'TRANSMITTED'
         let tx = await createNewTransaction(data)
 
-        const Wallet = osseus.db_models.wallet.getModel()
+        addNewBalance(tx.to)
+          .then(modified => {
+            const condition = {
+              'address': tx.to.accountAddress.toLowerCase(),
+              'balances.currency': tx.to.currency
+            }
+            const amount = new BigNumber(tx.amount)
+            const update = {
+              '$inc': {
+                'balances.$.offchainAmount': amount,
+                'balances.$.blockchainAmount': amount
+              }
+            }
+            const opts = {
+              upsert: false,
+              multi: false
+            }
+            // console.log(`createDeposit --> ${JSON.stringify(condition)}, ${JSON.stringify(update)}`)
+            Wallet.update(condition, update, opts).exec((err, raw) => {
+              if (err) {
+                return reject(err)
+              }
+              resolve(tx)
+            })
+          })
+      } catch (err) {
+        reject(err)
+      }
+    })
+  }
+
+  transaction.createChange = (data) => {
+    const Wallet = osseus.db_models.wallet.getModel()
+
+    const addNewBalance = (participant) => {
+      return new Promise(async (resolve, reject) => {
         const condition = {
-          'address': tx.to.accountAddress.toLowerCase(),
-          'balances.currency': tx.to.currency
+          'address': participant.accountAddress.toLowerCase(),
+          'balances': {
+            '$not': {
+              '$elemMatch': {
+                'currency': participant.currency
+              }
+            }
+          }
         }
-        const amount = new BigNumber(tx.amount)
         const update = {
-          '$inc': {
-            'balances.$.offchainAmount': amount,
-            'balances.$.blockchainAmount': amount
+          '$push': {
+            'balances': {
+              'created_at': new Date(),
+              'updated_at': new Date(),
+              'currency': participant.currency,
+              'pendingTxs': []
+            }
           }
         }
         const opts = {
           upsert: false,
           multi: false
         }
+        // console.log(`createChange --> addNewBalance: ${JSON.stringify(condition)}, ${JSON.stringify(update)}`)
         Wallet.update(condition, update, opts).exec((err, raw) => {
           if (err) {
             return reject(err)
           }
-          resolve(tx)
+          resolve(!!raw.nModified)
         })
+      })
+    }
+
+    const updateParticipant = (tx, participantEnd) => {
+      return new Promise(async (resolve, reject) => {
+        addNewBalance(tx[participantEnd])
+          .then(modified => {
+            const condition = {
+              'address': tx[participantEnd].accountAddress.toLowerCase(),
+              'balances.currency': tx[participantEnd].currency
+            }
+            const amount = new BigNumber(tx[participantEnd].amount).multipliedBy(participantEnd === 'from' ? -1 : 1)
+            const update = {
+              '$inc': {
+                'balances.$.offchainAmount': amount,
+                'balances.$.blockchainAmount': amount
+              }
+            }
+            const opts = {
+              upsert: false,
+              multi: false
+            }
+            // console.log(`createChange --> updateParticipant ${participantEnd}: ${JSON.stringify(condition)}`)
+            Wallet.update(condition, update, opts).exec((err, raw) => {
+              if (err) {
+                return reject(err)
+              }
+              resolve(!!raw.nModified)
+            })
+          })
+          .catch(err => reject(err))
+      })
+    }
+
+    return new Promise(async (resolve, reject) => {
+      try {
+        // if (!data.transmit) {
+        //   return reject(new Error(`Cannot create a 'change' transaction - missing transmit id`))
+        // }
+        data.state = 'TRANSMITTED'
+        let tx = await createNewTransaction(data)
+        await updateParticipant(tx, 'from')
+        await updateParticipant(tx, 'to')
+        resolve(tx)
       } catch (err) {
         reject(err)
       }

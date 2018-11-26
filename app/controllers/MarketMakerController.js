@@ -215,14 +215,6 @@ module.exports = (osseus) => {
       osseus.lib.MarketMaker.quote(req.query.fromToken, req.query.toToken, req.query.amount)
         .then(quote => { res.send({quote: quote.toString()}) })
         .catch(err => { next(err) })
-    },
-
-    /**
-     */
-    change: async (req, res, next) => {
-      osseus.lib.MarketMaker.change(req.body.from, req.body.fromToken, req.body.toToken, req.body.amount, req.body.minReturn)
-        .then(tx => { res.send(tx.id) })
-        .catch(err => { next(err) })
     }
   }
 }

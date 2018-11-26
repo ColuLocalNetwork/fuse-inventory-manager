@@ -12,7 +12,7 @@ module.exports = (osseus) => {
      */
 
     /**
-     * @api {post} /transaction/transfer Transfer
+     * @api {post} /api/transaction/transfer Transfer
      * @apiName Transfer
      * @apiGroup Transaction
      * @apiVersion 1.0.0
@@ -53,7 +53,7 @@ module.exports = (osseus) => {
         return next(new Error(`There was an error trying to make the transfer (amounts mismatch)`))
       }
 
-      let tx = await osseus.lib.Transaction.transfer(
+      osseus.lib.Transaction.transfer(
         {
           accountAddress: req.body.from[0].accountAddress,
           currency: req.body.currencyAddress
@@ -63,15 +63,60 @@ module.exports = (osseus) => {
           currency: req.body.currencyAddress
         },
         fromAmount
-      ).catch(err => { return next(err) })
-      if (tx.state !== 'DONE') {
-        return next(new Error(`There was an error trying to make the transfer`))
-      }
-      res.send({id: tx.id})
+      )
+        .then(tx => {
+          if (tx.state !== 'DONE') {
+            return next(new Error(`There was an error trying to make the transfer`))
+          }
+          res.send({id: tx.id})
+        })
+        .catch(err => { return next(err) })
     },
 
     /**
-     * @api {post} /transaction/revert/id/:id Revert
+     * @api {post} /api/transaction/change Change
+     * @apiName Change
+     * @apiGroup Transaction
+     * @apiVersion 1.0.0
+     *
+     * @apiDescription Change `amount` of `fromToken` to `tokenAmount` by `account` account address
+     *
+     * @apiUse JWT
+     *
+     * @apiParam {String} account account address changing the tokens
+     * @apiParam {String} fromToken token address of the token to sell
+     * @apiParam {String} toToken token address of the token to buy
+     * @apiParam {String} amount amount of `fromToken` to sell in exchange for `toToken` as string
+     * @apiParam {String} [minReturn] minimum amount of `toToken` to receive in exchange for the `amount` of `fromToken`
+     *
+     * @apiSuccess {String} id transaction unique id.
+     *
+     * @apiSuccessExample Success Example
+     *     HTTP/1.1 200 OK
+     *     {
+     *      "id": "5bb9d9ab565e2f63d5f0263c"
+     *     }
+     *
+     * @apiErrorExample Error Example
+     *     HTTP/1.1 500 Internal Server Error
+     *     {
+     *       "error": "The error description"
+     *     }
+     */
+    change: async (req, res, next) => {
+      osseus.lib.Transaction.change(
+        req.body.account,
+        req.body.fromToken,
+        req.body.toToken,
+        req.body.amount,
+        req.body.minReturn
+      )
+        .then(tx => { res.send({id: tx.id}) })
+        .catch(err => { return next(err) })
+    },
+
+    /**
+     * @api {post} /api/transaction/revert/id/:id Revert
      * @apiName Revert
      * @apiGroup Transaction
      * @apiVersion 1.0.0
@@ -99,7 +144,7 @@ module.exports = (osseus) => {
     revert: async (req, res, next) => {
       let tx = await osseus.db_models.tx.getById(req.params.id).catch(err => { return next(err) })
       let currency = await osseus.db_models.currency.getById(tx.to.currency).catch(err => { return next(err) })
-      let revertTx = await osseus.lib.Transaction.transfer(
+      osseus.lib.Transaction.transfer(
         {
           accountAddress: tx.to.accountAddress,
           currency: currency.currencyAddress
@@ -110,15 +155,18 @@ module.exports = (osseus) => {
         },
         tx.amount,
         {revert: tx.id}
-      ).catch(err => { return next(err) })
-      if (revertTx.state !== 'DONE') {
-        return next(new Error(`There was an error trying to revert`))
-      }
-      res.send({id: revertTx.id})
+      )
+        .then(revertTx => {
+          if (revertTx.state !== 'DONE') {
+            return next(new Error(`There was an error trying to revert`))
+          }
+          res.send({id: revertTx.id})
+        })
+        .catch(err => { return next(err) })
     },
 
     /**
-     * @api {get} /transaction/id/:id Get transaction by id
+     * @api {get} /api/transaction/id/:id Get transaction by id
      * @apiName GetTransactionById
      * @apiGroup Transaction
      * @apiVersion 1.0.0
@@ -176,7 +224,7 @@ module.exports = (osseus) => {
     },
 
     /**
-     * @api {post} /transaction/transmit Transmit
+     * @api {post} /api/transaction/transmit Transmit
      * @apiName Transmit
      * @apiGroup Transaction
      * @apiVersion 1.0.0
@@ -218,21 +266,24 @@ module.exports = (osseus) => {
      */
     transmit: async (req, res, next) => {
       let opts = req.body.currencyId ? {filters: {currency: req.body.currencyId}} : {}
-      let results = await osseus.lib.Transaction.transmit(opts).catch(err => { return next(err) })
-      if (!results || results.length === 0) {
-        return next(`Nothing to transmit`)
-      }
-      results = results.map(res => {
-        return {
-          currency: res.transmit.currency.toString(),
-          transmit: res.transmit.id.toString()
-        }
-      })
-      res.send({result: results})
+      osseus.lib.Transaction.transmit(opts)
+        .then(results => {
+          if (!results || results.length === 0) {
+            return next(`Nothing to transmit`)
+          }
+          results = results.map(res => {
+            return {
+              currency: res.transmit.currency.toString(),
+              transmit: res.transmit.id.toString()
+            }
+          })
+          res.send({result: results})
+        })
+        .catch(err => { return next(err) })
     },
 
     /**
-     * @api {get} /transaction/transmit/id/:id Get transmit by id
+     * @api {get} /api/transaction/transmit/id/:id Get transmit by id
      * @apiName GetTransmitById
      * @apiGroup Transaction
      * @apiVersion 1.0.0
@@ -280,7 +331,7 @@ module.exports = (osseus) => {
     },
 
     /**
-     * @api {get} /transaction/bc/id/:id Get BC transaction by id
+     * @api {get} /api/transaction/bc/id/:id Get BC transaction by id
      * @apiName GetBlockchainTransactionById
      * @apiGroup Transaction
      * @apiVersion 1.0.0
@@ -355,7 +406,7 @@ module.exports = (osseus) => {
     },
 
     /**
-     * @api {get} /transaction/bc/unknown Get unknown BC transactions
+     * @api {get} /api/transaction/bc/unknown Get unknown BC transactions
      * @apiName getUnknownBlockchainTransactions
      * @apiGroup Transaction
      * @apiVersion 1.0.0
@@ -391,7 +442,7 @@ module.exports = (osseus) => {
     },
 
     /**
-     * @api {post} /transaction/bc/known Mark BC transactions as known
+     * @api {post} /api/transaction/bc/known Mark BC transactions as known
      * @apiName markBlockchainTransactionsAsKnown
      * @apiGroup Transaction
      * @apiVersion 1.0.0
@@ -437,7 +488,7 @@ module.exports = (osseus) => {
     },
 
     /**
-     * @api {post} /transaction/bc/state Update BC transactions state
+     * @api {post} /api/transaction/bc/state Update BC transactions state
      * @apiName updateBlockchainTransactionsState
      * @apiGroup Transaction
      * @apiVersion 1.0.0
