@@ -27,7 +27,7 @@ services:
         restart: always
         env_file: .env
         working_dir: /app
-        command: 'npm run dev'
+        command: 'sh ./init.sh'
         environment:
             - OSSEUS_ENV=${APP_OSSEUS_ENV}
             - OSSEUS_PORT=${APP_OSSEUS_PORT}
