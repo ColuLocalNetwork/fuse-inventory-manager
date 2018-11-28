@@ -30,7 +30,7 @@ services:
         command: 'sh ./init.sh'
         environment:
             - OSSEUS_ENV=${APP_OSSEUS_ENV}
-            - OSSEUS_PORT=${APP_OSSEUS_PORT}
+            - OSSEUS_SERVER_PORT=${APP_OSSEUS_SERVER_PORT}
             - MONGODB_URI="mongodb://${MONGO_HOST}/${MONGO_DBNAME}"
             - MONGODB_APPLICATION_USER=${MONGO_USER}
             - MONGODB_APPLICATION_PASS=${MONGO_PASS}
