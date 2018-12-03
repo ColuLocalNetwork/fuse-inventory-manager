@@ -58,9 +58,7 @@ contract('WALLET', async (accounts) => {
   })
 
   beforeEach(function () {
-    Object.keys(osseus.db_models).forEach(model => {
-      osseus.db_models[model].getModel().remove({}, () => {})
-    })
+    osseus.helpers.clearDB()
   })
 
   it('should create a wallet', async () => {
@@ -195,8 +193,6 @@ contract('WALLET', async (accounts) => {
   })
 
   after(async function () {
-    Object.keys(osseus.db_models).forEach(model => {
-      osseus.db_models[model].getModel().remove({}, () => {})
-    })
+    osseus.helpers.clearDB()
   })
 })

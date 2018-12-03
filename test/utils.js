@@ -95,9 +95,7 @@ contract('UTILS', async (accounts) => {
   })
 
   beforeEach(async function () {
-    Object.keys(osseus.db_models).forEach(model => {
-      osseus.db_models[model].getModel().remove({}, () => {})
-    })
+    osseus.helpers.clearDB()
 
     await osseus.lib.Currency.create(cln.address, osseus.config.abi.CLN, clnBlockchainInfo, osseus.helpers.randomStr(10))
     currency = await osseus.lib.Currency.create(currencyAddress, osseus.config.abi.CommunityCurrency, currencyBlockchainInfo, osseus.helpers.randomStr(10))
@@ -225,8 +223,6 @@ contract('UTILS', async (accounts) => {
   })
 
   after(async function () {
-    Object.keys(osseus.db_models).forEach(model => {
-      osseus.db_models[model].getModel().remove({}, () => {})
-    })
+    osseus.helpers.clearDB()
   })
 })

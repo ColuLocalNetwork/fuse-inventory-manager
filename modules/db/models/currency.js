@@ -117,12 +117,11 @@ module.exports = (osseus) => {
 
   currency.getAll = (opts) => {
     return new Promise((resolve, reject) => {
-      Currency.paginate({}, opts, (err, docs) => {
+      Currency.paginate({}, opts, (err, result) => {
         if (err) {
           return reject(err)
         }
-        docs = docs || []
-        resolve(docs)
+        resolve(result)
       })
     })
   }

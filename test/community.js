@@ -69,9 +69,7 @@ contract('COMMUNITY', async (accounts) => {
   })
 
   beforeEach(function () {
-    Object.keys(osseus.db_models).forEach(model => {
-      osseus.db_models[model].getModel().remove({}, () => {})
-    })
+    osseus.helpers.clearDB()
   })
 
   it('should create a community (with default wallets)', async () => {
@@ -143,8 +141,6 @@ contract('COMMUNITY', async (accounts) => {
   })
 
   after(async function () {
-    Object.keys(osseus.db_models).forEach(model => {
-      osseus.db_models[model].getModel().remove({}, () => {})
-    })
+    osseus.helpers.clearDB()
   })
 })

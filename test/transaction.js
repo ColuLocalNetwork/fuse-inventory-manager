@@ -122,9 +122,7 @@ contract('TRANSACTION', async (accounts) => {
   })
 
   beforeEach(async function () {
-    Object.keys(osseus.db_models).forEach(model => {
-      osseus.db_models[model].getModel().remove({}, () => {})
-    })
+    osseus.helpers.clearDB()
 
     currency = await osseus.lib.Currency.create(currencyAddress, osseus.config.abi.CommunityCurrency, currencyBlockchainInfo, osseus.helpers.randomStr(10))
     community = await osseus.lib.Community.create('Test Community', currency, osseus.helpers.randomStr(10))
@@ -449,7 +447,7 @@ contract('TRANSACTION', async (accounts) => {
         let toAccount = otherAccounts[osseus.helpers.randomNum(2)]
         let from = {accountAddress: fromAccount, currency: currencyAddress}
         let to = {accountAddress: toAccount, currency: currencyAddress}
-        let amount = (osseus.helpers.randomNum(5) + 1) * TOKEN_DECIMALS
+        let amount = osseus.helpers.randomNum(5) * TOKEN_DECIMALS
         txs.push(makeTransaction(from, to, amount))
       }
 
@@ -499,7 +497,7 @@ contract('TRANSACTION', async (accounts) => {
     }
 
     it('should be able to transmit transactions for specific currency', async () => {
-      let txs = makeSomeTransactions(osseus.helpers.randomNum(100) + 1)
+      let txs = makeSomeTransactions(osseus.helpers.randomNum(100))
       let offchainResults = await Promise.all(txs, tx => { return tx })
       let transmitResults = await osseus.lib.Transaction.transmit({filters: {currency: currency.id}, bc: {gas: 1000000}})
       expect(transmitResults).to.be.an('array')
@@ -510,7 +508,7 @@ contract('TRANSACTION', async (accounts) => {
     })
 
     it('should be able to transmit all transactions', async () => {
-      let txs = makeSomeTransactions(osseus.helpers.randomNum(100) + 1)
+      let txs = makeSomeTransactions(osseus.helpers.randomNum(100))
       let offchainResults = await Promise.all(txs, tx => { return tx })
       let transmitResults = await osseus.lib.Transaction.transmit({filters: {}, bc: {gas: 1000000}})
       expect(transmitResults).to.be.an('array')
@@ -520,7 +518,7 @@ contract('TRANSACTION', async (accounts) => {
     })
 
     it('should be able to transmit relevant transacions, create some more and transmit only the ones not transmitted', async () => {
-      let txs1 = makeSomeTransactions(osseus.helpers.randomNum(100) + 1)
+      let txs1 = makeSomeTransactions(osseus.helpers.randomNum(100))
       let offchainResults1 = await Promise.all(txs1, tx => { return tx })
       let transmitResults1 = await osseus.lib.Transaction.transmit({filters: {}, bc: {gas: 1000000}})
       expect(transmitResults1).to.be.an('array')
@@ -528,7 +526,7 @@ contract('TRANSACTION', async (accounts) => {
       await validate(offchainResults1, transmitResults1[0])
       await jobsToFinish()
 
-      let txs2 = makeSomeTransactions(osseus.helpers.randomNum(100) + 1)
+      let txs2 = makeSomeTransactions(osseus.helpers.randomNum(100))
       let offchainResults2 = await Promise.all(txs2, tx => { return tx })
       let transmitResults2 = await osseus.lib.Transaction.transmit({filters: {}, bc: {gas: 1000000}})
       expect(transmitResults2).to.be.an('array')
@@ -539,9 +537,7 @@ contract('TRANSACTION', async (accounts) => {
   })
 
   after(async function () {
-    Object.keys(osseus.db_models).forEach(model => {
-      osseus.db_models[model].getModel().remove({}, () => {})
-    })
+    osseus.helpers.clearDB()
     osseus.agenda.purge()
   })
 })

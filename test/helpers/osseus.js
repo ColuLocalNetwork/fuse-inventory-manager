@@ -29,8 +29,17 @@ module.exports = async () => {
     BlockchainTransaction: require(path.join(cwd, 'modules/lib/models/blockchainTransaction'))(osseus)
   }
   osseus.helpers = {
-    randomNum: (n) => { return Math.floor(Math.random() * n) },
-    randomStr: (n) => { return Math.random().toString(36).substr(2, n) }
+    randomNum: (n) => {
+      return Math.floor(Math.random() * n)
+    },
+    randomStr: (n) => {
+      return Math.random().toString(36).substr(2, n)
+    },
+    clearDB: () => {
+      Object.keys(osseus.db_models).forEach(model => {
+        osseus.db_models[model].getModel().remove({}, () => {})
+      })
+    }
   }
   osseus.helpers.provider = new HDWalletProvider([{mnemonic: bip39.generateMnemonic(), password: osseus.helpers.randomStr(10)}], osseus.config.web3_provider)
 
