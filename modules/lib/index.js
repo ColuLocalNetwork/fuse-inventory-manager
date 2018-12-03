@@ -4,6 +4,7 @@ const init = (osseus) => {
     this.osseus.lib = {
       Community: require('./models/community')(this.osseus),
       Currency: require('./models/currency')(this.osseus),
+      MarketMaker: require('./models/marketMaker')(this.osseus),
       Transaction: require('./models/transaction')(this.osseus),
       BlockchainTransaction: require('./models/blockchainTransaction')(this.osseus)
     }

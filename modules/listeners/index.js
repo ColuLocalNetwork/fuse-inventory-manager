@@ -6,7 +6,7 @@ const init = (osseus) => {
       return resolve()
     }
     const transferListener = require('./models/transfer')(osseus)
-    const pastEventsInterval = parseInt((osseus.config.past_events_interval || 10000), 10)
+    const pastEventsInterval = parseInt((osseus.config.past_events_interval || 60000), 10)
     setInterval(async () => {
       await transferListener.getPastEvents()
     }, pastEventsInterval)

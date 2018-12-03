@@ -21,25 +21,27 @@ module.exports = (osseus) => {
 
      * @apiSuccessExample Success Example
      *     HTTP/1.1 200 OK
-     *     "id": "5bb9d9ab565e2f63d5f0263c",
-     *     "createdAt": "2018-10-07T10:02:19.305Z",
-     *     "updatedAt": "2018-10-07T10:02:19.305Z",
-     *     "type": "some_kind_of_type",
-     *     "address": "0x3b957f959e227d5accf7625e638fab02605dfd93",
-     *     "index": 3,
-     *     "exid": "123abc",
-     *     "balances": [
-     *         {
-     *             "id": "5bbb4e116666efbde308f212",
-     *             "createdAt": "2018-10-08T12:31:13.191Z",
-     *             "updatedAt": "2018-10-08T12:31:13.191Z",
-     *             "currency": "5bb9bff7e50dea460c5f8eac",
-     *             "blockNumberOfLastUpdate": 0,
-     *             "blockchainAmount": "0",
-     *             "offchainAmount": "0",
-     *             "pendingTxs": []
-     *         }
-     *     ]
+     *     {
+     *      "id": "5bb9d9ab565e2f63d5f0263c",
+     *      "createdAt": "2018-10-07T10:02:19.305Z",
+     *      "updatedAt": "2018-10-07T10:02:19.305Z",
+     *      "type": "some_kind_of_type",
+     *      "address": "0x3b957f959e227d5accf7625e638fab02605dfd93",
+     *      "index": 3,
+     *      "exid": "123abc",
+     *      "balances": [
+     *          {
+     *              "id": "5bbb4e116666efbde308f212",
+     *              "createdAt": "2018-10-08T12:31:13.191Z",
+     *              "updatedAt": "2018-10-08T12:31:13.191Z",
+     *              "currency": "5bb9bff7e50dea460c5f8eac",
+     *              "blockNumberOfLastUpdate": 0,
+     *              "blockchainAmount": "0",
+     *              "offchainAmount": "0",
+     *              "pendingTxs": []
+     *          }
+     *      ]
+     *     }
 
      * @apiErrorExample Error Example
      *     HTTP/1.1 500 Internal Server Error

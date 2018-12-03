@@ -61,7 +61,8 @@ const validateBlockchainTranscation = (tx, from, to, type, meta) => {
     expect(tx.meta.from).to.equal(meta.from)
     expect(tx.meta.fromToken).to.equal(meta.fromToken)
     expect(tx.meta.toToken).to.equal(meta.toToken)
-    expect(tx.meta.amount.toString()).to.equal(meta.amount.toString())
+    expect(tx.meta.fromAmount.toString()).to.equal(meta.fromAmount.toString())
+    expect(tx.meta.toAmount.toString()).to.equal(meta.toAmount.toString())
   }
   expect(tx.state).to.equal('TRANSMITTED')
 }
@@ -125,7 +126,6 @@ contract('BLOCKCHAIN_TRANSACTION', async (accounts) => {
     mm = await EllipseMarketMaker.at(marketMakerAddress)
 
     osseus = await OsseusHelper()
-    osseus.config.cln_address = cln.address
   })
 
   beforeEach(async function () {
@@ -133,8 +133,8 @@ contract('BLOCKCHAIN_TRANSACTION', async (accounts) => {
       osseus.db_models[model].getModel().remove({}, () => {})
     })
 
-    await osseus.lib.Currency.createCLN(cln.address, osseus.abi.cln, clnBlockchainInfo, osseus.helpers.randomStr(10))
-    currency = await osseus.lib.Currency.create(currencyAddress, marketMakerAddress, osseus.abi.cc, osseus.abi.mm, currencyBlockchainInfo, osseus.helpers.randomStr(10))
+    await osseus.lib.Currency.create(cln.address, osseus.config.abi.CLN, clnBlockchainInfo, osseus.helpers.randomStr(10))
+    currency = await osseus.lib.Currency.create(currencyAddress, osseus.config.abi.CommunityCurrency, currencyBlockchainInfo, osseus.helpers.randomStr(10))
     community = await osseus.lib.Community.create('Test Community', currency, osseus.helpers.randomStr(10))
 
     communityManagerAddress = community.wallets.filter(wallet => wallet.type === 'manager')[0].address
@@ -355,8 +355,10 @@ contract('BLOCKCHAIN_TRANSACTION', async (accounts) => {
         expect(bctx).to.be.undefined
       } else {
         bctx = await osseus.lib.BlockchainTransaction.change(data.from, data.fromToken, data.toToken, data.marketMaker, data.amount, opts)
-        validateBlockchainTranscation(bctx.result, data.from, data.fromToken, 'CHANGE', data)
         let returnAmount = bctx.receipt.logs.filter(log => log.args.to === data.from)[0].args.value
+        data.fromAmount = data.amount
+        data.toAmount = returnAmount
+        validateBlockchainTranscation(bctx.result, data.from, data.fromToken, 'CHANGE', data)
         return returnAmount
       }
     }
@@ -746,8 +748,10 @@ contract('BLOCKCHAIN_TRANSACTION', async (accounts) => {
         opts.gas = 1000000
 
         let bctx = await osseus.lib.BlockchainTransaction.change(data.from, data.fromToken, data.toToken, data.marketMaker, data.amount, opts)
+        let returnAmount = bctx.receipt.logs.filter(log => log.args.to === data.from)[0].args.value
+        data.fromAmount = data.amount
+        data.toAmount = returnAmount
         validateBlockchainTranscation(bctx.result, data.from, data.fromToken, 'CHANGE', data)
-        // let returnAmount = bctx.receipt.logs.filter(log => log.args.to === data.from)[0].args.value
         return bctx
       }
 
@@ -834,6 +838,5 @@ contract('BLOCKCHAIN_TRANSACTION', async (accounts) => {
     Object.keys(osseus.db_models).forEach(model => {
       osseus.db_models[model].getModel().remove({}, () => {})
     })
-    osseus.agenda.purge()
   })
 })

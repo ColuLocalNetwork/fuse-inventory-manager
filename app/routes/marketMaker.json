@@ -1,5 +1,5 @@
 {
-  "/currency": {
+  "/market-maker": {
     "POST": {
       "route": "create",
       "jwt": true,
@@ -13,26 +13,19 @@
             "notEmpty": true,
             "errorMessage": "is missing"
           },
-          "creationTransactionHash": {
+          "tokenAddress1": {
             "notEmpty": true,
             "errorMessage": "is missing"
           },
-          "creationBlockHash": {
+          "tokenAddress2": {
             "notEmpty": true,
             "errorMessage": "is missing"
-          },
-          "creationBlockNumber": {
-            "notEmpty": true,
-            "errorMessage": "is missing"
-          },
-          "externalId": {
-            "optional": true
           }
         }
       }
     }
   },
-  "/currency/id/:id": {
+  "/market-maker/id/:id": {
     "PUT": {
       "route": "edit",
       "jwt": true,
@@ -58,7 +51,7 @@
       }
     }
   },
-  "/currency/address/:address": {
+  "/market-maker/address/:address": {
     "PUT": {
       "route": "editByAddress",
       "jwt": true,
@@ -79,6 +72,52 @@
           "address": {
             "notEmpty": true,
             "errorMessage": "is missing"
+          }
+        }
+      }
+    }
+  },
+  "/market-maker/pair": {
+    "GET": {
+      "route": "getByPair",
+      "jwt": true,
+      "validators": {
+        "query": {
+          "tokenAddress1": {
+            "notEmpty": true,
+            "errorMessage": "is missing"
+          },
+          "tokenAddress2": {
+            "notEmpty": true,
+            "errorMessage": "is missing"
+          }
+        }
+      }
+    }
+  },
+  "/market-maker/quote": {
+    "GET": {
+      "route": "quote",
+      "jwt": true,
+      "validators": {
+        "query": {
+          "fromToken": {
+            "notEmpty": true,
+            "errorMessage": "is missing"
+          },
+          "toToken": {
+            "notEmpty": true,
+            "errorMessage": "is missing"
+          },
+          "amount": {
+            "notEmpty": true,
+            "errorMessage": "is missing"
+          },
+          "id": {
+            "optional": true
+          },
+          "address": {
+            "optional": true
           }
         }
       }

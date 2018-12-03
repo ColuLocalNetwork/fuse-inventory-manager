@@ -8,7 +8,7 @@ module.exports = (osseus) => {
     return new Promise(async (resolve, reject) => {
       try {
         await osseus.db_models.community.getByWalletAddress(participant.accountAddress)
-        let currency = await osseus.db_models.currency.getByCurrencyAddress(participant.currency)
+        let currency = await osseus.db_models.currency.getByAddress(participant.currency)
         resolve({
           accountAddress: participant.accountAddress,
           currency: currency.id
@@ -32,13 +32,12 @@ module.exports = (osseus) => {
     })
   }
 
-  const validateAggregatedBalances = () => {
+  const validateAggregatedBalances = (currencyId) => {
     return new Promise(async (resolve, reject) => {
       try {
-        const results = await osseus.utils.validateAggregatedBalances()
+        const results = await osseus.utils.validateAggregatedBalances(currencyId)
         const invalid = results.filter(res => !res.valid)
         if (invalid.length > 0) {
-          // TODO NOTIFY
           return reject(new Error(`Invalid aggregated balances - ${JSON.stringify(invalid)}`))
         }
         resolve()
@@ -56,15 +55,22 @@ module.exports = (osseus) => {
           let transmit = await osseus.db_models.transmit.workOn(filters.currency)
           transmits = [transmit]
         } else {
-          const currencies = await osseus.db_models.currency.getAllCCs()
-          const tasks = []
-          currencies.forEach(currency => {
-            tasks.push(new Promise(async (resolve, reject) => {
-              let transmit = await osseus.db_models.transmit.workOn(currency.id)
-              resolve(transmit)
-            }))
-          })
-          transmits = await Promise.all(tasks, task => { return task })
+          const limit = osseus.config.currencies_batch_size || 10
+          let offset = 0
+          let currenciesData = await osseus.db_models.currency.getAll({offset: offset, limit: limit})
+          while (currenciesData && currenciesData.docs && currenciesData.docs.length && currenciesData.total) {
+            const tasks = []
+            currenciesData.docs.forEach(currency => {
+              tasks.push(new Promise(async (resolve, reject) => {
+                let transmit = await osseus.db_models.transmit.workOn(currency.id)
+                resolve(transmit)
+              }))
+            })
+            let finishedTransmits = await Promise.all(tasks, task => { return task })
+            transmits = transmits.concat(finishedTransmits)
+            offset += limit
+            currenciesData = await osseus.db_models.currency.getAll({offset: offset, limit: limit})
+          }
         }
         resolve(transmits)
       } catch (err) {
@@ -112,7 +118,7 @@ module.exports = (osseus) => {
         transactions.forEach(transaction => {
           let txid = transaction._id.toString()
           let from = transaction.from.accountAddress
-          let token = transaction.from.currency.currencyAddress
+          let token = transaction.from.currency.address
           let to = transaction.to.accountAddress
           let amount = new BigNumber(transaction.amount)
 
@@ -217,6 +223,37 @@ module.exports = (osseus) => {
     })
   }
 
+  transaction.change = (fromAccountAddress, fromTokenAddress, toTokenAddress, amount, minReturn, marketMakerId, marketMakerAddress) => {
+    return new Promise(async (resolve, reject) => {
+      try {
+        amount = await validateAmount(amount)
+        const marketMaker = await osseus.db_models.marketMaker.get({id: marketMakerId, address: marketMakerAddress, pair: {tokenAddress1: fromTokenAddress, tokenAddress2: toTokenAddress}})
+        const opts = {}
+        if (minReturn) opts.minReturn = await validateAmount(minReturn)
+        const changeData = await osseus.lib.BlockchainTransaction.change(fromAccountAddress, fromTokenAddress, toTokenAddress, marketMaker.address, amount, opts)
+        const fromCurrency = await osseus.db_models.currency.getByAddress(fromTokenAddress)
+        const toCurrency = await osseus.db_models.currency.getByAddress(toTokenAddress)
+        const data = {
+          from: {
+            accountAddress: fromAccountAddress,
+            currency: fromCurrency.id,
+            amount: amount
+          },
+          to: {
+            accountAddress: fromAccountAddress,
+            currency: toCurrency.id,
+            amount: changeData.result.meta.toAmount
+          },
+          context: 'change'
+        }
+        const newTx = await osseus.db_models.tx.createChange(data)
+        resolve(newTx)
+      } catch (err) {
+        reject(err)
+      }
+    })
+  }
+
   transaction.deposit = (to, amount, bctxid) => {
     return new Promise(async (resolve, reject) => {
       try {
@@ -245,7 +282,7 @@ module.exports = (osseus) => {
   transaction.transmit = (opts) => {
     return new Promise(async (resolve, reject) => {
       try {
-        await validateAggregatedBalances()
+        await validateAggregatedBalances(opts.filters && opts.filters.currency)
 
         const transmits = await startWorkingOnTransmits(opts.filters)
         osseus.logger.debug(`found ${transmits.length} transmits to work on`)

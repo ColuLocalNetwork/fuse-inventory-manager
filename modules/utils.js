@@ -4,24 +4,13 @@ const getCurrencyFromToken = (token, community) => {
   this.osseus.logger.debug(`utils --> getCurrencyFromToken --> token: ${token}, community: ${JSON.stringify(community)}`)
   return new Promise(async (resolve, reject) => {
     try {
-      const result = {}
-      if (token === this.osseus.config.cln_address) {
-        this.osseus.logger.silly(`getCurrencyFromToken --> CLN: ${token}`)
-        const provider = await this.osseus.lib.Community.getProvider(community)
-        const currency = await this.osseus.lib.Currency.getCLN(provider)
-        result.contract = currency.contracts.cln
-        result.web3 = currency.contracts.web3
-      } else {
-        this.osseus.logger.silly(`getCurrencyFromToken --> CC: ${token}`)
-        const communityData = await this.osseus.lib.Community.get(community.id, community)
-        if (communityData.currencyContracts.cc.address !== token) {
-          return reject(new Error(`Unrecognized token: ${token} for community: ${community.id}`))
-        } else {
-          result.contract = communityData.currencyContracts.cc
-          result.web3 = communityData.currencyContracts.web3
-        }
-      }
-      resolve(result)
+      const provider = await this.osseus.lib.Community.getProvider(community)
+      const currency = await this.osseus.db_models.currency.getByAddress(token)
+      const currencyContracts = await this.osseus.lib.Currency.getContracts(currency.id, provider)
+      resolve({
+        contract: currencyContracts.currency,
+        web3: currencyContracts.web3
+      })
     } catch (err) {
       reject(err)
     }
@@ -55,7 +44,7 @@ const validateBlockchainBalance = (address, token) => {
   return new Promise(async (resolve, reject) => {
     try {
       const bcBalance = await getBlockchainBalance(address, token)
-      const currency = await this.osseus.db_models.currency.getByCurrencyAddress(token)
+      const currency = await this.osseus.db_models.currency.getByAddress(token)
       const bcBalanceInDB = await this.osseus.db_models.wallet.getBlockchainBalance(address, currency.id)
 
       if (typeof bcBalance === 'undefined') {
@@ -73,19 +62,18 @@ const validateBlockchainBalance = (address, token) => {
   })
 }
 
-const validateAggregatedBalances = (token) => {
-  this.osseus.logger.debug(`utils --> validateAggregatedBalances --> token: ${token}`)
+const validateAggregatedBalances = (currencyId) => {
+  this.osseus.logger.debug(`utils --> validateAggregatedBalances --> currencyId: ${currencyId}`)
   return new Promise(async (resolve, reject) => {
     try {
-      const currency = token ? await this.osseus.db_models.currency.getByCurrencyAddress(token) : {}
-      const aggregatedBalances = await this.osseus.db_models.wallet.aggregateBalancesPerCurrency(currency.id)
+      const aggregatedBalances = await this.osseus.db_models.wallet.aggregateBalancesPerCurrency(currencyId)
       const results = aggregatedBalances.map(balance => {
         balance.totalBlockchainAmount = balance.totalBlockchainAmount.toNumber()
         balance.totalOffchainAmount = balance.totalOffchainAmount.toNumber()
         balance.valid = balance.totalBlockchainAmount >= balance.totalOffchainAmount
         return balance
       })
-      this.osseus.logger.debug(`validateAggregatedBalances --> token: ${token}, results: ${JSON.stringify(results)}`)
+      this.osseus.logger.debug(`validateAggregatedBalances --> currencyId: ${currencyId}, results: ${JSON.stringify(results)}`)
       resolve(results)
     } catch (err) {
       reject(err)
@@ -99,7 +87,7 @@ const updateBlockchainBalance = (address, token) => {
     try {
       const currentBlock = await this.osseus.web3.eth.getBlockNumber()
       const balance = await getBlockchainBalance(address, token, true)
-      const currency = await this.osseus.db_models.currency.getByCurrencyAddress(token)
+      const currency = await this.osseus.db_models.currency.getByAddress(token)
       if (typeof balance === 'undefined') {
         return reject(new Error(`Could not get blockchain balance - address: ${address}, token: ${token}`))
       }
@@ -119,7 +107,6 @@ const getUnknownBlockchainTransactions = (filters, projection, limit, sort) => {
       this.osseus.logger.debug(`filters: ${JSON.stringify(filters)}, projection: ${JSON.stringify(projection)}, limit: ${limit}, sort: ${JSON.stringify(sort)}`)
       const transactions = await this.osseus.db_models.bctx.get(filters, projection, limit, sort)
       this.osseus.logger.debug(`got ${transactions.length} unknown transactions`)
-      // TODO NOTIFY
       resolve(transactions)
     } catch (err) {
       reject(err)

@@ -11,15 +11,11 @@ module.exports = async () => {
   osseus.web3 = web3 // this is the global web3 created by truffle...
   osseus.web3.eth.getBlockNumber = util.promisify(osseus.web3.eth.getBlockNumber)
   if (!osseus.utils) require(path.join(cwd, 'modules/utils')).init(osseus)
-  osseus.abi = {
-    cln: JSON.stringify(require(path.join(cwd, 'config/abi/ColuLocalNetwork'))),
-    cc: JSON.stringify(require(path.join(cwd, 'config/abi/ColuLocalCurrency'))),
-    mm: JSON.stringify(require(path.join(cwd, 'config/abi/EllipseMarketMaker')))
-  }
   osseus.db_models = osseus.db_models || {
     bctx: require(path.join(cwd, 'modules/db/models/blockchainTransaction'))(osseus),
-    currency: require(path.join(cwd, 'modules/db/models/currency'))(osseus),
     community: require(path.join(cwd, 'modules/db/models/community'))(osseus),
+    currency: require(path.join(cwd, 'modules/db/models/currency'))(osseus),
+    marketMaker: require(path.join(cwd, 'modules/db/models/marketMaker'))(osseus),
     transmit: require(path.join(cwd, 'modules/db/models/transmit'))(osseus),
     tx: require(path.join(cwd, 'modules/db/models/transaction'))(osseus),
     wallet: require(path.join(cwd, 'modules/db/models/wallet'))(osseus)
@@ -28,6 +24,7 @@ module.exports = async () => {
   osseus.lib = osseus.lib || {
     Currency: require(path.join(cwd, 'modules/lib/models/currency'))(osseus),
     Community: require(path.join(cwd, 'modules/lib/models/community'))(osseus),
+    MarketMaker: require(path.join(cwd, 'modules/lib/models/marketMaker'))(osseus),
     Transaction: require(path.join(cwd, 'modules/lib/models/transaction'))(osseus),
     BlockchainTransaction: require(path.join(cwd, 'modules/lib/models/blockchainTransaction'))(osseus)
   }
