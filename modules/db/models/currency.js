@@ -42,7 +42,7 @@ module.exports = (osseus) => {
         createdAt: ret.created_at,
         updatedAt: ret.updated_at,
         address: ret.address,
-        // abi: ret.abi,
+        abi: ret.abi,
         exid: ret.exid,
         blockchainInfo: ret.blockchainInfo
       }
