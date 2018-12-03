@@ -7,6 +7,7 @@ const init = (osseus) => {
       community: require('./models/community')(this.osseus),
       currency: require('./models/currency')(this.osseus),
       marketMaker: require('./models/marketMaker')(this.osseus),
+      notification: require('./models/notification')(this.osseus),
       tx: require('./models/transaction')(this.osseus),
       transmit: require('./models/transmit')(this.osseus),
       wallet: require('./models/wallet')(this.osseus)

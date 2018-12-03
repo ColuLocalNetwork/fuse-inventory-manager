@@ -16,6 +16,7 @@ module.exports = async () => {
     community: require(path.join(cwd, 'modules/db/models/community'))(osseus),
     currency: require(path.join(cwd, 'modules/db/models/currency'))(osseus),
     marketMaker: require(path.join(cwd, 'modules/db/models/marketMaker'))(osseus),
+    notification: require(path.join(cwd, 'modules/db/models/notification'))(osseus),
     transmit: require(path.join(cwd, 'modules/db/models/transmit'))(osseus),
     tx: require(path.join(cwd, 'modules/db/models/transaction'))(osseus),
     wallet: require(path.join(cwd, 'modules/db/models/wallet'))(osseus)
