@@ -82,7 +82,7 @@ contract('NOTIFICATION', async (accounts) => {
   })
 
   it('should create multiple notifications', async () => {
-    for (let i = 1; i <= osseus.helpers.randomNum(100); i++) {
+    for (let i = 1; i <= osseus.helpers.randomNumNotZero(100); i++) {
       await osseus.db_models.notification.create({level: osseus.db_models.notification.levels[osseus.helpers.randomNum(3)], community: community.id, title: `Test ${i}`})
     }
   })
@@ -102,9 +102,9 @@ contract('NOTIFICATION', async (accounts) => {
   })
 
   it('should get all unread notifications (with different filters)', async () => {
-    let nWARNING = osseus.helpers.randomNum(100)
-    let nCRITICAL = osseus.helpers.randomNum(100)
-    let nWithCommunity = osseus.helpers.randomNum(100)
+    let nWARNING = osseus.helpers.randomNumNotZero(100)
+    let nCRITICAL = osseus.helpers.randomNumNotZero(100)
+    let nWithCommunity = osseus.helpers.randomNumNotZero(100)
     let notifications = {levelWarning: [], levelCritical: [], withCommunity: []}
 
     for (let i = 1; i <= nWARNING; i++) {
@@ -134,7 +134,7 @@ contract('NOTIFICATION', async (accounts) => {
 
   it('should mark multiple notifications as read', async () => {
     let notificationIds = []
-    for (let i = 1; i <= osseus.helpers.randomNum(100); i++) {
+    for (let i = 1; i <= osseus.helpers.randomNumNotZero(100); i++) {
       let notification = await osseus.db_models.notification.create({level: osseus.db_models.notification.levels[osseus.helpers.randomNum(3)], community: community.id, title: `Test ${i}`})
       notificationIds.push(notification.id)
     }
@@ -146,7 +146,7 @@ contract('NOTIFICATION', async (accounts) => {
   it('should mark only unread notifications as read', async () => {
     let notificationIds = []
     let notificationIdsMarkedAsRead = []
-    for (let i = 1; i <= osseus.helpers.randomNum(100); i++) {
+    for (let i = 1; i <= osseus.helpers.randomNumNotZero(100); i++) {
       let notification = await osseus.db_models.notification.create({level: osseus.db_models.notification.levels[osseus.helpers.randomNum(3)], community: community.id, title: `Test ${i}`})
       notificationIds.push(notification.id)
       if (i % 2) {

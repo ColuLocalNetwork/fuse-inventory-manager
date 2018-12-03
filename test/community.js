@@ -80,7 +80,7 @@ contract('COMMUNITY', async (accounts) => {
 
   it('should create a community (with pre-defined wallets)', async () => {
     let wallets = [{type: 'manager', exid: osseus.helpers.randomStr(10)}]
-    for (var i = 1; i < osseus.helpers.randomNum(100); i++) {
+    for (var i = 1; i < osseus.helpers.randomNumNotZero(100); i++) {
       wallets.push({type: `user ${i}`, exid: osseus.helpers.randomStr(10)})
     }
     let currency = await osseus.lib.Currency.create(currencyAddress, osseus.config.abi.CommunityCurrency, currencyBlockchainInfo, osseus.helpers.randomStr(10))
@@ -90,7 +90,7 @@ contract('COMMUNITY', async (accounts) => {
 
   it('should get error if trying to create community without manager wallet', async () => {
     let wallets = []
-    for (var i = 1; i < osseus.helpers.randomNum(100); i++) {
+    for (var i = 1; i < osseus.helpers.randomNumNotZero(100); i++) {
       wallets.push({type: `user ${i}`, exid: osseus.helpers.randomStr(10)})
     }
     let currency = await osseus.lib.Currency.create(currencyAddress, osseus.config.abi.CommunityCurrency, currencyBlockchainInfo, osseus.helpers.randomStr(10))

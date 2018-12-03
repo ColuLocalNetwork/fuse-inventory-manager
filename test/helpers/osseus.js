@@ -33,6 +33,9 @@ module.exports = async () => {
     randomNum: (n) => {
       return Math.floor(Math.random() * n)
     },
+    randomNumNotZero: (n) => {
+      return Math.floor(Math.random() * n) + 1
+    },
     randomStr: (n) => {
       return Math.random().toString(36).substr(2, n)
     },

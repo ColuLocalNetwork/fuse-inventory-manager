@@ -67,7 +67,7 @@ contract('WALLET', async (accounts) => {
       address: accounts[0],
       type: 'manager',
       index: 0,
-      exid: osseus.helpers.randomNum(10),
+      exid: osseus.helpers.randomNumNotZero(10),
       balances: [{
         currency: currency,
         blockchainAmount: 0,
@@ -85,7 +85,7 @@ contract('WALLET', async (accounts) => {
       address: accounts[0],
       type: 'manager',
       index: 0,
-      exid: osseus.helpers.randomNum(10),
+      exid: osseus.helpers.randomNumNotZero(10),
       balances: [{
         currency: currency,
         blockchainAmount: 0,
@@ -98,7 +98,7 @@ contract('WALLET', async (accounts) => {
       address: accounts[0],
       type: 'users',
       index: 0,
-      exid: osseus.helpers.randomNum(10),
+      exid: osseus.helpers.randomNumNotZero(10),
       balances: [{
         currency: currency,
         blockchainAmount: 0,
@@ -118,7 +118,7 @@ contract('WALLET', async (accounts) => {
       address: accounts[0],
       type: 'manager',
       index: 0,
-      exid: osseus.helpers.randomNum(10),
+      exid: osseus.helpers.randomNumNotZero(10),
       balances: [{
         currency: currency,
         blockchainAmount: 0,
@@ -137,7 +137,7 @@ contract('WALLET', async (accounts) => {
       address: accounts[0],
       type: 'manager',
       index: 0,
-      exid: osseus.helpers.randomNum(10),
+      exid: osseus.helpers.randomNumNotZero(10),
       balances: [{
         currency: currency,
         blockchainAmount: 0,
@@ -157,7 +157,7 @@ contract('WALLET', async (accounts) => {
       address: accounts[0],
       type: 'manager',
       index: 0,
-      exid: osseus.helpers.randomNum(10),
+      exid: osseus.helpers.randomNumNotZero(10),
       balances: [{
         currency: currency,
         blockchainAmount: 0,
@@ -179,7 +179,7 @@ contract('WALLET', async (accounts) => {
       address: accounts[0],
       type: 'manager',
       index: 0,
-      exid: osseus.helpers.randomNum(10),
+      exid: osseus.helpers.randomNumNotZero(10),
       balances: [{
         currency: currency,
         blockchainAmount: 10 * TOKEN_DECIMALS,

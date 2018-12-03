@@ -102,7 +102,7 @@ contract('CURRENCY', async (accounts) => {
   })
 
   it('should get all CCs', async () => {
-    let n = osseus.helpers.randomNum(100)
+    let n = osseus.helpers.randomNumNotZero(100)
     let currencies1 = []
     for (let i = 1; i <= n; i++) {
       let cc = await createCurrency(`TestLocalCurrency${i}`, `TLC${i}`)
