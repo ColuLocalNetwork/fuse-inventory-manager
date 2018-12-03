@@ -112,6 +112,12 @@
           "amount": {
             "notEmpty": true,
             "errorMessage": "is missing"
+          },
+          "id": {
+            "optional": true
+          },
+          "address": {
+            "optional": true
           }
         }
       }

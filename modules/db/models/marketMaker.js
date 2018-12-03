@@ -12,7 +12,6 @@ module.exports = (osseus) => {
   }).plugin(timestamps())
 
   MarketMakerSchema.index({address: 1}, {unique: true})
-  MarketMakerSchema.index({tokenAddress1: 1, tokenAddress2: 1}, {unique: true})
   MarketMakerSchema.index({address: 1, tokenAddress1: 1, tokenAddress2: 1}, {unique: true})
 
   MarketMakerSchema.set('toJSON', {
@@ -106,15 +105,36 @@ module.exports = (osseus) => {
         {tokenAddress1: tokenAddress1.toLowerCase(), tokenAddress2: tokenAddress2.toLowerCase()},
         {tokenAddress1: tokenAddress2.toLowerCase(), tokenAddress2: tokenAddress1.toLowerCase()}
       ]}
-      MarketMaker.findOne(condition, (err, doc) => {
+      MarketMaker.find(condition, (err, docs) => {
         if (err) {
           return reject(err)
         }
-        if (!doc) {
+        if (!docs || !docs.length) {
           return reject(new Error(`MarketMaker not found for pair: ${tokenAddress1} and ${tokenAddress2}`))
         }
-        resolve(doc)
+        resolve(docs)
       })
+    })
+  }
+
+  marketMaker.get = (filter) => {
+    return new Promise(async (resolve, reject) => {
+      try {
+        let mm
+        if (filter.id) {
+          mm = await marketMaker.getById(filter.id)
+        } else if (filter.address) {
+          mm = await marketMaker.getByAddress(filter.address)
+        } else if (filter.pair) {
+          let marketMakers = await marketMaker.getByPair(filter.pair.tokenAddress1, filter.pair.tokenAddress2)
+          mm = marketMakers[0]
+        } else {
+          return reject(new Error(`MarketMaker could not be found - no relevant filter`))
+        }
+        resolve(mm)
+      } catch (err) {
+        reject(err)
+      }
     })
   }
 

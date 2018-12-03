@@ -45,6 +45,12 @@
           },
           "minReturn": {
             "optional": true
+          },
+          "marketMakerId": {
+            "optional": true
+          },
+          "marketMakerAddress": {
+            "optional": true
           }
         }
       }

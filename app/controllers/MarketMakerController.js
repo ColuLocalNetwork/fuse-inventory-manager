@@ -28,6 +28,35 @@ module.exports = (osseus) => {
      */
 
     /**
+     * @apiDefine MarketMakerArrayResponse
+     * @apiSuccess {String} id market maker unique id.
+     * @apiSuccess {String} createdAt market maker creation time.
+     * @apiSuccess {String} updatedAt market maker last update time.
+     * @apiSuccess {String} address market maker contract address.
+     * @apiSuccess {String} tokenAddress1 first token address supported by the market maker contract.
+     * @apiSuccess {String} tokenAddress2 second token address supported by the market maker contract.
+
+     * @apiSuccessExample Success Example
+     *     HTTP/1.1 200 OK
+     *     [
+     *      {
+     *      "id": "5bf6a7828f86a54ffe3a58d3",
+     *      "createdAt": "2018-11-22T12:56:34.660Z",
+     *      "updatedAt": "2018-11-22T12:56:34.660Z",
+     *      "address": "0x54b35ee5d1739018a9ce29c44bdf145529136706",
+     *      "tokenAddress1": "0x41c9d91e96b933b74ae21bcbb617369cbe022530",
+     *      "tokenAddress2": "0x24a85b72700cec4cf1912adcebdb9e8f60bdab91"
+     *      }
+     *     ]
+
+     * @apiErrorExample Error Example
+     *     HTTP/1.1 500 Internal Server Error
+     *     {
+     *       "error": "The error description"
+     *     }
+     */
+
+    /**
      * @apiDefine JWT
      * @apiHeader {String} Authorization JWT token generated using OSSEUS_ROUTER_JWT_SECRET value from the config.
      * @apiHeaderExample {json} Header-Example:
@@ -168,18 +197,18 @@ module.exports = (osseus) => {
      * @apiGroup Market Maker
      * @apiVersion 1.0.0
      *
-     * @apiDescription Get market maker by a pair of token addresses (order not important)
+     * @apiDescription Get market maker by a pair of token addresses (order not important). Note that this endpoint will return an array of Market Makers.
      *
      * @apiUse JWT
      *
      * @apiParam {String} tokenAddress1 first token address supported by the market maker contract.
      * @apiParam {String} tokenAddress2 second token address supported by the market maker contract.
      *
-     * @apiUse MarketMakerResponse
+     * @apiUse MarketMakerArrayResponse
      */
     getByPair: async (req, res, next) => {
       osseus.db_models.marketMaker.getByPair(req.query.tokenAddress1, req.query.tokenAddress2)
-        .then(marketMaker => { res.send(marketMaker) })
+        .then(marketMakers => { res.send(marketMakers) })
         .catch(err => { next(err) })
     },
 
@@ -189,13 +218,15 @@ module.exports = (osseus) => {
      * @apiGroup Market Maker
      * @apiVersion 1.0.0
      *
-     * @apiDescription Get quote from market maker for exchanging `amount` of `fromToken` to `toToken`
+     * @apiDescription Get quote from market maker for exchanging `amount` of `fromToken` to `toToken`. Optionally specify the market maker to use by id/address, or find the first one for the pair of tokens.
      *
      * @apiUse JWT
      *
      * @apiParam {String} fromToken token address of the token to sell
      * @apiParam {String} toToken token address of the token to buy
      * @apiParam {String} amount amount of `fromToken` to sell in exchange for `toToken` as string
+     * @apiParam {String} [id] market maker id.
+     * @apiParam {String} [address] market maker contract address.
      *
      * @apiSuccess {String} quote the amount of `toToken` which will be received in exchange for `amount` of `fromToken`.
      *
@@ -212,7 +243,7 @@ module.exports = (osseus) => {
      *     }
      */
     quote: async (req, res, next) => {
-      osseus.lib.MarketMaker.quote(req.query.fromToken, req.query.toToken, req.query.amount)
+      osseus.lib.MarketMaker.quote(req.query.fromToken, req.query.toToken, req.query.amount, {id: req.query.id, address: req.query.address})
         .then(quote => { res.send({quote: quote.toString()}) })
         .catch(err => { next(err) })
     }

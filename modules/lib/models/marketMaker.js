@@ -40,10 +40,12 @@ module.exports = (osseus) => {
     })
   }
 
-  marketMaker.quote = (fromTokenAddress, toTokenAddress, amount) => {
+  marketMaker.quote = (fromTokenAddress, toTokenAddress, amount, opts) => {
     return new Promise(async (resolve, reject) => {
       try {
-        const marketMaker = await osseus.db_models.marketMaker.getByPair(fromTokenAddress, toTokenAddress)
+        opts = opts || {}
+        opts.pair = {tokenAddress1: fromTokenAddress, tokenAddress2: toTokenAddress}
+        const marketMaker = await osseus.db_models.marketMaker.get(opts)
         const MarketMakerContract = new osseus.web3.eth.Contract(JSON.parse(marketMaker.abi), marketMaker.address)
         MarketMakerContract.methods.quote(fromTokenAddress, osseus.web3.utils.toHex(new BigNumber(amount)), toTokenAddress).call((err, quote) => {
           err ? reject(err) : resolve(quote)

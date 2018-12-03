@@ -79,7 +79,7 @@ module.exports = (osseus) => {
      * @apiGroup Transaction
      * @apiVersion 1.0.0
      *
-     * @apiDescription Change `amount` of `fromToken` to `tokenAmount` by `account` account address
+     * @apiDescription Change `amount` of `fromToken` to `tokenAmount` by `account` account address. Optionally specify the market maker to use by id/address, or find the first one for the pair of tokens.
      *
      * @apiUse JWT
      *
@@ -88,6 +88,8 @@ module.exports = (osseus) => {
      * @apiParam {String} toToken token address of the token to buy
      * @apiParam {String} amount amount of `fromToken` to sell in exchange for `toToken` as string
      * @apiParam {String} [minReturn] minimum amount of `toToken` to receive in exchange for the `amount` of `fromToken`
+     * @apiParam {String} [marketMakerId] market maker id.
+     * @apiParam {String} [marketMakerAddress] market maker contract address.
      *
      * @apiSuccess {String} id transaction unique id.
      *
@@ -109,7 +111,9 @@ module.exports = (osseus) => {
         req.body.fromToken,
         req.body.toToken,
         req.body.amount,
-        req.body.minReturn
+        req.body.minReturn,
+        req.body.marketMakerId,
+        req.body.marketMakerAddress
       )
         .then(tx => { res.send({id: tx.id}) })
         .catch(err => { return next(err) })

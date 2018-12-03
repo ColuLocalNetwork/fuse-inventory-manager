@@ -223,11 +223,11 @@ module.exports = (osseus) => {
     })
   }
 
-  transaction.change = (fromAccountAddress, fromTokenAddress, toTokenAddress, amount, minReturn) => {
+  transaction.change = (fromAccountAddress, fromTokenAddress, toTokenAddress, amount, minReturn, marketMakerId, marketMakerAddress) => {
     return new Promise(async (resolve, reject) => {
       try {
         amount = await validateAmount(amount)
-        const marketMaker = await osseus.db_models.marketMaker.getByPair(fromTokenAddress, toTokenAddress)
+        const marketMaker = await osseus.db_models.marketMaker.get({id: marketMakerId, address: marketMakerAddress, pair: {tokenAddress1: fromTokenAddress, tokenAddress2: toTokenAddress}})
         const opts = {}
         if (minReturn) opts.minReturn = await validateAmount(minReturn)
         const changeData = await osseus.lib.BlockchainTransaction.change(fromAccountAddress, fromTokenAddress, toTokenAddress, marketMaker.address, amount, opts)
