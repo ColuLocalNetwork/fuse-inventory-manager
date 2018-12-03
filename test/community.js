@@ -142,29 +142,6 @@ contract('COMMUNITY', async (accounts) => {
     expect(community2).to.be.undefined
   })
 
-  it('should get all communities', async () => {
-    let currency = await osseus.lib.Currency.create(currencyAddress, osseus.config.abi.CommunityCurrency, currencyBlockchainInfo, osseus.helpers.randomStr(10))
-    let community1 = await osseus.lib.Community.create(`${communityName} #1`, currency.id, osseus.helpers.randomStr(10))
-    let community2 = await osseus.lib.Community.create(`${communityName} #2`, currency.id, osseus.helpers.randomStr(10))
-    let community3 = await osseus.lib.Community.create(`${communityName} #3`, currency.id, osseus.helpers.randomStr(10))
-
-    // get all
-    let communities = await osseus.db_models.community.getAll()
-    expect(communities).to.be.an('array')
-    expect(communities).to.have.lengthOf(3)
-    validateCommunity(communities[0], community1, currency, `${communityName} #1`)
-    validateCommunity(communities[1], community2, currency, `${communityName} #2`)
-    validateCommunity(communities[2], community3, currency, `${communityName} #3`)
-
-    // get all populated
-    let communitiesPopulated = await osseus.db_models.community.getAllPopulated()
-    expect(communitiesPopulated).to.be.an('array')
-    expect(communitiesPopulated).to.have.lengthOf(3)
-    validateCommunity(communitiesPopulated[0], community1, currency, `${communityName} #1`)
-    validateCommunity(communitiesPopulated[1], community2, currency, `${communityName} #2`)
-    validateCommunity(communitiesPopulated[2], community3, currency, `${communityName} #3`)
-  })
-
   after(async function () {
     Object.keys(osseus.db_models).forEach(model => {
       osseus.db_models[model].getModel().remove({}, () => {})

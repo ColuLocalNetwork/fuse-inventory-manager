@@ -217,21 +217,6 @@ module.exports = (osseus) => {
     })
   }
 
-  wallet.getAll = (query, projection) => {
-    return new Promise((resolve, reject) => {
-      Wallet.find(query, projection)
-        .lean()
-        .populate('balances.currency')
-        .exec((err, docs) => {
-          if (err) {
-            return reject(err)
-          }
-          docs = docs || []
-          resolve(docs)
-        })
-    })
-  }
-
   wallet.aggregateBalancesPerCurrency = (currency) => {
     return new Promise((resolve, reject) => {
       const condition = currency ? {'balances.currency': db.mongoose.Types.ObjectId(currency)} : {}
