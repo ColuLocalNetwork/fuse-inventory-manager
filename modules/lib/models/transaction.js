@@ -55,15 +55,22 @@ module.exports = (osseus) => {
           let transmit = await osseus.db_models.transmit.workOn(filters.currency)
           transmits = [transmit]
         } else {
-          const currencies = await osseus.db_models.currency.getAll()
-          const tasks = []
-          currencies.forEach(currency => {
-            tasks.push(new Promise(async (resolve, reject) => {
-              let transmit = await osseus.db_models.transmit.workOn(currency.id)
-              resolve(transmit)
-            }))
-          })
-          transmits = await Promise.all(tasks, task => { return task })
+          const limit = osseus.config.currencies_batch_size || 10
+          let offset = 0
+          let currenciesData = await osseus.db_models.currency.getAll({offset: offset, limit: limit})
+          while (currenciesData && currenciesData.docs && currenciesData.docs.length && currenciesData.total) {
+            const tasks = []
+            currenciesData.docs.forEach(currency => {
+              tasks.push(new Promise(async (resolve, reject) => {
+                let transmit = await osseus.db_models.transmit.workOn(currency.id)
+                resolve(transmit)
+              }))
+            })
+            let finishedTransmits = await Promise.all(tasks, task => { return task })
+            transmits = transmits.concat(finishedTransmits)
+            offset += limit
+            currenciesData = await osseus.db_models.currency.getAll({offset: offset, limit: limit})
+          }
         }
         resolve(transmits)
       } catch (err) {

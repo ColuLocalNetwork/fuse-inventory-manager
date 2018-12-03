@@ -1,4 +1,5 @@
 const timestamps = require('mongoose-time')
+const pagination = require('mongoose-paginate')
 
 module.exports = (osseus) => {
   const db = osseus.mongo
@@ -15,7 +16,7 @@ module.exports = (osseus) => {
     abi: {type: String, required: true},
     exid: {type: String},
     blockchainInfo: {type: CurrencyBlockchainInfoSchema}
-  }).plugin(timestamps())
+  }).plugin(timestamps()).plugin(pagination)
 
   CurrencySchema.index({address: 1}, {unique: true})
 
@@ -114,9 +115,9 @@ module.exports = (osseus) => {
     })
   }
 
-  currency.getAll = () => {
+  currency.getAll = (opts) => {
     return new Promise((resolve, reject) => {
-      Currency.find({}, (err, docs) => {
+      Currency.paginate({}, opts, (err, docs) => {
         if (err) {
           return reject(err)
         }

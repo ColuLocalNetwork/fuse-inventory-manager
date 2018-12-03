@@ -24,6 +24,7 @@
     "bignumber.js": "^7.2.1",
     "bip39": "^2.5.0",
     "cln-solidity": "github:ColuLocalNetwork/CLN-solidity",
+    "mongoose-paginate": "^5.0.3",
     "mongoose-time": "^0.1.0",
     "truffle-contract": "^3.0.6",
     "truffle-hdwallet-provider": "github:ColuLocalNetwork/truffle-hdwallet-provider",

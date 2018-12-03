@@ -72,33 +72,49 @@ module.exports = (osseus) => {
           .then(handlePastEvents)
           .catch(err => osseus.logger.error(`Transfer events listener - getPastEvents - error`, err))
       }
-      osseus.logger.silly(`Transfer events listener - getPastEvents`)
-      const currencies = await osseus.db_models.currency.getAll()
-      if (!currencies || currencies.length === 0) {
-        osseus.logger.warn(`Transfer events listener - getPastEvents - no currencies`)
-        return
+
+      const getBatchOfCurrencies = async (offset, limit) => {
+        osseus.logger.silly(`Transfer events listener - getBatchOfCurrencies - offset: ${offset}, limit: ${limit}`)
+        return osseus.db_models.currency.getAll({offset: offset, limit: limit})
       }
+
+      const processBatchOfCurrencies = async (currencies) => {
+        async.each(currencies, async (currency) => {
+          osseus.logger.silly(`Transfer events listener - processBatchOfCurrencies - currency: ${currency.address}`)
+          const address = currency.address
+          const abi = JSON.parse(currency.abi)
+          const creationBlock = currency.blockchainInfo.blockNumber
+          const currentBlock = await osseus.web3.eth.getBlockNumber()
+          const CurrencyContract = new osseus.web3.eth.Contract(abi, address)
+          const lastBlock = await osseus.db_models.bcevent.getLastBlock(address)
+          let fromBlock = Math.max(lastBlock, creationBlock) + 1
+          let toBlock = fromBlock + pastEventsBlockLimit
+          while (toBlock < currentBlock) {
+            getContractEvents(CurrencyContract, address, fromBlock, toBlock)
+            fromBlock = toBlock + 1
+            toBlock += pastEventsBlockLimit
+          }
+          getContractEvents(CurrencyContract, address, fromBlock, 'latest')
+        }, (err) => {
+          if (err) {
+            osseus.logger.error(`Transfer events listener - processBatchOfCurrencies - error`, err)
+          }
+          osseus.logger.silly(`Transfer events listener - processBatchOfCurrencies - done`)
+        })
+      }
+
+      osseus.logger.silly(`Transfer events listener - getPastEvents`)
       const pastEventsBlockLimit = osseus.config.past_events_block_limit || 1000
-      async.each(currencies, async (currency) => {
-        const address = currency.address
-        const abi = JSON.parse(currency.abi)
-        const creationBlock = currency.blockchainInfo.blockNumber
-        const currentBlock = await osseus.web3.eth.getBlockNumber()
-        const CurrencyContract = new osseus.web3.eth.Contract(abi, address)
-        const lastBlock = await osseus.db_models.bcevent.getLastBlock(address)
-        let fromBlock = Math.max(lastBlock, creationBlock) + 1
-        let toBlock = fromBlock + pastEventsBlockLimit
-        while (toBlock < currentBlock) {
-          getContractEvents(CurrencyContract, address, fromBlock, toBlock)
-          fromBlock = toBlock + 1
-          toBlock += pastEventsBlockLimit
-        }
-        getContractEvents(CurrencyContract, address, fromBlock, 'latest')
-      }, (err) => {
-        return err
-          ? osseus.logger.error(`Transfer events listener - getPastEvents - error`, err)
-          : osseus.logger.silly(`Transfer events listener - getPastEvents - done`)
-      })
+      const limit = osseus.config.currencies_batch_size || 10
+
+      let offset = 0
+      let currenciesData = await getBatchOfCurrencies(offset, limit)
+      while (currenciesData && currenciesData.docs && currenciesData.docs.length && currenciesData.total) {
+        await processBatchOfCurrencies(currenciesData.docs)
+        offset += limit
+        currenciesData = await getBatchOfCurrencies(offset, limit)
+      }
+      osseus.logger.silly(`Transfer events listener - getPastEvents - done`)
     }
   }
 }

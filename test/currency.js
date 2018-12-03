@@ -104,7 +104,7 @@ contract('CURRENCY', async (accounts) => {
   })
 
   it('should get all CCs', async () => {
-    let n = (osseus.helpers.randomNum(10) + 1)
+    let n = (osseus.helpers.randomNum(100) + 1)
     let currencies1 = []
     for (let i = 1; i <= n; i++) {
       let cc = await createCurrency(`TestLocalCurrency${i}`, `TLC${i}`)
@@ -112,13 +112,15 @@ contract('CURRENCY', async (accounts) => {
       currencies1.push(currency)
     }
 
-    let currencies2 = await osseus.db_models.currency.getAll()
-    expect(currencies2).to.be.an('array')
-    expect(currencies2).to.have.lengthOf(n)
+    let currencies2 = await osseus.db_models.currency.getAll({limit: 100})
+    expect(currencies2).to.be.an('object')
+    expect(currencies2.docs).to.be.an('array')
+    expect(currencies2.docs).to.have.lengthOf(n)
+    expect(currencies2.total).to.equal(n)
     currencies1.sort()
-    currencies2.sort()
+    currencies2.docs.sort()
     for (let i = 0; i < n; i++) {
-      validateCurrency(currencies1[i], currencies2[i])
+      validateCurrency(currencies1[i], currencies2.docs[i])
     }
   })
 
