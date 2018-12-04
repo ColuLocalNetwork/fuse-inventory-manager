@@ -21,6 +21,8 @@ const main = async () => {
     if (osseus.config.debug) console.timeEnd('INVENTORY MANAGER')
 
     osseus.logger.info('INVENTORY MANAGER IS RUNNING :)')
+
+    osseus.db_models.notification.create({type: 'SYSTEM', title: `Inventory Manager is up & running`})
   } catch (err) {
     console.error('BOOTSTRAP ERROR!', err.stack || err)
     process.exit(1)
