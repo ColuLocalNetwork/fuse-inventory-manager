@@ -31,6 +31,7 @@ module.exports = (osseus) => {
      * @apiParam {String} name community name.
      * @apiParam {String} defaultCurrency default community currency id.
      * @apiParam {String} [externalId] external id of the community on the requester system.
+     * @apiParam {String} [webhookURL] webhook url to receive community related notifications.
      * @apiParam {Object[]} [wallets] array of wallets for the community, if not defined a default of three wallets is created ("manager", "users", "merchants").
      * @apiParam {String} wallet.type type of the wallet (a "manager" wallet must exist in the array, other types are up to the requester).
      * @apiParam {String} wallet.exid external id of the wallet on the requester system.
@@ -49,6 +50,7 @@ module.exports = (osseus) => {
      * @apiSuccess {Number} wallet.index wallet index the wallet is managed at by the provider.
      * @apiSuccess {String} defaultCurrency default community currency id.
      * @apiSuccess {String} [exid] external id of the community (defined by who ever created it).
+     * @apiSuccess {String} [webhookURL] webhook url of the community (defined by who ever created it).
      * @apiSuccess {String} mnemonic generated mnemonic for the community
      * @apiSuccess {String} uuid generated uuid for the community
 
@@ -86,6 +88,8 @@ module.exports = (osseus) => {
      *         }
      *     ],
      *     "defaultCurrency": "5bb9bff7e50dea460c5f8eac",
+     *     "exid": "JEDKfTIkVAXL5yRZ28h09hMk2td2",
+     *     "webhookURL": "http://jereed.com/swietenia/bajada?a=urostegal&b=ebullient#hesperornithoid",
      *     "mnemonic": "very fruit feel scissors innocent holiday asthma expect despair exchange apple blanket",
      *     "uuid": "6e98343f-1c60-4d52-8f06-e68a7cdef023"
      *  }
@@ -93,7 +97,7 @@ module.exports = (osseus) => {
      * @apiUse ErrorResponse
      */
     create: async (req, res, next) => {
-      osseus.lib.Community.create(req.body.name, req.body.defaultCurrency, req.body.externalId, req.body.wallets)
+      osseus.lib.Community.create(req.body.name, req.body.defaultCurrency, req.body.externalId, req.body.webhookURL, req.body.wallets)
         .then(community => { res.send(community.toJSON({onCreate: true})) })
         .catch(err => { next(err) })
     },
@@ -111,6 +115,7 @@ module.exports = (osseus) => {
      * @apiParam {String} id community id.
      * @apiParam {String} [name] community name.
      * @apiParam {String} [externalId] external id of the community on the requester system.
+     * @apiParam {String} [webhookURL] webhook url to receive community related notifications.
      *
      * @apiSuccess {String} id community unique id.
      * @apiSuccess {String} createdAt community creation time.
@@ -119,6 +124,7 @@ module.exports = (osseus) => {
      * @apiSuccess {Object[]} wallets array of community wallet unique ids.
      * @apiSuccess {String} defaultCurrency default community currency id.
      * @apiSuccess {String} [exid] external id of the community (defined by who ever created it).
+     * @apiSuccess {String} [webhookURL] webhook url of the community (defined by who ever created it).
 
      * @apiSuccessExample Success Example
      *     HTTP/1.1 200 OK
@@ -132,13 +138,15 @@ module.exports = (osseus) => {
      *         "5bb9e8014350ec77ce164b31",
      *         "5bb9e8014350ec77ce164b33"
      *     ],
-     *     "defaultCurrency": "5bb9bff7e50dea460c5f8eac"
+     *     "defaultCurrency": "5bb9bff7e50dea460c5f8eac",
+     *     "exid": "JEDKfTIkVAXL5yRZ28h09hMk2td2",
+     *     "webhookURL": "http://jereed.com/swietenia/bajada?a=urostegal&b=ebullient#hesperornithoid",
      *  }
 
      * @apiUse ErrorResponse
      */
     edit: async (req, res, next) => {
-      const allowedToEdit = ['name', 'externalId']
+      const allowedToEdit = ['name', 'externalId', 'webhookURL']
       if (!req.body || !Object.keys(req.body) || !Object.keys(req.body).length) {
         return next(`Nothing to update`)
       }
@@ -148,6 +156,7 @@ module.exports = (osseus) => {
       let update = {}
       if (req.body.name) update['name'] = req.body.name
       if (req.body.externalId) update['exid'] = req.body.externalId
+      if (req.body.webhookURL) update['webhookURL'] = req.body.webhookURL
       osseus.db_models.community.update(req.params.id, update)
         .then(updatedCommunity => { res.send(updatedCommunity) })
         .catch(err => { next(err) })
@@ -172,6 +181,7 @@ module.exports = (osseus) => {
      * @apiSuccess {Object[]} wallets array of community wallet unique ids.
      * @apiSuccess {String} defaultCurrency default community currency id.
      * @apiSuccess {String} [exid] external id of the community (defined by who ever created it).
+     * @apiSuccess {String} [webhookURL] webhook url of the community (defined by who ever created it).
 
      * @apiSuccessExample Success Example
      *     HTTP/1.1 200 OK
