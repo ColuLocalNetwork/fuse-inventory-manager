@@ -5,7 +5,7 @@ module.exports = (osseus) => {
   const db = osseus.mongo
   const Schema = db.mongoose.Schema
 
-  const NOTIFICATION_TYPES = ['SYSTEM', 'GENERAL'] // TODO add more types
+  const NOTIFICATION_TYPES = ['SYSTEM', 'GENERAL']
   const NOTIFICATION_LEVELS = ['INFO', 'WARNING', 'CRITICAL']
 
   const NotificationSchema = new Schema({
@@ -58,10 +58,6 @@ module.exports = (osseus) => {
       })
     })
   }
-
-  NOTIFICATION_LEVELS.forEach(level => {
-    notification[level] = (data) => notification.create(Object.assign({}, data, {level: level}))
-  })
 
   notification.markAsRead = (ids) => {
     return new Promise((resolve, reject) => {

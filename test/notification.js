@@ -68,33 +68,33 @@ contract('NOTIFICATION', async (accounts) => {
   })
 
   it('should create a notification', async () => {
-    let notification = await osseus.db_models.notification.create({community: community.id, title: 'Test', content: 'Some content', data: {a: 1, b: 2, c: {d: 3, e: 4}}})
+    let notification = await osseus.lib.Notification.create('INFO', 'GENERAL', community.id, 'Test', 'Some content', {a: 1, b: 2, c: {d: 3, e: 4}})
     validateNotification(notification)
   })
 
   it('should create notifications for all levels', async () => {
-    let notification1 = await osseus.db_models.notification.INFO({community: community.id, title: 'Test INFO'})
+    let notification1 = await osseus.lib.Notification.info('GENERAL', community.id, 'Test INFO')
     validateNotification(notification1, undefined, undefined, 'INFO')
-    let notification2 = await osseus.db_models.notification.WARNING({community: community.id, title: 'Test WARNING'})
+    let notification2 = await osseus.lib.Notification.warning('GENERAL', community.id, 'Test WARNING')
     validateNotification(notification2, undefined, undefined, 'WARNING')
-    let notification3 = await osseus.db_models.notification.CRITICAL({community: community.id, title: 'Test CRITICAL'})
+    let notification3 = await osseus.lib.Notification.critical('GENERAL', community.id, 'Test CRITICAL')
     validateNotification(notification3, undefined, undefined, 'CRITICAL')
   })
 
   it('should create multiple notifications', async () => {
     for (let i = 1; i <= osseus.helpers.randomNumNotZero(100); i++) {
-      await osseus.db_models.notification.create({level: osseus.db_models.notification.levels[osseus.helpers.randomNum(3)], community: community.id, title: `Test ${i}`})
+      await osseus.lib.Notification.create(osseus.db_models.notification.levels[osseus.helpers.randomNum(3)], 'GENERAL', community.id, `Test ${i}`)
     }
   })
 
   it('should get a notification by id', async () => {
-    let notification1 = await osseus.db_models.notification.create({community: community.id, title: 'Test', content: 'Some content', data: {a: 1, b: 2, c: {d: 3, e: 4}}})
+    let notification1 = await osseus.lib.Notification.create('INFO', 'GENERAL', community.id, 'Test', 'Some content', {a: 1, b: 2, c: {d: 3, e: 4}})
     let notification2 = await osseus.db_models.notification.getById(notification1.id)
     validateNotification(notification1, notification2)
   })
 
   it('should mark one notification as read', async () => {
-    let notification = await osseus.db_models.notification.create()
+    let notification = await osseus.lib.Notification.create()
     let result = await osseus.db_models.notification.markAsRead(notification.id)
     expect(result).to.be.a('Object')
     expect(result.found).to.equal(1)
@@ -108,15 +108,15 @@ contract('NOTIFICATION', async (accounts) => {
     let notifications = {levelWarning: [], levelCritical: [], withCommunity: []}
 
     for (let i = 1; i <= nWARNING; i++) {
-      let notification = await osseus.db_models.notification.create({level: 'WARNING'})
+      let notification = await osseus.lib.Notification.create('WARNING')
       notifications.levelWarning.push(notification.id)
     }
     for (let i = 1; i <= nCRITICAL; i++) {
-      let notification = await osseus.db_models.notification.create({level: 'CRITICAL'})
+      let notification = await osseus.lib.Notification.create('CRITICAL')
       notifications.levelCritical.push(notification.id)
     }
     for (let i = 1; i <= nWithCommunity; i++) {
-      let notification = await osseus.db_models.notification.create({community: community.id})
+      let notification = await osseus.lib.Notification.create('INFO', 'GENERAL', community.id)
       notifications.withCommunity.push(notification.id)
     }
 
@@ -135,7 +135,7 @@ contract('NOTIFICATION', async (accounts) => {
   it('should mark multiple notifications as read', async () => {
     let notificationIds = []
     for (let i = 1; i <= osseus.helpers.randomNumNotZero(100); i++) {
-      let notification = await osseus.db_models.notification.create({level: osseus.db_models.notification.levels[osseus.helpers.randomNum(3)], community: community.id, title: `Test ${i}`})
+      let notification = await osseus.lib.Notification.create(osseus.db_models.notification.levels[osseus.helpers.randomNum(3)], 'GENERAL', community.id, `Test ${i}`)
       notificationIds.push(notification.id)
     }
     let result = await osseus.db_models.notification.markAsRead(notificationIds)
@@ -147,7 +147,7 @@ contract('NOTIFICATION', async (accounts) => {
     let notificationIds = []
     let notificationIdsMarkedAsRead = []
     for (let i = 1; i <= osseus.helpers.randomNumNotZero(100); i++) {
-      let notification = await osseus.db_models.notification.create({level: osseus.db_models.notification.levels[osseus.helpers.randomNum(3)], community: community.id, title: `Test ${i}`})
+      let notification = await osseus.lib.Notification.create(osseus.db_models.notification.levels[osseus.helpers.randomNum(3)], 'GENERAL', community.id, `Test ${i}`)
       notificationIds.push(notification.id)
       if (i % 2) {
         await osseus.db_models.notification.markAsRead(notification.id)
