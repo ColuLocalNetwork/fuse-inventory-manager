@@ -22,6 +22,7 @@
     "@colucom/osseus-server": "~0.2.1",
     "agenda": "^2.0.2",
     "async": "^2.6.1",
+    "axios": "^0.18.0",
     "bignumber.js": "^7.2.1",
     "bip39": "^2.5.0",
     "cln-solidity": "github:ColuLocalNetwork/CLN-solidity",

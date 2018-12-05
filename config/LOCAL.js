@@ -17,5 +17,6 @@ module.exports = {
   OSSEUS_MONGO_URI: 'mongodb://localhost/inventory-manager',
   WEB3_PROVIDER: 'https://ropsten.infura.io',
   SECRET: 'e4365c30-ec9f-459a-8a8e-55d3818c6134kNJYzFQ1jB97WXAn',
-  BLOCKS_TO_CONFIRM_BCTX: 20
+  BLOCKS_TO_CONFIRM_BCTX: 20,
+  NOTIFICATIONS_WEBHOOK_URL: 'http://localhost:4000/test'
 }
