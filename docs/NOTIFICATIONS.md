@@ -3,7 +3,7 @@
 ## Levels
 * INFO
 * WARNING
-* CRTITICAL
+* CRITICAL
 
 ## Types
 * SYSTEM
