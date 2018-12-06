@@ -88,13 +88,12 @@ module.exports = (osseus) => {
           return next(`Invalid address: ${req.body[k]}`)
         }
       })
-      const marketMaker = await osseus.lib.MarketMaker.create(
-        req.body.address,
-        JSON.stringify(req.body.abi),
-        req.body.tokenAddress1,
-        req.body.tokenAddress2
-      ).catch(err => { return next(err) })
-      res.send(marketMaker)
+      osseus.lib.MarketMaker.create(req.body.address, JSON.stringify(req.body.abi), req.body.tokenAddress1, req.body.tokenAddress2)
+        .then(marketMaker => {
+          osseus.lib.Notification.info(`API`, null, `MarketMaker Created`, null, marketMaker.id)
+          res.send(marketMaker)
+        })
+        .catch(err => { return next(err) })
     },
 
     /**
@@ -120,7 +119,10 @@ module.exports = (osseus) => {
         return next(`Nothing to update`)
       }
       osseus.db_models.marketMaker.update({_id: req.params.id}, req.body)
-        .then(updatedMarketMaker => { res.send(updatedMarketMaker) })
+        .then(updatedMarketMaker => {
+          osseus.lib.Notification.info(`API`, null, `MarketMaker Edited`, null, req.params.id)
+          res.send(updatedMarketMaker)
+        })
         .catch(err => { next(err) })
     },
 
@@ -167,7 +169,10 @@ module.exports = (osseus) => {
         return next(`Nothing to update`)
       }
       osseus.db_models.marketMaker.update({address: req.params.address}, req.body)
-        .then(updatedMarketMaker => { res.send(updatedMarketMaker) })
+        .then(updatedMarketMaker => {
+          osseus.lib.Notification.info(`API`, null, `MarketMaker Edited`, null, updatedMarketMaker.id)
+          res.send(updatedMarketMaker)
+        })
         .catch(err => { next(err) })
     },
 

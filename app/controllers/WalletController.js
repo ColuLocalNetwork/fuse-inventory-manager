@@ -102,6 +102,8 @@ module.exports = (osseus) => {
 
       await osseus.db_models.community.update(req.body.communityId, {wallets: communityWallets}).catch(err => { return next(err) })
 
+      osseus.lib.Notification.info(`API`, req.body.communityId, `Wallet Created`, null, wallet.id)
+
       res.send(wallet)
     },
 
@@ -133,7 +135,10 @@ module.exports = (osseus) => {
       if (req.body.type) update['type'] = req.body.type
       if (req.body.externalId) update['exid'] = req.body.externalId
       osseus.db_models.wallet.update({_id: req.params.id}, update)
-        .then(updatedWallet => { res.send(updatedWallet) })
+        .then(updatedWallet => {
+          osseus.lib.Notification.info(`API`, null, `Wallet Edited`, null, req.params.id)
+          res.send(updatedWallet)
+        })
         .catch(err => { next(err) })
     },
 
