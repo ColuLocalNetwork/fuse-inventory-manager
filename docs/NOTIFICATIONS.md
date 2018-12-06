@@ -43,6 +43,6 @@
 |   Deposit transaction created   	| TRANSFER_EVENT 	|   INFO   	|          x         	| `Object` blockchain & offchain transaction ids 	|
 |    Known from & to addresses    	| TRANSFER_EVENT 	|   INFO   	|          x         	|     `Object` from & to addresses and amount    	|
 |   Get blockchain balance error  	|   BLOCKCHAIN   	| CRITICAL 	|          x         	|            `Object` address & token            	|
-| Update blockchain balance error 	| BLOCKCHAIN     	| CRITICAL 	| x                  	| `Object` address & token                       	|
+| Update blockchain balance error 	|   BLOCKCHAIN   	| CRITICAL 	|          x         	|            `Object` address & token            	|
 |                                 	|                	|          	|                    	|                                                	|
 |                                 	|                	|          	|                    	|                                                	|
