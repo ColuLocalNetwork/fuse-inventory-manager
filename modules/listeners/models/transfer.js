@@ -21,14 +21,18 @@ module.exports = (osseus) => {
       osseus.logger.silly(`Transfer events listener - onEvent addresses - from: ${from}, knownFrom: ${knownFrom}, to: ${to}, knownTo: ${knownTo}`)
 
       if (!knownTo) {
+        osseus.lib.Notification.warning(`TRANSFER_EVENT`, null, `To unknown`, null, {from: from, to: to, amount: amount.toNumber()})
         osseus.logger.warn(`Transfer event to unknown address - from: ${from}, to: ${to}, amount: ${amount.toNumber()}`)
       } else if (!knownFrom) {
+        osseus.lib.Notification.info(`TRANSFER_EVENT`, null, `From unknown`, null, {from: from, to: to, amount: amount.toNumber()})
         osseus.logger.info(`Transfer event from unknown address (deposit) - from: ${from}, to: ${to}, amount: ${amount.toNumber()}`)
         const bctx = await osseus.lib.BlockchainTransaction.deposit(data.transactionHash, from, to, token, amount)
         osseus.logger.info(`Created blockchain deposit transaction: ${JSON.stringify(bctx)}`)
         const tx = await osseus.lib.Transaction.deposit({accountAddress: to, currency: token}, amount, bctx.id)
         osseus.logger.info(`Created offchain deposit transaction: ${JSON.stringify(tx)}`)
+        osseus.lib.Notification.info(`TRANSFER_EVENT`, null, `Deposit created`, null, {bctx: bctx.id, tx: tx.id})
       } else {
+        osseus.lib.Notification.info(`TRANSFER_EVENT`, null, `Known`, null, {from: from, to: to, amount: amount.toNumber()})
         osseus.logger.info(`Transfer event with known addresses - from: ${from}, to: ${to}, amount: ${amount.toNumber()}`)
         data.type = 'TRANSFER'
         data.state = 'DONE'
@@ -70,7 +74,10 @@ module.exports = (osseus) => {
         osseus.logger.silly(`Transfer events listener - getPastEvents - get - currency address: ${address}, fromBlock: ${fromBlock} toBlock: ${toBlock}`)
         contract.getPastEvents('Transfer', {fromBlock: fromBlock, toBlock: toBlock})
           .then(handlePastEvents)
-          .catch(err => osseus.logger.error(`Transfer events listener - getPastEvents - error`, err))
+          .catch(err => {
+            osseus.lib.Notification.warning(`LISTENER`, null, `Transfer events - getContractEvents`, null, err)
+            osseus.logger.error(`Transfer events listener - getPastEvents - error`, err)
+          })
       }
 
       const getBatchOfCurrencies = async (offset, limit) => {
@@ -97,6 +104,7 @@ module.exports = (osseus) => {
           getContractEvents(CurrencyContract, address, fromBlock, 'latest')
         }, (err) => {
           if (err) {
+            osseus.lib.Notification.warning(`LISTENER`, null, `Transfer events - processBatchOfCurrencies`, null, err)
             osseus.logger.error(`Transfer events listener - processBatchOfCurrencies - error`, err)
           }
           osseus.logger.silly(`Transfer events listener - processBatchOfCurrencies - done`)
