@@ -58,9 +58,7 @@ contract('WALLET', async (accounts) => {
   })
 
   beforeEach(function () {
-    Object.keys(osseus.db_models).forEach(model => {
-      osseus.db_models[model].getModel().remove({}, () => {})
-    })
+    osseus.helpers.clearDB()
   })
 
   it('should create a wallet', async () => {
@@ -69,7 +67,7 @@ contract('WALLET', async (accounts) => {
       address: accounts[0],
       type: 'manager',
       index: 0,
-      exid: osseus.helpers.randomNum(10),
+      exid: osseus.helpers.randomNumNotZero(10),
       balances: [{
         currency: currency,
         blockchainAmount: 0,
@@ -87,7 +85,7 @@ contract('WALLET', async (accounts) => {
       address: accounts[0],
       type: 'manager',
       index: 0,
-      exid: osseus.helpers.randomNum(10),
+      exid: osseus.helpers.randomNumNotZero(10),
       balances: [{
         currency: currency,
         blockchainAmount: 0,
@@ -100,7 +98,7 @@ contract('WALLET', async (accounts) => {
       address: accounts[0],
       type: 'users',
       index: 0,
-      exid: osseus.helpers.randomNum(10),
+      exid: osseus.helpers.randomNumNotZero(10),
       balances: [{
         currency: currency,
         blockchainAmount: 0,
@@ -120,7 +118,7 @@ contract('WALLET', async (accounts) => {
       address: accounts[0],
       type: 'manager',
       index: 0,
-      exid: osseus.helpers.randomNum(10),
+      exid: osseus.helpers.randomNumNotZero(10),
       balances: [{
         currency: currency,
         blockchainAmount: 0,
@@ -139,7 +137,7 @@ contract('WALLET', async (accounts) => {
       address: accounts[0],
       type: 'manager',
       index: 0,
-      exid: osseus.helpers.randomNum(10),
+      exid: osseus.helpers.randomNumNotZero(10),
       balances: [{
         currency: currency,
         blockchainAmount: 0,
@@ -159,7 +157,7 @@ contract('WALLET', async (accounts) => {
       address: accounts[0],
       type: 'manager',
       index: 0,
-      exid: osseus.helpers.randomNum(10),
+      exid: osseus.helpers.randomNumNotZero(10),
       balances: [{
         currency: currency,
         blockchainAmount: 0,
@@ -181,7 +179,7 @@ contract('WALLET', async (accounts) => {
       address: accounts[0],
       type: 'manager',
       index: 0,
-      exid: osseus.helpers.randomNum(10),
+      exid: osseus.helpers.randomNumNotZero(10),
       balances: [{
         currency: currency,
         blockchainAmount: 10 * TOKEN_DECIMALS,
@@ -195,8 +193,6 @@ contract('WALLET', async (accounts) => {
   })
 
   after(async function () {
-    Object.keys(osseus.db_models).forEach(model => {
-      osseus.db_models[model].getModel().remove({}, () => {})
-    })
+    osseus.helpers.clearDB()
   })
 })

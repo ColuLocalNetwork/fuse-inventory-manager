@@ -16,6 +16,7 @@ module.exports = async () => {
     community: require(path.join(cwd, 'modules/db/models/community'))(osseus),
     currency: require(path.join(cwd, 'modules/db/models/currency'))(osseus),
     marketMaker: require(path.join(cwd, 'modules/db/models/marketMaker'))(osseus),
+    notification: require(path.join(cwd, 'modules/db/models/notification'))(osseus),
     transmit: require(path.join(cwd, 'modules/db/models/transmit'))(osseus),
     tx: require(path.join(cwd, 'modules/db/models/transaction'))(osseus),
     wallet: require(path.join(cwd, 'modules/db/models/wallet'))(osseus)
@@ -25,12 +26,25 @@ module.exports = async () => {
     Currency: require(path.join(cwd, 'modules/lib/models/currency'))(osseus),
     Community: require(path.join(cwd, 'modules/lib/models/community'))(osseus),
     MarketMaker: require(path.join(cwd, 'modules/lib/models/marketMaker'))(osseus),
+    Notification: require(path.join(cwd, 'modules/lib/models/notification'))(osseus),
     Transaction: require(path.join(cwd, 'modules/lib/models/transaction'))(osseus),
     BlockchainTransaction: require(path.join(cwd, 'modules/lib/models/blockchainTransaction'))(osseus)
   }
   osseus.helpers = {
-    randomNum: (n) => { return Math.floor(Math.random() * n) },
-    randomStr: (n) => { return Math.random().toString(36).substr(2, n) }
+    randomNum: (n) => {
+      return Math.floor(Math.random() * n)
+    },
+    randomNumNotZero: (n) => {
+      return Math.floor(Math.random() * n) + 1
+    },
+    randomStr: (n) => {
+      return Math.random().toString(36).substr(2, n)
+    },
+    clearDB: () => {
+      Object.keys(osseus.db_models).forEach(model => {
+        osseus.db_models[model].getModel().remove({}, () => {})
+      })
+    }
   }
   osseus.helpers.provider = new HDWalletProvider([{mnemonic: bip39.generateMnemonic(), password: osseus.helpers.randomStr(10)}], osseus.config.web3_provider)
 

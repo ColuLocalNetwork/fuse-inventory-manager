@@ -16,6 +16,9 @@
           "externalId": {
             "optional": true
           },
+          "webhookURL": {
+            "optional": true
+          },
           "wallets": {
             "optional": true
           }

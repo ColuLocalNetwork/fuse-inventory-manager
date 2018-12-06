@@ -1,0 +1,55 @@
+{
+  "/notification/id/:id": {
+    "GET": {
+      "route": "get",
+      "jwt": true,
+      "validators": {
+        "params": {
+          "id": {
+            "notEmpty": true,
+            "errorMessage": "is missing"
+          }
+        }
+      }
+    }
+  },
+  "/notification/unread": {
+    "GET": {
+      "route": "unread",
+      "jwt": true,
+      "validators": {
+        "query": {
+          "offset": {
+            "optional": true
+          },
+          "limit": {
+            "optional": true
+          },
+          "type": {
+            "optional": true
+          },
+          "level": {
+            "optional": true
+          },
+          "communityId": {
+            "optional": true
+          }
+        }
+      }
+    }
+  },
+  "/notification/mark-as-read": {
+    "PUT": {
+      "route": "markAsRead",
+      "jwt": true,
+      "validators": {
+        "body": {
+          "ids": {
+            "notEmpty": true,
+            "errorMessage": "is missing"
+          }
+        }
+      }
+    }
+  }
+}

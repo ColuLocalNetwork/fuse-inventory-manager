@@ -11,7 +11,8 @@ module.exports = (osseus) => {
     mnemonic: {type: String, required: true},
     uuid: {type: String},
     defaultCurrency: {type: Schema.Types.ObjectId, ref: 'Currency', required: true},
-    exid: {type: String}
+    exid: {type: String},
+    webhookURL: {type: String}
   }).plugin(timestamps())
 
   CommunitySchema.set('toJSON', {
@@ -25,7 +26,8 @@ module.exports = (osseus) => {
         name: ret.name,
         wallets: ret.wallets,
         defaultCurrency: ret.defaultCurrency,
-        exid: ret.exid
+        exid: ret.exid,
+        webhookURL: ret.webhookURL
       }
       if (options.onCreate) {
         safeRet.mnemonic = ret.mnemonic

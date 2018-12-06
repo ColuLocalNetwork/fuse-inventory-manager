@@ -63,9 +63,7 @@ contract('CURRENCY', async (accounts) => {
   })
 
   beforeEach(function () {
-    Object.keys(osseus.db_models).forEach(model => {
-      osseus.db_models[model].getModel().remove({}, () => {})
-    })
+    osseus.helpers.clearDB()
   })
 
   it('should create a currency', async () => {
@@ -104,7 +102,7 @@ contract('CURRENCY', async (accounts) => {
   })
 
   it('should get all CCs', async () => {
-    let n = (osseus.helpers.randomNum(100) + 1)
+    let n = osseus.helpers.randomNumNotZero(100)
     let currencies1 = []
     for (let i = 1; i <= n; i++) {
       let cc = await createCurrency(`TestLocalCurrency${i}`, `TLC${i}`)
@@ -125,8 +123,6 @@ contract('CURRENCY', async (accounts) => {
   })
 
   after(async function () {
-    Object.keys(osseus.db_models).forEach(model => {
-      osseus.db_models[model].getModel().remove({}, () => {})
-    })
+    osseus.helpers.clearDB()
   })
 })

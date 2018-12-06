@@ -9,7 +9,8 @@
     "build": "npm install",
     "lint": "./node_modules/.bin/standard",
     "test": "./node_modules/.bin/truffle test --ENV=TEST",
-    "apidocs": "node_modules/apidoc/bin/apidoc -i app/ -o docs/"
+    "apidocs": "node_modules/apidoc/bin/apidoc -i app/ -o docs/",
+    "cycle": "npm run lint && npm run test && npm run apidocs"
   },
   "author": "LiorRabin",
   "license": "MIT",
@@ -21,6 +22,7 @@
     "@colucom/osseus-server": "~0.2.1",
     "agenda": "^2.0.2",
     "async": "^2.6.1",
+    "axios": "^0.18.0",
     "bignumber.js": "^7.2.1",
     "bip39": "^2.5.0",
     "cln-solidity": "github:ColuLocalNetwork/CLN-solidity",

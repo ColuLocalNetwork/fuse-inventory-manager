@@ -129,9 +129,7 @@ contract('BLOCKCHAIN_TRANSACTION', async (accounts) => {
   })
 
   beforeEach(async function () {
-    Object.keys(osseus.db_models).forEach(model => {
-      osseus.db_models[model].getModel().remove({}, () => {})
-    })
+    osseus.helpers.clearDB()
 
     await osseus.lib.Currency.create(cln.address, osseus.config.abi.CLN, clnBlockchainInfo, osseus.helpers.randomStr(10))
     currency = await osseus.lib.Currency.create(currencyAddress, osseus.config.abi.CommunityCurrency, currencyBlockchainInfo, osseus.helpers.randomStr(10))
@@ -782,8 +780,8 @@ contract('BLOCKCHAIN_TRANSACTION', async (accounts) => {
     }
 
     it('should make some successful tranasctions (transfers and changes) and be able to update their state accordingly', async () => {
-      const transferTxs = await makeSomeTransferTransactions(osseus.helpers.randomNum(10) + 1)
-      const changeTxs = await makeSomeChangeTransactions(osseus.helpers.randomNum(10) + 1)
+      const transferTxs = await makeSomeTransferTransactions(osseus.helpers.randomNumNotZero(10))
+      const changeTxs = await makeSomeChangeTransactions(osseus.helpers.randomNumNotZero(10))
 
       const updatedTxs = await osseus.lib.BlockchainTransaction.syncState()
       expect(updatedTxs).to.have.lengthOf(transferTxs.length + changeTxs.length)
@@ -795,7 +793,7 @@ contract('BLOCKCHAIN_TRANSACTION', async (accounts) => {
     })
 
     it('should make some successful tranasctions (transfers and changes) and be able to update their state accordingly', async () => {
-      const transferTxs = await makeSomeTransferTransactions(osseus.helpers.randomNum(10) + 1)
+      const transferTxs = await makeSomeTransferTransactions(osseus.helpers.randomNumNotZero(10))
 
       const updatedTxs = await osseus.lib.BlockchainTransaction.syncState(communityManagerAddress, 'TRANSFER')
       expect(updatedTxs).to.have.lengthOf(transferTxs.length)
@@ -810,8 +808,8 @@ contract('BLOCKCHAIN_TRANSACTION', async (accounts) => {
     })
 
     it('should make some successful tranasctions (transfers and changes) and be able to update their state accordingly', async () => {
-      const transferTxs = await makeSomeTransferTransactions(osseus.helpers.randomNum(10) + 1)
-      const changeTxs = await makeSomeChangeTransactions(osseus.helpers.randomNum(10) + 1)
+      const transferTxs = await makeSomeTransferTransactions(osseus.helpers.randomNumNotZero(10))
+      const changeTxs = await makeSomeChangeTransactions(osseus.helpers.randomNumNotZero(10))
 
       osseus.config.blocks_to_confirm_bctx = 20
 
@@ -835,8 +833,6 @@ contract('BLOCKCHAIN_TRANSACTION', async (accounts) => {
   })
 
   after(async function () {
-    Object.keys(osseus.db_models).forEach(model => {
-      osseus.db_models[model].getModel().remove({}, () => {})
-    })
+    osseus.helpers.clearDB()
   })
 })

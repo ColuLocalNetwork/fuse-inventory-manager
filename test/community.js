@@ -34,6 +34,8 @@ contract('COMMUNITY', async (accounts) => {
     expect(community1.defaultCurrency.toString()).to.equal(community2 ? community2.defaultCurrency.toString() : currency.id)
     expect(community1.exid).to.be.a('string')
     if (community2) expect(community1.exid).to.equal(community2.exid)
+    expect(community1.webhookURL).to.be.a('string')
+    if (community2) expect(community1.webhookURL).to.equal(community2.webhookURL)
     walletsPopulated && community1.wallets.forEach(wallet => {
       if (!walletsLength) expect(['manager', 'users', 'merchants']).to.contain(wallet.type)
       expect(wallet.address).to.be.a('string')
@@ -69,34 +71,32 @@ contract('COMMUNITY', async (accounts) => {
   })
 
   beforeEach(function () {
-    Object.keys(osseus.db_models).forEach(model => {
-      osseus.db_models[model].getModel().remove({}, () => {})
-    })
+    osseus.helpers.clearDB()
   })
 
   it('should create a community (with default wallets)', async () => {
     let currency = await osseus.lib.Currency.create(currencyAddress, osseus.config.abi.CommunityCurrency, currencyBlockchainInfo, osseus.helpers.randomStr(10))
-    let community = await osseus.lib.Community.create(communityName, currency.id, osseus.helpers.randomStr(10))
+    let community = await osseus.lib.Community.create(communityName, currency.id, osseus.helpers.randomStr(10), 'http://www.test.com')
     validateCommunity(community, undefined, currency, undefined, undefined, true)
   })
 
   it('should create a community (with pre-defined wallets)', async () => {
     let wallets = [{type: 'manager', exid: osseus.helpers.randomStr(10)}]
-    for (var i = 1; i < osseus.helpers.randomNum(100); i++) {
+    for (var i = 1; i < osseus.helpers.randomNumNotZero(100); i++) {
       wallets.push({type: `user ${i}`, exid: osseus.helpers.randomStr(10)})
     }
     let currency = await osseus.lib.Currency.create(currencyAddress, osseus.config.abi.CommunityCurrency, currencyBlockchainInfo, osseus.helpers.randomStr(10))
-    let community = await osseus.lib.Community.create(communityName, currency.id, osseus.helpers.randomStr(10), wallets)
+    let community = await osseus.lib.Community.create(communityName, currency.id, osseus.helpers.randomStr(10), 'http://www.test.com', wallets)
     validateCommunity(community, undefined, currency, undefined, wallets.length, true)
   })
 
   it('should get error if trying to create community without manager wallet', async () => {
     let wallets = []
-    for (var i = 1; i < osseus.helpers.randomNum(100); i++) {
+    for (var i = 1; i < osseus.helpers.randomNumNotZero(100); i++) {
       wallets.push({type: `user ${i}`, exid: osseus.helpers.randomStr(10)})
     }
     let currency = await osseus.lib.Currency.create(currencyAddress, osseus.config.abi.CommunityCurrency, currencyBlockchainInfo, osseus.helpers.randomStr(10))
-    let community = await osseus.lib.Community.create(communityName, currency.id, osseus.helpers.randomStr(10), wallets).catch(err => {
+    let community = await osseus.lib.Community.create(communityName, currency.id, osseus.helpers.randomStr(10), 'http://www.test.com', wallets).catch(err => {
       expect(err).not.to.be.undefined
     })
     expect(community).to.be.undefined
@@ -104,7 +104,7 @@ contract('COMMUNITY', async (accounts) => {
 
   it('should get community (by id)', async () => {
     let currency = await osseus.lib.Currency.create(currencyAddress, osseus.config.abi.CommunityCurrency, currencyBlockchainInfo, osseus.helpers.randomStr(10))
-    let community1 = await osseus.lib.Community.create(communityName, currency.id, osseus.helpers.randomStr(10))
+    let community1 = await osseus.lib.Community.create(communityName, currency.id, osseus.helpers.randomStr(10), 'http://www.test.com')
     let community2 = await osseus.db_models.community.getById(community1.id)
     let community3 = await osseus.db_models.community.getByIdPopulated(community1.id)
     validateCommunity(community1, community2, currency, undefined, undefined, true)
@@ -113,14 +113,14 @@ contract('COMMUNITY', async (accounts) => {
 
   it('should get community (by name)', async () => {
     let currency = await osseus.lib.Currency.create(currencyAddress, osseus.config.abi.CommunityCurrency, currencyBlockchainInfo, osseus.helpers.randomStr(10))
-    let community1 = await osseus.lib.Community.create(communityName, currency.id, osseus.helpers.randomStr(10))
+    let community1 = await osseus.lib.Community.create(communityName, currency.id, osseus.helpers.randomStr(10), 'http://www.test.com')
     let community2 = await osseus.db_models.community.getByName(communityName)
     validateCommunity(community1, community2, currency, undefined, undefined, true)
   })
 
   it('should get community (by wallet address)', async () => {
     let currency = await osseus.lib.Currency.create(currencyAddress, osseus.config.abi.CommunityCurrency, currencyBlockchainInfo, osseus.helpers.randomStr(10))
-    let community1 = await osseus.lib.Community.create(communityName, currency.id, osseus.helpers.randomStr(10))
+    let community1 = await osseus.lib.Community.create(communityName, currency.id, osseus.helpers.randomStr(10), 'http://www.test.com')
     let community2 = await osseus.db_models.community.getByWalletAddress(community1.wallets[0].address)
     validateCommunity(community1, community2, currency, undefined, undefined, true)
 
@@ -134,7 +134,7 @@ contract('COMMUNITY', async (accounts) => {
   it('should get error if community not found (by id)', async () => {
     let fakeId = '123abc'
     let currency = await osseus.lib.Currency.create(currencyAddress, osseus.config.abi.CommunityCurrency, currencyBlockchainInfo, osseus.helpers.randomStr(10))
-    let community1 = await osseus.lib.Community.create(communityName, currency.id, osseus.helpers.randomStr(10))
+    let community1 = await osseus.lib.Community.create(communityName, currency.id, osseus.helpers.randomStr(10), 'http://www.test.com')
     validateCommunity(community1, undefined, currency, undefined, undefined, true)
     let community2 = await osseus.db_models.community.getById(fakeId).catch(err => {
       expect(err).not.to.be.undefined
@@ -143,8 +143,6 @@ contract('COMMUNITY', async (accounts) => {
   })
 
   after(async function () {
-    Object.keys(osseus.db_models).forEach(model => {
-      osseus.db_models[model].getModel().remove({}, () => {})
-    })
+    osseus.helpers.clearDB()
   })
 })
