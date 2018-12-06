@@ -89,7 +89,7 @@ module.exports = (osseus) => {
      *     ],
      *     "defaultCurrency": "5bb9bff7e50dea460c5f8eac",
      *     "exid": "JEDKfTIkVAXL5yRZ28h09hMk2td2",
-     *     "webhookURL": "http://jereed.com/swietenia/bajada?a=urostegal&b=ebullient#hesperornithoid",
+     *     "webhookURL": "https://postman-echo.com/post",
      *     "mnemonic": "very fruit feel scissors innocent holiday asthma expect despair exchange apple blanket",
      *     "uuid": "6e98343f-1c60-4d52-8f06-e68a7cdef023"
      *  }
@@ -140,7 +140,7 @@ module.exports = (osseus) => {
      *     ],
      *     "defaultCurrency": "5bb9bff7e50dea460c5f8eac",
      *     "exid": "JEDKfTIkVAXL5yRZ28h09hMk2td2",
-     *     "webhookURL": "http://jereed.com/swietenia/bajada?a=urostegal&b=ebullient#hesperornithoid",
+     *     "webhookURL": "https://postman-echo.com/post",
      *  }
 
      * @apiUse ErrorResponse
