@@ -44,5 +44,11 @@
 |    Known from & to addresses    	| TRANSFER_EVENT 	|   INFO   	|          x         	|     `Object` from & to addresses and amount    	|
 |   Get blockchain balance error  	|   BLOCKCHAIN   	| CRITICAL 	|          x         	|            `Object` address & token            	|
 | Update blockchain balance error 	|   BLOCKCHAIN   	| CRITICAL 	|          x         	|            `Object` address & token            	|
-|                                 	|                	|          	|                    	|                                                	|
-|                                 	|                	|          	|                    	|                                                	|
+|          Transfer done          	|   BLOCKCHAIN   	|   INFO   	|          x         	|      `String` blockchain transaction hash      	|
+|           Change done           	|   BLOCKCHAIN   	|   INFO   	|          x         	|      `String` blockchain transaction hash      	|
+|   Blockchain sync-state error   	|   BLOCKCHAIN   	|  WARNING 	|          x         	|               `Object` the error               	|
+|    Blockchain sync-state done   	|   BLOCKCHAIN   	|   INFO   	|          x         	|      `String[]` blockchain transaction ids     	|
+|          Transfer error         	|   BLOCKCHAIN   	| CRITICAL 	|          x         	|               `Object` the error               	|
+|           Change error          	|   BLOCKCHAIN   	| CRITICAL 	|          x         	|               `Object` the error               	|
+|          Deposit error          	|   BLOCKCHAIN   	| CRITICAL 	|          x         	|               `Object` the error               	|
+|          Transmit error         	|   BLOCKCHAIN   	| CRITICAL 	|          x         	|               `Object` the error               	|
