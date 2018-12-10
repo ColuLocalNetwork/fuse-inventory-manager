@@ -2,6 +2,7 @@ const init = (osseus) => {
   this.osseus = osseus
   return new Promise(async (resolve, reject) => {
     if (osseus.config.no_listeners) {
+      osseus.lib.Notification.warning(`LISTENER`, null, `Disabled in config`)
       osseus.logger.warn(`Listeners skipped`)
       return resolve()
     }

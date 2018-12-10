@@ -76,19 +76,17 @@ module.exports = (osseus) => {
       if (!osseus.web3.utils.isAddress(req.body.address)) {
         return next(`Invalid address: ${req.body.address}`)
       }
-      let currency
       let blockchainInfo = {
         transactionHash: req.body.creationTransactionHash,
         blockHash: req.body.creationBlockHash,
         blockNumber: req.body.creationBlockNumber
       }
-      currency = await osseus.lib.Currency.create(
-        req.body.address,
-        JSON.stringify(req.body.abi),
-        blockchainInfo,
-        req.body.externalId
-      ).catch(err => { return next(err) })
-      res.send(currency)
+      osseus.lib.Currency.create(req.body.address, JSON.stringify(req.body.abi), blockchainInfo, req.body.externalId)
+        .then(currency => {
+          osseus.lib.Notification.info(`API`, null, `Currency Created`, null, currency.id)
+          res.send(currency)
+        })
+        .catch(err => { return next(err) })
     },
 
     /**
@@ -118,7 +116,10 @@ module.exports = (osseus) => {
       let condition = {_id: req.params.id}
       let update = buildUpdate(req.body)
       osseus.db_models.currency.update(condition, update)
-        .then(updatedCurrecny => { res.send(updatedCurrecny) })
+        .then(updatedCurrecny => {
+          osseus.lib.Notification.info(`API`, null, `Currency Edited`, null, req.params.id)
+          res.send(updatedCurrecny)
+        })
         .catch(err => { next(err) })
     },
 
@@ -169,7 +170,10 @@ module.exports = (osseus) => {
       let condition = {address: req.params.address}
       let update = buildUpdate(req.body)
       osseus.db_models.currency.update(condition, update)
-        .then(updatedCurrecny => { res.send(updatedCurrecny) })
+        .then(updatedCurrecny => {
+          osseus.lib.Notification.info(`API`, null, `Currency Edited`, null, updatedCurrecny.id)
+          res.send(updatedCurrecny)
+        })
         .catch(err => { next(err) })
     },
 

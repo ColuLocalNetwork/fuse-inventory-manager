@@ -34,6 +34,7 @@ const getBlockchainBalance = (address, token, bignum) => {
       }
       resolve(balance)
     } catch (err) {
+      this.osseus.lib.Notification.critical(`BLOCKCHAIN`, null, `Utils - getBlockchainBalance`, null, {address: address, token: token})
       reject(err)
     }
   })
@@ -94,6 +95,7 @@ const updateBlockchainBalance = (address, token) => {
       const result = await this.osseus.db_models.wallet.updateBlockchainBalance(address, currency.id, currentBlock, balance)
       resolve(result)
     } catch (err) {
+      this.osseus.lib.Notification.critical(`BLOCKCHAIN`, null, `Utils - updateBlockchainBalance`, null, {address: address, token: token})
       reject(err)
     }
   })

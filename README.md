@@ -43,8 +43,10 @@ Under the hood, we use a complete [osseus](https://github.com/colucom/osseus) st
 You will find the local configuration at [LOCAL.js](https://github.com/ColuLocalNetwork/inventory-manager/blob/master/config/LOCAL.js).
 
 ## Getting Started
-See [tutorial](https://github.com/ColuLocalNetwork/inventory-manager/blob/master/docs/GETTING-STARTED.md).
+See [tutorial](https://github.com/ColuLocalNetwork/inventory-manager/blob/master/GETTING-STARTED.md).
 
+## Notifications
+See [tutorial](https://github.com/ColuLocalNetwork/inventory-manager/blob/master/NOTIFICATIONS.md).
 
 ## Testing
 

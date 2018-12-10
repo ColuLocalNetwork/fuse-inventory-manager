@@ -218,6 +218,7 @@ module.exports = (osseus) => {
 
         resolve(newTx)
       } catch (err) {
+        osseus.lib.Notification.critical(`BLOCKCHAIN`, null, `Transfer error`, null, err)
         reject(err)
       }
     })
@@ -249,6 +250,7 @@ module.exports = (osseus) => {
         const newTx = await osseus.db_models.tx.createChange(data)
         resolve(newTx)
       } catch (err) {
+        osseus.lib.Notification.critical(`BLOCKCHAIN`, null, `Change error`, null, err)
         reject(err)
       }
     })
@@ -274,6 +276,7 @@ module.exports = (osseus) => {
 
         resolve(newTx)
       } catch (err) {
+        osseus.lib.Notification.critical(`BLOCKCHAIN`, null, `Deposit error`, null, err)
         reject(err)
       }
     })
@@ -312,6 +315,7 @@ module.exports = (osseus) => {
 
         resolve(results)
       } catch (err) {
+        osseus.lib.Notification.critical(`BLOCKCHAIN`, null, `Transmit error`, null, err)
         reject(err)
       }
     })

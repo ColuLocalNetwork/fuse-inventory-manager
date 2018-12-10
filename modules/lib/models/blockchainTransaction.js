@@ -84,6 +84,7 @@ module.exports = (osseus) => {
           }
           const result = await osseus.db_models.bctx.update({hash: receipt.tx}, update)
           osseus.logger.debug(`blockchainTransaction.transfer --> result: ${JSON.stringify(result)}`)
+          osseus.lib.Notification.info(`BLOCKCHAIN`, null, `Transfer done`, null, receipt.tx)
           resolve({
             receipt: receipt,
             result: result
@@ -121,6 +122,7 @@ module.exports = (osseus) => {
           }
           const result = await osseus.db_models.bctx.create(tx)
           osseus.logger.debug(`blockchainTransaction.change --> result: ${JSON.stringify(result)}`)
+          osseus.lib.Notification.info(`BLOCKCHAIN`, null, `Change done`, null, receipt.tx)
           resolve({
             receipt: receipt,
             result: result
@@ -198,8 +200,10 @@ module.exports = (osseus) => {
           })
         }, (err, updatedTransactions) => {
           if (err) {
+            osseus.lib.Notification.warning(`BLOCKCHAIN`, null, `Sync state error`, null, err)
             return reject(err)
           }
+          osseus.lib.Notification.info(`BLOCKCHAIN`, null, `Sync state done`, null, updatedTransactions.map(bctx => bctx._id))
           resolve(updatedTransactions)
         })
       } catch (err) {

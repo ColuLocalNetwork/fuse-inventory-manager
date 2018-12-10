@@ -49,6 +49,10 @@
     ]
   },
   "apidoc": {
-    "title": "Inventory Manager API"
+    "title": "Inventory Manager API",
+    "header": {
+      "title": "README",
+      "filename": "README.md"
+    }
   }
 }

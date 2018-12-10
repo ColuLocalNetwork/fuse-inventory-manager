@@ -5,7 +5,7 @@ module.exports = (osseus) => {
   const db = osseus.mongo
   const Schema = db.mongoose.Schema
 
-  const NOTIFICATION_TYPES = ['SYSTEM', 'GENERAL']
+  const NOTIFICATION_TYPES = ['SYSTEM', 'GENERAL', 'API', 'JOB', 'LISTENER', 'TRANSFER_EVENT', 'BLOCKCHAIN']
   const NOTIFICATION_LEVELS = ['INFO', 'WARNING', 'CRITICAL']
 
   const NotificationSchema = new Schema({

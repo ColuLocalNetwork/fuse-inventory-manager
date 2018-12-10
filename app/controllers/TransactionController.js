@@ -68,6 +68,7 @@ module.exports = (osseus) => {
           if (tx.state !== 'DONE') {
             return next(new Error(`There was an error trying to make the transfer`))
           }
+          osseus.lib.Notification.info(`API`, null, `Transfer Successful`, null, tx.id)
           res.send({id: tx.id})
         })
         .catch(err => { return next(err) })
@@ -115,7 +116,10 @@ module.exports = (osseus) => {
         req.body.marketMakerId,
         req.body.marketMakerAddress
       )
-        .then(tx => { res.send({id: tx.id}) })
+        .then(tx => {
+          osseus.lib.Notification.info(`API`, null, `Change Successful`, null, tx.id)
+          res.send({id: tx.id})
+        })
         .catch(err => { return next(err) })
     },
 
@@ -164,6 +168,7 @@ module.exports = (osseus) => {
           if (revertTx.state !== 'DONE') {
             return next(new Error(`There was an error trying to revert`))
           }
+          osseus.lib.Notification.info(`API`, null, `Revert Successful`, null, {tx: tx.id, revertTx: revertTx.id})
           res.send({id: revertTx.id})
         })
         .catch(err => { return next(err) })
@@ -281,6 +286,7 @@ module.exports = (osseus) => {
               transmit: res.transmit.id.toString()
             }
           })
+          osseus.lib.Notification.info(`API`, null, `Transmit Successful`, null, results)
           res.send({result: results})
         })
         .catch(err => { return next(err) })
