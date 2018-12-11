@@ -150,8 +150,8 @@ module.exports = (osseus) => {
      *     }
      */
     revert: async (req, res, next) => {
-      let tx = await osseus.db_models.tx.getById(req.params.id).catch(err => { return next(err) })
-      let currency = await osseus.db_models.currency.getById(tx.to.currency).catch(err => { return next(err) })
+      let tx = await osseus.lib.Transaction.getById(req.params.id).catch(err => { return next(err) })
+      let currency = await osseus.lib.Currency.getById(tx.to.currency).catch(err => { return next(err) })
       osseus.lib.Transaction.transfer(
         {
           accountAddress: tx.to.accountAddress,
@@ -227,7 +227,7 @@ module.exports = (osseus) => {
      *     }
      */
     getTransactionById: async (req, res, next) => {
-      osseus.db_models.tx.getById(req.params.id)
+      osseus.lib.Transaction.getById(req.params.id)
         .then(tx => { res.send(tx) })
         .catch(err => { next(err) })
     },
@@ -335,7 +335,7 @@ module.exports = (osseus) => {
      *     }
      */
     getTransmitById: async (req, res, next) => {
-      osseus.db_models.transmit.getById(req.params.id)
+      osseus.lib.Transmit.getById(req.params.id)
         .then(transmit => { res.send(transmit) })
         .catch(err => { next(err) })
     },
@@ -410,7 +410,7 @@ module.exports = (osseus) => {
      *     }
      */
     getBlockchainTransactionById: async (req, res, next) => {
-      osseus.db_models.bctx.getById(req.params.id)
+      osseus.lib.BlockchainTransaction.getById(req.params.id)
         .then(bctx => { res.send(bctx) })
         .catch(err => { next(err) })
     },
@@ -446,7 +446,7 @@ module.exports = (osseus) => {
      *     }
      */
     getUnknownBlockchainTransactions: async (req, res, next) => {
-      osseus.db_models.bctx.get({known: false})
+      osseus.lib.BlockchainTransaction.get({known: false})
         .then(bctxs => { bctxs = bctxs.map(bctx => bctx._id); res.send({ids: bctxs}) })
         .catch(err => { next(err) })
     },
@@ -487,7 +487,7 @@ module.exports = (osseus) => {
       const tasks = []
       req.body.ids.forEach((id) => {
         tasks.push(new Promise(async (resolve, reject) => {
-          osseus.db_models.bctx.update({_id: id}, {$set: {known: true}})
+          osseus.lib.BlockchainTransaction.update({_id: id}, {$set: {known: true}})
             .then(bctx => resolve(bctx))
             .catch(err => reject(err))
         }))

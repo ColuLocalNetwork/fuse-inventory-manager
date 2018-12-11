@@ -63,50 +63,50 @@ contract('WALLET', async (accounts) => {
 
   it('should create a wallet', async () => {
     let currency = await osseus.lib.Currency.create(currencyAddress, osseus.config.abi.CommunityCurrency, currencyBlockchainInfo, osseus.helpers.randomStr(10))
-    let wallet = await osseus.db_models.wallet.create({
-      address: accounts[0],
-      type: 'manager',
-      index: 0,
-      exid: osseus.helpers.randomNumNotZero(10),
-      balances: [{
+    let wallet = await osseus.lib.Wallet.create(
+      accounts[0],
+      'manager',
+      0,
+      [{
         currency: currency,
         blockchainAmount: 0,
         offchainAmount: 10 * TOKEN_DECIMALS,
         blockNumberOfLastUpdate: 0,
         pendingTxs: []
-      }]
-    })
+      }],
+      osseus.helpers.randomNumNotZero(10)
+    )
     validateWallet(wallet, undefined, currency, 10 * TOKEN_DECIMALS)
   })
 
   it('should not create a wallet with same address', async () => {
     let currency = await osseus.lib.Currency.create(currencyAddress, osseus.config.abi.CommunityCurrency, currencyBlockchainInfo, osseus.helpers.randomStr(10))
-    await osseus.db_models.wallet.create({
-      address: accounts[0],
-      type: 'manager',
-      index: 0,
-      exid: osseus.helpers.randomNumNotZero(10),
-      balances: [{
+    await osseus.lib.Wallet.create(
+      accounts[0],
+      'manager',
+      0,
+      [{
         currency: currency,
         blockchainAmount: 0,
         offchainAmount: 10 * TOKEN_DECIMALS,
         blockNumberOfLastUpdate: 0,
         pendingTxs: []
-      }]
-    })
-    let wallet = await osseus.db_models.wallet.create({
-      address: accounts[0],
-      type: 'users',
-      index: 0,
-      exid: osseus.helpers.randomNumNotZero(10),
-      balances: [{
+      }],
+      osseus.helpers.randomNumNotZero(10)
+    )
+    let wallet = await osseus.lib.Wallet.create(
+      accounts[0],
+      'users',
+      0,
+      [{
         currency: currency,
         blockchainAmount: 0,
         offchainAmount: 10 * TOKEN_DECIMALS,
         blockNumberOfLastUpdate: 0,
         pendingTxs: []
-      }]
-    }).catch(err => {
+      }],
+      osseus.helpers.randomNumNotZero(10)
+    ).catch(err => {
       expect(err).not.to.be.undefined
     })
     expect(wallet).to.be.undefined
@@ -114,60 +114,60 @@ contract('WALLET', async (accounts) => {
 
   it('should get wallet (by id)', async () => {
     let currency = await osseus.lib.Currency.create(currencyAddress, osseus.config.abi.CommunityCurrency, currencyBlockchainInfo, osseus.helpers.randomStr(10))
-    let wallet1 = await osseus.db_models.wallet.create({
-      address: accounts[0],
-      type: 'manager',
-      index: 0,
-      exid: osseus.helpers.randomNumNotZero(10),
-      balances: [{
+    let wallet1 = await osseus.lib.Wallet.create(
+      accounts[0],
+      'manager',
+      0,
+      [{
         currency: currency,
         blockchainAmount: 0,
         offchainAmount: 10 * TOKEN_DECIMALS,
         blockNumberOfLastUpdate: 0,
         pendingTxs: []
-      }]
-    })
-    let wallet2 = await osseus.db_models.wallet.getById(wallet1.id)
+      }],
+      osseus.helpers.randomNumNotZero(10)
+    )
+    let wallet2 = await osseus.lib.Wallet.getById(wallet1.id)
     validateWallet(wallet1, wallet2)
   })
 
   it('should get wallet (by address)', async () => {
     let currency = await osseus.lib.Currency.create(currencyAddress, osseus.config.abi.CommunityCurrency, currencyBlockchainInfo, osseus.helpers.randomStr(10))
-    let wallet1 = await osseus.db_models.wallet.create({
-      address: accounts[0],
-      type: 'manager',
-      index: 0,
-      exid: osseus.helpers.randomNumNotZero(10),
-      balances: [{
+    let wallet1 = await osseus.lib.Wallet.create(
+      accounts[0],
+      'manager',
+      0,
+      [{
         currency: currency,
         blockchainAmount: 0,
         offchainAmount: 10 * TOKEN_DECIMALS,
         blockNumberOfLastUpdate: 0,
         pendingTxs: []
-      }]
-    })
-    let wallet2 = await osseus.db_models.wallet.getByAddress(wallet1.address)
+      }],
+      osseus.helpers.randomNumNotZero(10)
+    )
+    let wallet2 = await osseus.lib.Wallet.getByAddress(wallet1.address)
     validateWallet(wallet1, wallet2)
   })
 
   it('should get error if wallet not found (by id)', async () => {
     let fakeId = '123abc'
     let currency = await osseus.lib.Currency.create(currencyAddress, osseus.config.abi.CommunityCurrency, currencyBlockchainInfo, osseus.helpers.randomStr(10))
-    let wallet1 = await osseus.db_models.wallet.create({
-      address: accounts[0],
-      type: 'manager',
-      index: 0,
-      exid: osseus.helpers.randomNumNotZero(10),
-      balances: [{
+    let wallet1 = await osseus.lib.Wallet.create(
+      accounts[0],
+      'manager',
+      0,
+      [{
         currency: currency,
         blockchainAmount: 0,
         offchainAmount: 10 * TOKEN_DECIMALS,
         blockNumberOfLastUpdate: 0,
         pendingTxs: []
-      }]
-    })
+      }],
+      osseus.helpers.randomNumNotZero(10)
+    )
     validateWallet(wallet1, undefined, currency, 10 * TOKEN_DECIMALS)
-    let wallet2 = await osseus.db_models.wallet.getById(fakeId).catch(err => {
+    let wallet2 = await osseus.lib.Wallet.getById(fakeId).catch(err => {
       expect(err).not.to.be.undefined
     })
     expect(wallet2).to.be.undefined
@@ -175,19 +175,19 @@ contract('WALLET', async (accounts) => {
 
   it('should get blockchain balance', async () => {
     let currency = await osseus.lib.Currency.create(currencyAddress, osseus.config.abi.CommunityCurrency)
-    let wallet1 = await osseus.db_models.wallet.create({
-      address: accounts[0],
-      type: 'manager',
-      index: 0,
-      exid: osseus.helpers.randomNumNotZero(10),
-      balances: [{
+    let wallet1 = await osseus.lib.Wallet.create(
+      accounts[0],
+      'manager',
+      0,
+      [{
         currency: currency,
         blockchainAmount: 10 * TOKEN_DECIMALS,
         offchainAmount: 10 * TOKEN_DECIMALS,
         blockNumberOfLastUpdate: 0,
         pendingTxs: []
-      }]
-    })
+      }],
+      osseus.helpers.randomNumNotZero(10)
+    )
     let bcBalance = await osseus.db_models.wallet.getBlockchainBalance(wallet1.address, currency.id)
     expect(bcBalance).to.equal(10 * TOKEN_DECIMALS)
   })

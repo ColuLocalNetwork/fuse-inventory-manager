@@ -160,7 +160,7 @@ module.exports = (osseus) => {
       if (req.body.name) update['name'] = req.body.name
       if (req.body.externalId) update['exid'] = req.body.externalId
       if (req.body.webhookURL) update['webhookURL'] = req.body.webhookURL
-      osseus.db_models.community.update(req.params.id, update)
+      osseus.lib.Community.update(req.params.id, update)
         .then(updatedCommunity => {
           osseus.lib.Notification.info(`API`, req.params.id, `Community Edited`, null, req.params.id)
           res.send(updatedCommunity)
@@ -207,7 +207,7 @@ module.exports = (osseus) => {
      * @apiUse ErrorResponse
      */
     get: async (req, res, next) => {
-      osseus.db_models.community.getById(req.params.id)
+      osseus.lib.Community.getById(req.params.id)
         .then(community => { res.send(community) })
         .catch(err => { next(err) })
     }

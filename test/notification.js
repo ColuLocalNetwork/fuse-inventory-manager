@@ -89,13 +89,13 @@ contract('NOTIFICATION', async (accounts) => {
 
   it('should get a notification by id', async () => {
     let notification1 = await osseus.lib.Notification.create('INFO', 'GENERAL', community.id, 'Test', 'Some content', {a: 1, b: 2, c: {d: 3, e: 4}})
-    let notification2 = await osseus.db_models.notification.getById(notification1.id)
+    let notification2 = await osseus.lib.Notification.getById(notification1.id)
     validateNotification(notification1, notification2)
   })
 
   it('should mark one notification as read', async () => {
     let notification = await osseus.lib.Notification.create()
-    let result = await osseus.db_models.notification.markAsRead(notification.id)
+    let result = await osseus.lib.Notification.markAsRead(notification.id)
     expect(result).to.be.a('Object')
     expect(result.found).to.equal(1)
     expect(result.updated).to.equal(1)
@@ -120,9 +120,9 @@ contract('NOTIFICATION', async (accounts) => {
       notifications.withCommunity.push(notification.id)
     }
 
-    let notificationsWARNING = await osseus.db_models.notification.getUnread({level: 'WARNING'}, 0, 100)
-    let notificationsCRITICAL = await osseus.db_models.notification.getUnread({level: 'CRITICAL'}, 0, 100)
-    let notificationsWithCommunity = await osseus.db_models.notification.getUnread({level: 'INFO', community: community.id}, 0, 100)
+    let notificationsWARNING = await osseus.lib.Notification.getUnread({level: 'WARNING'}, 0, 100)
+    let notificationsCRITICAL = await osseus.lib.Notification.getUnread({level: 'CRITICAL'}, 0, 100)
+    let notificationsWithCommunity = await osseus.lib.Notification.getUnread({level: 'INFO', community: community.id}, 0, 100)
 
     expect(notificationsWARNING.docs.length).to.equal(nWARNING)
     expect(notificationsWARNING.docs.map(doc => doc.id)).to.deep.equal(notifications.levelWarning)
@@ -138,7 +138,7 @@ contract('NOTIFICATION', async (accounts) => {
       let notification = await osseus.lib.Notification.create(osseus.db_models.notification.levels[osseus.helpers.randomNum(3)], 'GENERAL', community.id, `Test ${i}`)
       notificationIds.push(notification.id)
     }
-    let result = await osseus.db_models.notification.markAsRead(notificationIds)
+    let result = await osseus.lib.Notification.markAsRead(notificationIds)
     expect(result.found).to.equal(notificationIds.length)
     expect(result.updated).to.equal(notificationIds.length)
   })
@@ -150,11 +150,11 @@ contract('NOTIFICATION', async (accounts) => {
       let notification = await osseus.lib.Notification.create(osseus.db_models.notification.levels[osseus.helpers.randomNum(3)], 'GENERAL', community.id, `Test ${i}`)
       notificationIds.push(notification.id)
       if (i % 2) {
-        await osseus.db_models.notification.markAsRead(notification.id)
+        await osseus.lib.Notification.markAsRead(notification.id)
         notificationIdsMarkedAsRead.push(notification.id)
       }
     }
-    let result = await osseus.db_models.notification.markAsRead(notificationIds)
+    let result = await osseus.lib.Notification.markAsRead(notificationIds)
     expect(result.found).to.equal(notificationIds.length - notificationIdsMarkedAsRead.length)
     expect(result.updated).to.equal(notificationIds.length - notificationIdsMarkedAsRead.length)
   })

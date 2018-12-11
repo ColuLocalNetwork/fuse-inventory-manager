@@ -40,5 +40,38 @@ module.exports = (osseus) => {
     })
   }
 
+  currency.getById = (currencyId) => {
+    return new Promise(async (resolve, reject) => {
+      try {
+        const currency = await osseus.db_models.currency.getById(currencyId)
+        resolve(currency)
+      } catch (err) {
+        reject(err)
+      }
+    })
+  }
+
+  currency.getByAddress = (currencyAddress) => {
+    return new Promise(async (resolve, reject) => {
+      try {
+        const currency = await osseus.db_models.currency.getByAddress(currencyAddress)
+        resolve(currency)
+      } catch (err) {
+        reject(err)
+      }
+    })
+  }
+
+  currency.update = (condition, updateData) => {
+    return new Promise(async (resolve, reject) => {
+      try {
+        const updatedCurrency = await osseus.db_models.currency.update(condition, updateData)
+        resolve(updatedCurrency)
+      } catch (err) {
+        reject(err)
+      }
+    })
+  }
+
   return currency
 }

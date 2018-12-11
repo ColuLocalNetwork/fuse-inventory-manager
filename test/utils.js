@@ -114,7 +114,7 @@ contract('UTILS', async (accounts) => {
     await cc.transfer(communityManagerAddress, COMMUNITY_MANAGER_CC_BALANCE, {from: accounts[0]})
 
     // update the wallet
-    await osseus.db_models.wallet.update({'address': communityManagerAddress, 'balances.currency': currency.id}, {'balances.$.offchainAmount': new BigNumber(COMMUNITY_MANAGER_CC_BALANCE), 'balances.$.blockchainAmount': new BigNumber(COMMUNITY_MANAGER_CC_BALANCE)})
+    await osseus.lib.Wallet.update({'address': communityManagerAddress, 'balances.currency': currency.id}, {'balances.$.offchainAmount': new BigNumber(COMMUNITY_MANAGER_CC_BALANCE), 'balances.$.blockchainAmount': new BigNumber(COMMUNITY_MANAGER_CC_BALANCE)})
   })
 
   it('should be able to check ETH balance for existing wallet', async () => {
@@ -209,13 +209,13 @@ contract('UTILS', async (accounts) => {
   })
 
   it('should be able to get unknown blockchain transactions if exist', async () => {
-    let bctx = await osseus.db_models.bctx.update({}, {$set: {}, $setOnInsert: {known: false}})
+    let bctx = await osseus.lib.BlockchainTransaction.update({}, {$set: {}, $setOnInsert: {known: false}})
 
     let unknownBctxs = await osseus.utils.getUnknownBlockchainTransactions()
     expect(unknownBctxs).to.be.an('array')
     expect(unknownBctxs).to.have.lengthOf(1)
 
-    await osseus.db_models.bctx.update({_id: bctx._id}, {$set: {known: true}})
+    await osseus.lib.BlockchainTransaction.update({_id: bctx._id}, {$set: {known: true}})
 
     unknownBctxs = await osseus.utils.getUnknownBlockchainTransactions()
     expect(unknownBctxs).to.be.an('array')

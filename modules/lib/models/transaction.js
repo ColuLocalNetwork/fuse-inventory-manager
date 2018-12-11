@@ -321,5 +321,27 @@ module.exports = (osseus) => {
     })
   }
 
+  transaction.get = (condition) => {
+    return new Promise(async (resolve, reject) => {
+      try {
+        const tx = await osseus.db_models.tx.get(condition)
+        resolve(tx)
+      } catch (err) {
+        reject(err)
+      }
+    })
+  }
+
+  transaction.getById = (txid) => {
+    return new Promise(async (resolve, reject) => {
+      try {
+        const tx = await osseus.db_models.tx.getById(txid)
+        resolve(tx)
+      } catch (err) {
+        reject(err)
+      }
+    })
+  }
+
   return transaction
 }

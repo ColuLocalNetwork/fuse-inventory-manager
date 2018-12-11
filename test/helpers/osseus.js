@@ -23,12 +23,14 @@ module.exports = async () => {
   }
   if (!osseus.agenda) require(path.join(cwd, 'modules/jobs')).init(osseus)
   osseus.lib = osseus.lib || {
+    BlockchainTransaction: require(path.join(cwd, 'modules/lib/models/blockchainTransaction'))(osseus),
     Currency: require(path.join(cwd, 'modules/lib/models/currency'))(osseus),
     Community: require(path.join(cwd, 'modules/lib/models/community'))(osseus),
     MarketMaker: require(path.join(cwd, 'modules/lib/models/marketMaker'))(osseus),
     Notification: require(path.join(cwd, 'modules/lib/models/notification'))(osseus),
     Transaction: require(path.join(cwd, 'modules/lib/models/transaction'))(osseus),
-    BlockchainTransaction: require(path.join(cwd, 'modules/lib/models/blockchainTransaction'))(osseus)
+    Transmit: require(path.join(cwd, 'modules/lib/models/transmit'))(osseus),
+    Wallet: require(path.join(cwd, 'modules/lib/models/wallet'))(osseus)
   }
   osseus.helpers = {
     randomNum: (n) => {

@@ -79,28 +79,28 @@ module.exports = (osseus) => {
       if (req.body.type === 'manager') {
         return next(new Error(`Cannot create a "manager" wallet - it is created on community creation`))
       }
-      let communityData = await osseus.lib.Community.get(req.body.communityId)
+      let communityData = await osseus.lib.Community.getWithProviderAndContracts(req.body.communityId)
 
       let address = communityData.provider.addAddress()
 
-      let wallet = await osseus.db_models.wallet.create({
-        address: address,
-        type: req.body.type,
-        index: communityData.community.wallets.length,
-        balances: [{
+      let wallet = await osseus.lib.Wallet.create(
+        address,
+        req.body.type,
+        communityData.community.wallets.length,
+        [{
           currency: communityData.community.defaultCurrency,
           blockchainAmount: 0,
           blockNumberOfLastUpdate: 0,
           offchainAmount: 0,
           pendingTxs: []
         }],
-        exid: req.body.externalId
-      }).catch(err => { return next(err) })
+        req.body.externalId
+      ).catch(err => { return next(err) })
 
       let communityWallets = communityData.community.wallets.map(w => w.id)
       communityWallets.push(wallet.id)
 
-      await osseus.db_models.community.update(req.body.communityId, {wallets: communityWallets}).catch(err => { return next(err) })
+      await osseus.lib.Community.update(req.body.communityId, {wallets: communityWallets}).catch(err => { return next(err) })
 
       osseus.lib.Notification.info(`API`, req.body.communityId, `Wallet Created`, null, wallet.id)
 
@@ -134,7 +134,7 @@ module.exports = (osseus) => {
       let update = {}
       if (req.body.type) update['type'] = req.body.type
       if (req.body.externalId) update['exid'] = req.body.externalId
-      osseus.db_models.wallet.update({_id: req.params.id}, update)
+      osseus.lib.Wallet.update({_id: req.params.id}, update)
         .then(updatedWallet => {
           osseus.lib.Notification.info(`API`, null, `Wallet Edited`, null, req.params.id)
           res.send(updatedWallet)
@@ -157,7 +157,7 @@ module.exports = (osseus) => {
      * @apiUse WalletResponse
      */
     get: async (req, res, next) => {
-      osseus.db_models.wallet.getById(req.params.id)
+      osseus.lib.Wallet.getById(req.params.id)
         .then(wallet => { res.send(wallet) })
         .catch(err => { next(err) })
     },
@@ -189,7 +189,7 @@ module.exports = (osseus) => {
       let update = {}
       if (req.body.type) update['type'] = req.body.type
       if (req.body.externalId) update['exid'] = req.body.externalId
-      osseus.db_models.wallet.update({address: req.params.address}, update)
+      osseus.lib.Wallet.update({address: req.params.address}, update)
         .then(updatedWallet => { res.send(updatedWallet) })
         .catch(err => { next(err) })
     },
@@ -209,7 +209,7 @@ module.exports = (osseus) => {
      * @apiUse WalletResponse
      */
     getByAddress: async (req, res, next) => {
-      osseus.db_models.wallet.getByAddress(req.params.address)
+      osseus.lib.Wallet.getByAddress(req.params.address)
         .then(wallet => { res.send(wallet) })
         .catch(err => { next(err) })
     }
