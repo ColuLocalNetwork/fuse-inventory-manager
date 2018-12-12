@@ -15,7 +15,7 @@
   "author": "LiorRabin",
   "license": "MIT",
   "dependencies": {
-    "@colucom/osseus": "~2.2.7",
+    "@colucom/osseus": "~2.3.1",
     "@colucom/osseus-logger": "~0.5.1",
     "@colucom/osseus-mongo": "~0.3.1",
     "@colucom/osseus-router": "~0.4.1",
