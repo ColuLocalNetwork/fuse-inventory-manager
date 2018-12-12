@@ -58,7 +58,7 @@ module.exports = (osseus) => {
      * @apiUse NotificationResponse
      */
     get: async (req, res, next) => {
-      osseus.db_models.notification.getById(req.params.id)
+      osseus.lib.Notification.getById(req.params.id)
         .then(notification => { res.send(notification) })
         .catch(err => { next(err) })
     },
@@ -133,11 +133,9 @@ module.exports = (osseus) => {
      *     }
      */
     unread: async (req, res, next) => {
-      let offset = req.query.offset ? parseInt(req.query.offset) : 0
-      let limit = req.query.limit ? parseInt(req.query.limit) : 10
       let type = req.query.type ? req.query.type.toUpperCase() : ''
       let level = req.query.level ? req.query.level.toUpperCase() : ''
-      osseus.db_models.notification.getUnread({type: type, level: level, community: req.query.communityId}, offset, limit)
+      osseus.lib.Notification.getUnread({type: type, level: level, community: req.query.communityId}, req.query.offset, req.query.limit)
         .then(data => { res.send({notifications: data.docs, total: data.total, limit: data.limit, offset: data.offset}) })
         .catch(err => { next(err) })
     },
@@ -171,15 +169,7 @@ module.exports = (osseus) => {
      *     }
      */
     markAsRead: async (req, res, next) => {
-      let ids
-      if (typeof req.body.ids === 'string') {
-        ids = req.body.ids.split(',')
-      } else if (Array.isArray(req.body.ids)) {
-        ids = req.body.ids
-      } else {
-        return next(`ids is not string/array`)
-      }
-      osseus.db_models.notification.markAsRead(ids)
+      osseus.lib.Notification.markAsRead(req.body.ids)
         .then(data => { res.send(data) })
         .catch(err => { next(err) })
     }

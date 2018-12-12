@@ -118,7 +118,7 @@ module.exports = (osseus) => {
       if (!req.body || !Object.keys(req.body) || !Object.keys(req.body).length) {
         return next(`Nothing to update`)
       }
-      osseus.db_models.marketMaker.update({_id: req.params.id}, req.body)
+      osseus.lib.MarketMaker.update({_id: req.params.id}, req.body)
         .then(updatedMarketMaker => {
           osseus.lib.Notification.info(`API`, null, `MarketMaker Edited`, null, req.params.id)
           res.send(updatedMarketMaker)
@@ -141,7 +141,7 @@ module.exports = (osseus) => {
      * @apiUse MarketMakerResponse
      */
     get: async (req, res, next) => {
-      osseus.db_models.marketMaker.getById(req.params.id)
+      osseus.lib.MarketMaker.getById(req.params.id)
         .then(marketMaker => { res.send(marketMaker) })
         .catch(err => { next(err) })
     },
@@ -168,7 +168,7 @@ module.exports = (osseus) => {
       if (!req.body || !Object.keys(req.body) || !Object.keys(req.body).length) {
         return next(`Nothing to update`)
       }
-      osseus.db_models.marketMaker.update({address: req.params.address}, req.body)
+      osseus.lib.MarketMaker.update({address: req.params.address}, req.body)
         .then(updatedMarketMaker => {
           osseus.lib.Notification.info(`API`, null, `MarketMaker Edited`, null, updatedMarketMaker.id)
           res.send(updatedMarketMaker)
@@ -191,7 +191,7 @@ module.exports = (osseus) => {
      * @apiUse MarketMakerResponse
      */
     getByAddress: async (req, res, next) => {
-      osseus.db_models.marketMaker.getByAddress(req.params.address)
+      osseus.lib.MarketMaker.getByAddress(req.params.address)
         .then(marketMaker => { res.send(marketMaker) })
         .catch(err => { next(err) })
     },
@@ -212,7 +212,7 @@ module.exports = (osseus) => {
      * @apiUse MarketMakerArrayResponse
      */
     getByPair: async (req, res, next) => {
-      osseus.db_models.marketMaker.getByPair(req.query.tokenAddress1, req.query.tokenAddress2)
+      osseus.lib.MarketMaker.getByPair(req.query.tokenAddress1, req.query.tokenAddress2)
         .then(marketMakers => { res.send(marketMakers) })
         .catch(err => { next(err) })
     },

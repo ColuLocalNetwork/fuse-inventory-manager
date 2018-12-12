@@ -212,5 +212,38 @@ module.exports = (osseus) => {
     })
   }
 
+  blockchainTransaction.getById = (bctxid) => {
+    return new Promise(async (resolve, reject) => {
+      try {
+        const bctx = await osseus.db_models.bctx.getById(bctxid)
+        resolve(bctx)
+      } catch (err) {
+        reject(err)
+      }
+    })
+  }
+
+  blockchainTransaction.get = (condition) => {
+    return new Promise(async (resolve, reject) => {
+      try {
+        const bctx = await osseus.db_models.bctx.get(condition)
+        resolve(bctx)
+      } catch (err) {
+        reject(err)
+      }
+    })
+  }
+
+  blockchainTransaction.update = (condition, updateData) => {
+    return new Promise(async (resolve, reject) => {
+      try {
+        const updatedBctx = await osseus.db_models.bctx.update(condition, updateData)
+        resolve(updatedBctx)
+      } catch (err) {
+        reject(err)
+      }
+    })
+  }
+
   return blockchainTransaction
 }

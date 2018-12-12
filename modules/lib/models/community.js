@@ -81,10 +81,10 @@ module.exports = (osseus) => {
     })
   }
 
-  community.get = (id, community) => {
+  community.getWithProviderAndContracts = (communityId, community) => {
     return new Promise(async (resolve, reject) => {
       try {
-        community = community || await osseus.db_models.community.getByIdPopulated(id)
+        community = community || await osseus.db_models.community.getByIdPopulated(communityId)
         const provider = getProvider(community, community.wallets.length)
         const currencyContracts = await osseus.lib.Currency.getContracts(community.defaultCurrency, provider)
         resolve({
@@ -92,6 +92,28 @@ module.exports = (osseus) => {
           provider: provider,
           currencyContracts: currencyContracts
         })
+      } catch (err) {
+        reject(err)
+      }
+    })
+  }
+
+  community.getById = (communityId, getPopulated) => {
+    return new Promise(async (resolve, reject) => {
+      try {
+        const community = getPopulated ? await osseus.db_models.community.getByIdPopulated(communityId) : await osseus.db_models.community.getById(communityId)
+        resolve(community)
+      } catch (err) {
+        reject(err)
+      }
+    })
+  }
+
+  community.update = (communityId, updateData) => {
+    return new Promise(async (resolve, reject) => {
+      try {
+        const updatedCommunity = await osseus.db_models.community.update(communityId, updateData)
+        resolve(updatedCommunity)
       } catch (err) {
         reject(err)
       }

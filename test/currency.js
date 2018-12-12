@@ -81,13 +81,13 @@ contract('CURRENCY', async (accounts) => {
 
   it('should get currency (by id)', async () => {
     let currency1 = await osseus.lib.Currency.create(currencyAddress, osseus.config.abi.CommunityCurrency, currencyBlockchainInfo, osseus.helpers.randomStr(10))
-    let currency2 = await osseus.db_models.currency.getById(currency1.id)
+    let currency2 = await osseus.lib.Currency.getById(currency1.id)
     validateCurrency(currency1, currency2)
   })
 
   it('should get currency (by address)', async () => {
     let currency1 = await osseus.lib.Currency.create(currencyAddress, osseus.config.abi.CommunityCurrency, currencyBlockchainInfo, osseus.helpers.randomStr(10))
-    let currency2 = await osseus.db_models.currency.getByAddress(currency1.address)
+    let currency2 = await osseus.lib.Currency.getByAddress(currency1.address)
     validateCurrency(currency1, currency2)
   })
 
@@ -95,7 +95,7 @@ contract('CURRENCY', async (accounts) => {
     let fakeId = '123abc'
     let currency1 = await osseus.lib.Currency.create(currencyAddress, osseus.config.abi.CommunityCurrency, currencyBlockchainInfo, osseus.helpers.randomStr(10))
     validateCurrency(currency1)
-    let currency2 = await osseus.db_models.currency.getById(fakeId).catch(err => {
+    let currency2 = await osseus.lib.Currency.getById(fakeId).catch(err => {
       expect(err).not.to.be.undefined
     })
     expect(currency2).to.be.undefined

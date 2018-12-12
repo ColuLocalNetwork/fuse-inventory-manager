@@ -103,19 +103,19 @@ contract('MARKET_MAKER', async (accounts) => {
 
   it('should get market maker (by id)', async () => {
     let marketMaker1 = await osseus.lib.MarketMaker.create(mm.address, osseus.config.abi.MarketMaker, cln.address, cc.address)
-    let marketMaker2 = await osseus.db_models.marketMaker.getById(marketMaker1.id)
+    let marketMaker2 = await osseus.lib.MarketMaker.getById(marketMaker1.id)
     validateMarketMaker(marketMaker1, marketMaker2)
   })
 
   it('should get market maker (by address)', async () => {
     let marketMaker1 = await osseus.lib.MarketMaker.create(mm.address, osseus.config.abi.MarketMaker, cln.address, cc.address)
-    let marketMaker2 = await osseus.db_models.marketMaker.getByAddress(marketMaker1.address)
+    let marketMaker2 = await osseus.lib.MarketMaker.getByAddress(marketMaker1.address)
     validateMarketMaker(marketMaker1, marketMaker2)
   })
 
   it('should get market maker (by pair of currencies)', async () => {
     let marketMaker1 = await osseus.lib.MarketMaker.create(mm.address, osseus.config.abi.MarketMaker, cln.address, cc.address)
-    let marketMakers = await osseus.db_models.marketMaker.getByPair(marketMaker1.tokenAddress1, marketMaker1.tokenAddress2)
+    let marketMakers = await osseus.lib.MarketMaker.getByPair(marketMaker1.tokenAddress1, marketMaker1.tokenAddress2)
     validateMarketMaker(marketMaker1, marketMakers[0])
   })
 
@@ -123,7 +123,7 @@ contract('MARKET_MAKER', async (accounts) => {
     let marketMaker1 = await osseus.lib.MarketMaker.create('address1', osseus.config.abi.MarketMaker, cln.address, cc.address)
     let marketMaker2 = await osseus.lib.MarketMaker.create('address2', osseus.config.abi.MarketMaker, cln.address, cc.address)
     let marketMaker3 = await osseus.lib.MarketMaker.create('address3', osseus.config.abi.MarketMaker, cln.address, cc.address)
-    let marketMakers = await osseus.db_models.marketMaker.getByPair(marketMaker1.tokenAddress1, marketMaker1.tokenAddress2)
+    let marketMakers = await osseus.lib.MarketMaker.getByPair(marketMaker1.tokenAddress1, marketMaker1.tokenAddress2)
     validateMarketMaker(marketMaker1, marketMakers[0])
     validateMarketMaker(marketMaker2, marketMakers[1])
     validateMarketMaker(marketMaker3, marketMakers[2])
@@ -132,7 +132,7 @@ contract('MARKET_MAKER', async (accounts) => {
   it('should get error if market maker not found (by id)', async () => {
     let marketMaker1 = await osseus.lib.MarketMaker.create(mm.address, osseus.config.abi.MarketMaker, cln.address, cc.address)
     validateMarketMaker(marketMaker1)
-    let marketMaker2 = await osseus.db_models.marketMaker.getById('fakeId').catch(err => {
+    let marketMaker2 = await osseus.lib.MarketMaker.getById('fakeId').catch(err => {
       expect(err).not.to.be.undefined
     })
     expect(marketMaker2).to.be.undefined
@@ -141,7 +141,7 @@ contract('MARKET_MAKER', async (accounts) => {
   it('should get error if market maker not found (by address)', async () => {
     let marketMaker1 = await osseus.lib.MarketMaker.create(mm.address, osseus.config.abi.MarketMaker, cln.address, cc.address)
     validateMarketMaker(marketMaker1)
-    let marketMaker2 = await osseus.db_models.marketMaker.getByAddress('fakeAddress').catch(err => {
+    let marketMaker2 = await osseus.lib.MarketMaker.getByAddress('fakeAddress').catch(err => {
       expect(err).not.to.be.undefined
     })
     expect(marketMaker2).to.be.undefined
@@ -150,7 +150,7 @@ contract('MARKET_MAKER', async (accounts) => {
   it('should get error if market maker not found (by pair of currencies)', async () => {
     let marketMaker1 = await osseus.lib.MarketMaker.create(mm.address, osseus.config.abi.MarketMaker, cln.address, cc.address)
     validateMarketMaker(marketMaker1)
-    let marketMakers = await osseus.db_models.marketMaker.getByPair('fakeTokenAddress1', 'fakeTokenAddress2').catch(err => {
+    let marketMakers = await osseus.lib.MarketMaker.getByPair('fakeTokenAddress1', 'fakeTokenAddress2').catch(err => {
       expect(err).not.to.be.undefined
     })
     expect(marketMakers).to.be.undefined
@@ -158,13 +158,13 @@ contract('MARKET_MAKER', async (accounts) => {
 
   it('should update market maker (address)', async () => {
     let marketMaker1 = await osseus.lib.MarketMaker.create('fakeAddress', osseus.config.abi.MarketMaker, cln.address, cc.address)
-    let marketMaker2 = await osseus.db_models.marketMaker.update({_id: marketMaker1.id}, {address: mm.address})
+    let marketMaker2 = await osseus.lib.MarketMaker.update({_id: marketMaker1.id}, {address: mm.address})
     expect(marketMaker2.address).to.equal(mm.address)
   })
 
   it('should update market maker (one of the currencies)', async () => {
     let marketMaker1 = await osseus.lib.MarketMaker.create(mm.address, osseus.config.abi.MarketMaker, 'fakeTokenAddress1', 'fakeTokenAddress2')
-    let marketMaker2 = await osseus.db_models.marketMaker.update({_id: marketMaker1.id}, {tokenAddress1: cln.address, tokenAddress2: cc.address})
+    let marketMaker2 = await osseus.lib.MarketMaker.update({_id: marketMaker1.id}, {tokenAddress1: cln.address, tokenAddress2: cc.address})
     expect(marketMaker2.tokenAddress1).to.equal(cln.address)
     expect(marketMaker2.tokenAddress2).to.equal(cc.address)
   })

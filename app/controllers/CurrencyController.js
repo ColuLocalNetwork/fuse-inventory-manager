@@ -115,7 +115,7 @@ module.exports = (osseus) => {
       }
       let condition = {_id: req.params.id}
       let update = buildUpdate(req.body)
-      osseus.db_models.currency.update(condition, update)
+      osseus.lib.Currency.update(condition, update)
         .then(updatedCurrecny => {
           osseus.lib.Notification.info(`API`, null, `Currency Edited`, null, req.params.id)
           res.send(updatedCurrecny)
@@ -138,7 +138,7 @@ module.exports = (osseus) => {
      * @apiUse CurrencyResponse
      */
     get: async (req, res, next) => {
-      osseus.db_models.currency.getById(req.params.id)
+      osseus.lib.Currency.getById(req.params.id)
         .then(currency => { res.send(currency) })
         .catch(err => { next(err) })
     },
@@ -169,7 +169,7 @@ module.exports = (osseus) => {
       }
       let condition = {address: req.params.address}
       let update = buildUpdate(req.body)
-      osseus.db_models.currency.update(condition, update)
+      osseus.lib.Currency.update(condition, update)
         .then(updatedCurrecny => {
           osseus.lib.Notification.info(`API`, null, `Currency Edited`, null, updatedCurrecny.id)
           res.send(updatedCurrecny)
@@ -192,7 +192,7 @@ module.exports = (osseus) => {
      * @apiUse CurrencyResponse
      */
     getByAddress: async (req, res, next) => {
-      osseus.db_models.currency.getByAddress(req.params.address)
+      osseus.lib.Currency.getByAddress(req.params.address)
         .then(currency => { res.send(currency) })
         .catch(err => { next(err) })
     }

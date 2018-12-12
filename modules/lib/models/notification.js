@@ -39,5 +39,48 @@ module.exports = (osseus) => {
     notification[level.toLowerCase()] = (type, communityId, title, content, data) => create(level, type, communityId, title, content, data)
   })
 
+  notification.getById = (notificationId) => {
+    return new Promise(async (resolve, reject) => {
+      try {
+        const notification = await osseus.db_models.notification.getById(notificationId)
+        resolve(notification)
+      } catch (err) {
+        reject(err)
+      }
+    })
+  }
+
+  notification.getUnread = (filter, offset, limit) => {
+    return new Promise(async (resolve, reject) => {
+      try {
+        offset = offset ? parseInt(offset) : 0
+        limit = limit ? parseInt(limit) : 10
+        const notifications = await osseus.db_models.notification.getUnread(filter, offset, limit)
+        resolve(notifications)
+      } catch (err) {
+        reject(err)
+      }
+    })
+  }
+
+  notification.markAsRead = (notificationIds) => {
+    return new Promise(async (resolve, reject) => {
+      try {
+        let ids
+        if (typeof notificationIds === 'string') {
+          ids = notificationIds.split(',')
+        } else if (Array.isArray(notificationIds)) {
+          ids = notificationIds
+        } else {
+          return reject(new Error(`not string/array`))
+        }
+        const result = await osseus.db_models.notification.markAsRead(ids)
+        resolve(result)
+      } catch (err) {
+        reject(err)
+      }
+    })
+  }
+
   return notification
 }

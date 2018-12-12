@@ -56,5 +56,49 @@ module.exports = (osseus) => {
     })
   }
 
+  marketMaker.getById = (marketMakerId) => {
+    return new Promise(async (resolve, reject) => {
+      try {
+        const marketMaker = await osseus.db_models.marketMaker.getById(marketMakerId)
+        resolve(marketMaker)
+      } catch (err) {
+        reject(err)
+      }
+    })
+  }
+
+  marketMaker.getByAddress = (marketMakerAddress) => {
+    return new Promise(async (resolve, reject) => {
+      try {
+        const marketMaker = await osseus.db_models.marketMaker.getByAddress(marketMakerAddress)
+        resolve(marketMaker)
+      } catch (err) {
+        reject(err)
+      }
+    })
+  }
+
+  marketMaker.getByPair = (tokenAddress1, tokenAddress2) => {
+    return new Promise(async (resolve, reject) => {
+      try {
+        const marketMaker = await osseus.db_models.marketMaker.getByPair(tokenAddress1, tokenAddress2)
+        resolve(marketMaker)
+      } catch (err) {
+        reject(err)
+      }
+    })
+  }
+
+  marketMaker.update = (condition, updateData) => {
+    return new Promise(async (resolve, reject) => {
+      try {
+        const updatedMarketMaker = await osseus.db_models.marketMaker.update(condition, updateData)
+        resolve(updatedMarketMaker)
+      } catch (err) {
+        reject(err)
+      }
+    })
+  }
+
   return marketMaker
 }

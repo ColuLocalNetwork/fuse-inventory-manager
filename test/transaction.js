@@ -77,7 +77,7 @@ contract('TRANSACTION', async (accounts) => {
       const currency = tx[participantEnd].currency.toString()
       const state = tx.state
       const amount = tx.amount.toNumber()
-      const wallet = await osseus.db_models.wallet.getByAddress(accountAddress)
+      const wallet = await osseus.lib.Wallet.getByAddress(accountAddress)
       const startingBalance = defaultBalances[accountAddress]
       const currencyBalance = wallet.balances.filter(balance => balance.currency.toString() === currency)[0]
       const actualBalance = currencyBalance.offchainAmount.toNumber()
@@ -148,9 +148,9 @@ contract('TRANSACTION', async (accounts) => {
 
     // update the wallets
     let amount = new BigNumber(CC_BALANCE)
-    await osseus.db_models.wallet.update({'address': managerAccountAddress, 'balances.currency': currency.id}, {'balances.$.offchainAmount': amount, 'balances.$.blockchainAmount': amount})
-    await osseus.db_models.wallet.update({'address': usersAccountAddress, 'balances.currency': currency.id}, {'balances.$.offchainAmount': amount, 'balances.$.blockchainAmount': amount})
-    await osseus.db_models.wallet.update({'address': merchantsAccountAddress, 'balances.currency': currency.id}, {'balances.$.offchainAmount': amount, 'balances.$.blockchainAmount': amount})
+    await osseus.lib.Wallet.update({'address': managerAccountAddress, 'balances.currency': currency.id}, {'balances.$.offchainAmount': amount, 'balances.$.blockchainAmount': amount})
+    await osseus.lib.Wallet.update({'address': usersAccountAddress, 'balances.currency': currency.id}, {'balances.$.offchainAmount': amount, 'balances.$.blockchainAmount': amount})
+    await osseus.lib.Wallet.update({'address': merchantsAccountAddress, 'balances.currency': currency.id}, {'balances.$.offchainAmount': amount, 'balances.$.blockchainAmount': amount})
 
     defaultBalances[managerAccountAddress] = CC_BALANCE
     defaultBalances[usersAccountAddress] = CC_BALANCE
@@ -164,7 +164,7 @@ contract('TRANSACTION', async (accounts) => {
       let to = {accountAddress: usersAccountAddress, currency: currencyAddress}
 
       let tx1 = await osseus.lib.Transaction.transfer(from, to, amount)
-      let tx2 = await osseus.db_models.tx.get({id: tx1.id})
+      let tx2 = await osseus.lib.Transaction.get({id: tx1.id})
       validateTransaction(tx1, tx2[0])
     })
 
@@ -180,7 +180,7 @@ contract('TRANSACTION', async (accounts) => {
       to.currency = currency.id
       validateTransaction(tx1, undefined, from, to, amount, 'DONE', 'transfer')
 
-      let tx2 = await osseus.db_models.tx.get({id: fakeId}).catch(err => {
+      let tx2 = await osseus.lib.Transaction.get({id: fakeId}).catch(err => {
         expect(err).not.to.be.undefined
       })
       expect(tx2).to.be.undefined
@@ -193,12 +193,12 @@ contract('TRANSACTION', async (accounts) => {
 
       let tx1 = await osseus.lib.Transaction.transfer(from, to, amount)
 
-      let txs = await osseus.db_models.tx.get({fromAddress: managerAccountAddress})
+      let txs = await osseus.lib.Transaction.get({fromAddress: managerAccountAddress})
       expect(txs).to.be.an('array')
       expect(txs).to.have.lengthOf(1)
       validateTransaction(tx1, txs[0])
 
-      txs = await osseus.db_models.tx.get({toAddress: usersAccountAddress})
+      txs = await osseus.lib.Transaction.get({toAddress: usersAccountAddress})
       expect(txs).to.be.an('array')
       expect(txs).to.have.lengthOf(1)
       validateTransaction(tx1, txs[0])
@@ -211,7 +211,7 @@ contract('TRANSACTION', async (accounts) => {
 
       let tx1 = await osseus.lib.Transaction.transfer(from, to, amount)
 
-      let txs = await osseus.db_models.tx.get({state: 'DONE'})
+      let txs = await osseus.lib.Transaction.get({state: 'DONE'})
       expect(txs).to.be.an('array')
       expect(txs).to.have.lengthOf(1)
       validateTransaction(tx1, txs[0])
@@ -224,7 +224,7 @@ contract('TRANSACTION', async (accounts) => {
 
       let tx1 = await osseus.lib.Transaction.transfer(from, to, amount)
 
-      let txs = await osseus.db_models.tx.get({currency: currency.id})
+      let txs = await osseus.lib.Transaction.get({currency: currency.id})
       expect(txs).to.be.an('array')
       expect(txs).to.have.lengthOf(1)
       validateTransaction(tx1, txs[0])
@@ -237,7 +237,7 @@ contract('TRANSACTION', async (accounts) => {
 
       let tx1 = await osseus.lib.Transaction.transfer(from, to, amount)
 
-      let txs = await osseus.db_models.tx.get({address: managerAccountAddress, currency: currency.id, context: 'transfer', state: 'DONE'})
+      let txs = await osseus.lib.Transaction.get({address: managerAccountAddress, currency: currency.id, context: 'transfer', state: 'DONE'})
       expect(txs).to.be.an('array')
       expect(txs).to.have.lengthOf(1)
       validateTransaction(tx1, txs[0])
@@ -323,7 +323,7 @@ contract('TRANSACTION', async (accounts) => {
 
         Object.keys(data.checks).forEach(async accountAddress => {
           const amount = data.checks[accountAddress]
-          const wallet = await osseus.db_models.wallet.getByAddress(accountAddress)
+          const wallet = await osseus.lib.Wallet.getByAddress(accountAddress)
           const startingBalance = defaultBalances[accountAddress]
           const currencyBalance = wallet.balances.filter(balance => balance.currency.toString() === currency.id)[0]
           const actualBalance = currencyBalance.offchainAmount.toNumber()
@@ -351,7 +351,7 @@ contract('TRANSACTION', async (accounts) => {
       expect(tx.context).to.equal('deposit')
       expect(tx.state).to.equal('TRANSMITTED')
 
-      let updatedTransmit = await osseus.db_models.transmit.getById(tx.transmit)
+      let updatedTransmit = await osseus.lib.Transmit.getById(tx.transmit)
       expect(updatedTransmit.offchainTransactions).to.have.lengthOf(1)
       expect(updatedTransmit.offchainTransactions[0].toString()).to.equal(tx.id)
       expect(updatedTransmit.blockchainTransactions).to.have.lengthOf(1)
@@ -468,7 +468,7 @@ contract('TRANSACTION', async (accounts) => {
       let stateChecks = []
       offchainResultsFiltered.forEach(async obj => {
         stateChecks.push(new Promise(async (resolve, reject) => {
-          let tx = await osseus.db_models.tx.get({id: obj._id})
+          let tx = await osseus.lib.Transaction.get({id: obj._id})
           resolve(tx[0].state === 'TRANSMITTED')
         }))
       })
