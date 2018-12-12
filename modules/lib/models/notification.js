@@ -4,6 +4,11 @@ module.exports = (osseus) => {
   function notification () {}
 
   const postToWebhook = (url, notification) => {
+    const belowMinLevel = () => osseus.db_models.notification.isBelowLevel(notification.level, osseus.config.notifications_webhook_min_level)
+
+    if (belowMinLevel()) {
+      osseus.logger.debug(`Not sending notification ${notification.id} to ${url} as it is below minimum level defined`)
+    }
     axios.post(url, notification)
       .then(response => {
         osseus.logger.debug(`Succesfully sent notification ${notification.id} to ${url}`)

@@ -6,7 +6,8 @@ module.exports = (osseus) => {
   const Schema = db.mongoose.Schema
 
   const NOTIFICATION_TYPES = ['SYSTEM', 'GENERAL', 'API', 'JOB', 'LISTENER', 'TRANSFER_EVENT', 'BLOCKCHAIN']
-  const NOTIFICATION_LEVELS = ['INFO', 'WARNING', 'CRITICAL']
+  const NOTIFICATION_LEVELS_MAP = {'INFO': 1, 'WARNING': 2, 'CRITICAL': 3}
+  const NOTIFICATION_LEVELS = Object.keys(NOTIFICATION_LEVELS_MAP)
 
   const NotificationSchema = new Schema({
     type: {type: String, enum: NOTIFICATION_TYPES, default: 'GENERAL'},
@@ -107,6 +108,8 @@ module.exports = (osseus) => {
       })
     })
   }
+
+  notification.isBelowLevel = (levelKey1, levelKey2) => levelKey1 && levelKey2 && NOTIFICATION_LEVELS_MAP[levelKey1] < NOTIFICATION_LEVELS_MAP[levelKey2]
 
   notification.levels = NOTIFICATION_LEVELS
 
