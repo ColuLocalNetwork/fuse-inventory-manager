@@ -6,6 +6,11 @@ The inventory manager is an [osseus](https://github.com/colucom/osseus) based se
 
 It provides blockchain reflection of offchain activities on community currencies issued against the [CLN](https://cln.network/).
 
+## Dockerized workflow
+
+Dev: `docker-compose up -d`
+
+Test, QA, Production with appropriate npm command: `cp docker-compose-inventory-only.yml docker-compose.override.yml && docker-compose up -d`
 
 ## Dependencies
 

@@ -1,0 +1,10 @@
+version: '3.2'
+services:
+    inventory:
+        env_file: .env
+        command: >
+          sh -c "npm run build &&
+                 npm run test"
+        environment:
+          - OSSEUS_MONGO_URI="mongodb://${MONGO_USER}:${MONGO_PASS}@${MONGO_HOST}/${MONGO_DBNAME}"
+          - WEB3_PROVIDER=${APP_WEB3_PROVIDER_URI}

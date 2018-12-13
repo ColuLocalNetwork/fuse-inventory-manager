@@ -1,0 +1,33 @@
+version: '3.2'
+services:
+    mongo:
+        container_name: inventory_manager-mongo
+        build: ./docker/mongo
+        image: inventory-manager-mongo:latest
+        restart: always
+        environment:
+            - AUTH=yes
+            - MONGODB_ADMIN_USER=mongo
+            - MONGODB_ADMIN_PASS=mongo
+            - MONGODB_APPLICATION_DATABASE=cln
+            - MONGODB_APPLICATION_USER=cln
+            - MONGODB_APPLICATION_PASS=cln
+        volumes:
+            - ./docker/mongo/db:/data/db
+            - ./docker/mongo/config:/data/configdb
+        ports:
+          - "27017:27017"
+    inventory:
+        container_name: inventory_manager-app
+        build: ./
+        image: inventory-manager:latest
+        restart: always
+        working_dir: /app
+        command: >
+          sh -c "npm run build &&
+                 npm run dev"
+        environment:
+          - OSSEUS_MONGO_URI="mongodb://cln:cln@$mongo/cln"
+          - WEB3_PROVIDER=https://ropsten.infura.io/
+        volumes:
+            - .:/app
