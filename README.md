@@ -6,7 +6,6 @@ The inventory manager is an [osseus](https://github.com/colucom/osseus) based se
 
 It provides blockchain reflection of offchain activities on community currencies issued against the [CLN](https://cln.network/).
 
-
 ## Dependencies
 
 To make sure that the following instructions work, please install the following dependencies
@@ -73,6 +72,12 @@ $ export A_LOT_OF_TXS={n}
 
 The task uses [truffle framework](https://truffleframework.com/).
 
+## Dockerized workflow
+
+```
+cp .env.example .env
+docker-compose up -d
+```
 
 ## Contributing
 Please see [contributing guidelines](https://github.com/ColuLocalNetwork/inventory-manager/blob/master/.github/CONTRIBUTING.md).

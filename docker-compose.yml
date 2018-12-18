@@ -1,0 +1,38 @@
+version: '3.2'
+services:
+    mongo:
+        container_name: $APP_NAME-mongo
+        build: ./docker/mongo
+        image: $APP_NAME-mongo:latest
+        restart: always
+        env_file: .env
+        environment:
+            - MONGODB_ADMIN_USER=mongo
+            - MONGODB_ADMIN_PASS=mongo
+            - MONGODB_APPLICATION_DATABASE=${MONGO_DBNAME}
+            - MONGODB_APPLICATION_USER=${MONGO_USER}
+            - MONGODB_APPLICATION_PASS=${MONGO_PASS}
+        volumes:
+            - ./docker/mongo/db:/data/db
+            - ./docker/mongo/config:/data/configdb
+        ports:
+            - "27017"
+    app:
+        container_name: $APP_NAME-app
+        build: ./
+        user: "${UID}:${GID}"
+        image: $APP_NAME-app:latest
+        restart: always
+        env_file: .env
+        working_dir: ./
+        command: >
+          sh -c "npm run build &&
+                 npm start"
+        environment:
+          - ENV=${APP_ENV}
+          - OSSEUS_SERVER_PORT=${APP_PORT}
+          - OSSEUS_MONGO_URI=mongodb://${MONGO_USER}:${MONGO_PASS}@mongo/${MONGO_DBNAME}
+        volumes:
+            - .:/app
+        ports:
+            - "3000:$APP_PORT"
