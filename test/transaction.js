@@ -123,6 +123,7 @@ contract('TRANSACTION', async (accounts) => {
 
   beforeEach(async function () {
     osseus.helpers.clearDB()
+    osseus.agenda.purge()
 
     currency = await osseus.lib.Currency.create(currencyAddress, osseus.config.abi.CommunityCurrency, currencyBlockchainInfo, osseus.helpers.randomStr(10))
     community = await osseus.lib.Community.create('Test Community', currency, osseus.helpers.randomStr(10))
